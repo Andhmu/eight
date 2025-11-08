@@ -4,17 +4,50 @@
 
 label{ font-size:14px; color:var(--color-muted); }
 
+
+
 .input{
 
-  padding:10px 12px; border:1px solid #d8dde6; border-radius:var(--radius);
+  height:44px;               /* удобная тач-зона */
 
-  outline:none; background:#fff; transition:border-color .2s;
+  padding:10px 12px;
+
+  border:1px solid #d8dde6; border-radius:var(--radius);
+
+  outline:none; background:#fff; transition:border-color .2s, box-shadow .2s;
 
 }
 
-.input:focus{ border-color:var(--color-accent); }
+.input:focus{
 
-.actions{ display:flex; gap:12px; justify-content:flex-end; align-items:center; }
+  border-color:var(--color-accent);
+
+  box-shadow:0 0 0 3px rgba(59,130,246,.12);
+
+}
+
+
+
+.actions{
+
+  display:flex; gap:12px; justify-content:flex-end; align-items:center;
+
+  flex-wrap:wrap;
+
+}
+
+
+
+/* мобильные: кнопки в линию на всю ширину */
+
+@media (max-width: 480px){
+
+  .actions{ justify-content:stretch; }
+
+  .actions .btn{ flex:1; }
+
+}
+
+
 
 .below{ margin-top:12px; display:flex; gap:12px; flex-wrap:wrap; }
-

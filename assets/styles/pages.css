@@ -1,5 +1,19 @@
-.cta{ display:flex; gap:12px; }
+/* утилиты/страничные мелочи */
 
 .center{ display:grid; place-items:center; }
 
+.cta{ display:flex; gap:12px; flex-wrap:wrap; }
+
 .profile-info{ display:grid; gap:12px; text-align:center; }
+
+
+
+/* чтобы на очень маленьких экранах карточка не упиралась в края */
+
+@media (max-width: 360px){
+
+  .stack{ padding:12px; }
+
+  .card{ width: 94vw; }
+
+}

@@ -1,12 +1,16 @@
 .header{
 
-  height:64px; display:flex; align-items:center; justify-content:space-between;
+  height:var(--header-h);
+
+  display:flex; align-items:center; justify-content:space-between;
 
   padding:0 16px; background:#fff; box-shadow:0 1px 3px rgba(0,0,0,.05);
 
 }
 
-.brand{ font-weight:700; font-size:20px; text-decoration:none; color:var(--color-primary); }
+
+
+.brand{ font-weight:700; font-size:20px; text-decoration:none; color:var(--color-text); }
 
 .nav{ display:flex; gap:16px; }
 
@@ -16,14 +20,51 @@
 
 
 
+/* страничная обёртка */
+
 .page{ padding:24px; }
 
-.stack{ min-height:calc(100vh - 80px); display:grid; place-items:center; gap:20px; padding:16px; }
+
+
+/* центрирующая обёртка для страниц с карточкой */
+
+.stack{
+
+  min-height:calc(100dvh - var(--header-h)); /* без “скачущего” 100vh на мобайле */
+
+  display:grid; place-items:center; gap:20px; padding:16px;
+
+}
+
+
+
+/* карточки форм */
 
 .card{
 
-  width:min(420px, 92vw); background:#fff; border-radius:var(--radius);
+  width:clamp(320px, 92vw, 420px);
 
-  box-shadow:0 6px 24px rgba(0,0,0,.06); padding:24px;
+  background:#fff; border-radius:var(--radius);
+
+  box-shadow:0 6px 24px rgba(0,0,0,.06);
+
+  padding:24px;
 
 }
+
+
+
+/* мобильные правки */
+
+@media (max-width: 480px){
+
+  .page{ padding:16px; }
+
+  .card{ padding:20px; border-radius:12px; }
+
+  .nav{ gap:12px; }
+
+  .brand{ font-size:18px; }
+
+}
+
