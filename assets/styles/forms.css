@@ -1,0 +1,20 @@
+.form{ display:grid; gap:14px; }
+
+.field{ display:grid; gap:6px; }
+
+label{ font-size:14px; color:var(--color-muted); }
+
+.input{
+
+  padding:10px 12px; border:1px solid #d8dde6; border-radius:var(--radius);
+
+  outline:none; background:#fff; transition:border-color .2s;
+
+}
+
+.input:focus{ border-color:var(--color-accent); }
+
+.actions{ display:flex; gap:12px; justify-content:flex-end; align-items:center; }
+
+.below{ margin-top:12px; display:flex; gap:12px; flex-wrap:wrap; }
+

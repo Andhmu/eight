@@ -1,0 +1,32 @@
+:root{
+
+  --color-primary:#0f172a;
+
+  --color-accent:#3b82f6;
+
+  --color-text:#1e293b;
+
+  --color-muted:#64748b;
+
+  --color-bg:#f8fafc;
+
+  --radius:10px;
+
+}
+
+*{ box-sizing:border-box; }
+
+body{
+
+  font-family:'Inter', system-ui, sans-serif;
+
+  font-size:16px;
+
+  color:var(--color-text);
+
+  background:var(--color-bg);
+
+  margin:0;
+
+}
+

@@ -1,0 +1,5 @@
+.cta{ display:flex; gap:12px; }
+
+.center{ display:grid; place-items:center; }
+
+.profile-info{ display:grid; gap:12px; text-align:center; }

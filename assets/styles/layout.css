@@ -1,0 +1,29 @@
+.header{
+
+  height:64px; display:flex; align-items:center; justify-content:space-between;
+
+  padding:0 16px; background:#fff; box-shadow:0 1px 3px rgba(0,0,0,.05);
+
+}
+
+.brand{ font-weight:700; font-size:20px; text-decoration:none; color:var(--color-primary); }
+
+.nav{ display:flex; gap:16px; }
+
+.link{ color:var(--color-muted); text-decoration:none; transition:color .2s; }
+
+.link:hover{ color:var(--color-primary); }
+
+
+
+.page{ padding:24px; }
+
+.stack{ min-height:calc(100vh - 80px); display:grid; place-items:center; gap:20px; padding:16px; }
+
+.card{
+
+  width:min(420px, 92vw); background:#fff; border-radius:var(--radius);
+
+  box-shadow:0 6px 24px rgba(0,0,0,.06); padding:24px;
+
+}

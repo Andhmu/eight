@@ -1,35 +1,157 @@
 <template>
-  <section class="auth-wrap">
-    <div class="card">
+
+  <div class="stack">
+
+    <div class="card" style="min-width:360px; position: relative;">
+
+
+
+      <!-- 🔔 Тост над формой -->
+
+      <transition name="slide-fade">
+
+        <div v-if="notice" class="toast">
+
+          <div class="toast__content">
+
+            <b>Проверьте почту</b><br />
+
+            Мы отправили ссылку для смены пароля.
+
+          </div>
+
+          <div class="toast__progress" :style="{ width: progress + '%' }"></div>
+
+        </div>
+
+      </transition>
+
+
+
       <h2>Восстановление пароля</h2>
-      <form @submit.prevent="onSubmit" novalidate>
-        <label><span>Логин или e-mail</span><input v-model.trim="who" required /></label>
-        <button class="btn primary" type="submit">Отправить ссылку</button>
-        <p v-if="msg" class="ok">{{ msg }}</p>
+
+
+
+      <form class="form" @submit.prevent="sendResetLink">
+
+        <div class="field">
+
+          <label>Email</label>
+
+          <input v-model="email" type="email" class="input" required />
+
+        </div>
+
+
+
+        <div class="actions" style="justify-content:flex-end">
+
+          <button class="btn btn--primary" type="submit" :disabled="loading">
+
+            Отправить ссылку
+
+          </button>
+
+        </div>
+
+
+
+        <p v-if="error" class="error">{{ error }}</p>
+
       </form>
-      <div class="links">
-        <NuxtLink to="/" class="link">Назад ко входу</NuxtLink>
-      </div>
+
     </div>
-  </section>
+
+  </div>
+
 </template>
 
-<script setup lang="ts">
-import { ref } from 'vue'
-const who = ref(''), msg = ref('')
-function onSubmit(){ msg.value = 'Если такой аккаунт существует — отправили инструкцию на e-mail.' }
-</script>
 
-<style scoped>
-/* те же стили что и выше */
-.auth-wrap{ display:grid; min-height:calc(100vh - 56px); place-items:center; padding:24px; }
-.card{ width:min(440px, 92vw); background: rgba(255,255,255,.75); border:1px solid rgba(0,0,0,.08); border-radius:16px; padding:22px 20px; box-shadow:0 12px 36px rgba(0,0,0,.10); backdrop-filter: blur(8px); }
-form{ display:grid; gap:12px; margin-top:8px; }
-label{ display:grid; gap:6px; font-size:14px; color:var(--ink-soft); }
-input{ padding:12px 14px; border-radius:10px; border:1px solid rgba(0,0,0,.12); background:#fff; }
-.btn{ padding:12px 14px; border-radius:10px; border:0; cursor:pointer; }
-.primary{ background:#111; color:#fff; }
-.links{ display:flex; justify-content:flex-end; margin-top:10px; }
-.link{ color:var(--ink); opacity:.8; text-decoration:none; }
-.ok{ color:#1b5e20; font-size:14px; margin-top:6px; }
-</style>
+
+<script setup lang="ts">
+
+import { ref } from 'vue'
+
+
+
+const client = useSupabaseClient()
+
+
+
+const email = ref('')
+
+const loading = ref(false)
+
+const error = ref<string | null>(null)
+
+const notice = ref(false)
+
+const progress = ref(0)
+
+
+
+async function sendResetLink() {
+
+  loading.value = true
+
+  error.value = null
+
+
+
+  const { error: e } = await client.auth.resetPasswordForEmail(email.value, {
+
+    redirectTo: 'http://localhost:3000/reset'
+
+  })
+
+
+
+  loading.value = false
+
+  if (e) {
+
+    error.value = e.message
+
+    return
+
+  }
+
+
+
+  // ✅ Показываем тост на 5 секунд
+
+  notice.value = true
+
+  progress.value = 0
+
+
+
+  const duration = 5000 // 5 секунд
+
+  const steps = 50
+
+  const interval = duration / steps
+
+
+
+  let count = 0
+
+  const timer = setInterval(() => {
+
+    count++
+
+    progress.value = (count / steps) * 100
+
+    if (count >= steps) {
+
+      clearInterval(timer)
+
+      navigateTo('/')
+
+    }
+
+  }, interval)
+
+}
+
+</script>

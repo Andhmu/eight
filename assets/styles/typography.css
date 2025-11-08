@@ -1,0 +1,7 @@
+h1,h2,h3,h4{ margin:0 0 10px; color:var(--color-primary); }
+
+h2{ font-size:22px; font-weight:600; }
+
+p{ margin:0 0 12px; line-height:1.6; }
+
+.brand-big{ font-size:48px; font-weight:700; opacity:.9; }
