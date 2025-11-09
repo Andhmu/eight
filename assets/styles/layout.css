@@ -1,85 +1,49 @@
 .header{
-
   height:var(--header-h);
-
   display:flex; align-items:center; justify-content:space-between;
-
-  padding:0 16px; background:#fff; box-shadow:0 1px 3px rgba(0,0,0,.05);
-
+  padding:0 16px;
+  background:#fff;
+  box-shadow:0 1px 3px rgba(0,0,0,.05);
 }
 
-
-
 .brand{ font-weight:700; font-size:20px; text-decoration:none; color:var(--color-text); }
-
 .nav{ display:flex; gap:16px; }
-
 .link{ color:var(--color-muted); text-decoration:none; transition:color .2s; }
-
 .link:hover{ color:var(--color-primary); }
-
-
 
 .page{ padding:16px; }
 
-
-
-/* центрируем блок с карточкой, без “лишнего” вертикального скролла */
-
+/* Центрирование и устранение скролла */
 .stack{
-
-  /* используем svh, чтобы тулбары iOS не добавляли прокрутку */
-
   min-height:calc(100svh - var(--header-h));
-
   display:grid;
-
-  place-content:center;       /* и по вертикали, и по горизонтали */
-
+  place-content:center;
   gap:20px;
-
   padding:16px;
-
 }
 
-
-
-/* карточка: всегда строго по центру и чуть уже на мобайле */
-
+/* Карточка */
 .card{
-
   width:100%;
-
-  max-width:420px;            /* десктоп/планшет */
-
-  margin-inline:auto;         /* абсолютный центр по горизонтали */
-
+  max-width:420px;       /* одинаковая ширина для всех форм */
+  margin-inline:auto;
   background:#fff;
-
   border-radius:var(--radius);
-
   box-shadow:0 6px 24px rgba(0,0,0,.06);
-
   padding:24px;
-
 }
 
-
-
+/* Лёгкая адаптивность */
 @media (max-width:640px){
-
-  .card{ max-width:380px; padding:20px; border-radius:12px; }
-
+  .card{
+    max-width:400px;     /* чуть шире, чем раньше */
+    padding:20px;
+    border-radius:12px;
+  }
 }
-
-@media (max-width:420px){
-
-  .card{ max-width:340px; }
-
+@media (max-width:480px){
+  .card{ max-width:380px; }
 }
-
 @media (max-width:360px){
-
-  .card{ max-width:320px; }
-
+  .card{ max-width:340px; }
 }
