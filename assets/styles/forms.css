@@ -1,20 +1,22 @@
-.form{ display:grid; gap:14px; }
+.form{ display:grid; gap:12px; }         /* компактнее */
 
 .field{ display:grid; gap:6px; }
 
-label{ font-size:14px; color:var(--color-muted); }
+label{ font-size:13px; color:var(--color-muted); }
 
 
 
 .input{
 
-  height:44px;               /* удобная тач-зона */
+  height:42px;                           /* меньше высота на телефоне */
 
   padding:10px 12px;
 
   border:1px solid #d8dde6; border-radius:var(--radius);
 
-  outline:none; background:#fff; transition:border-color .2s, box-shadow .2s;
+  outline:none; background:#fff;
+
+  transition:border-color .2s, box-shadow .2s;
 
 }
 
@@ -30,7 +32,9 @@ label{ font-size:14px; color:var(--color-muted); }
 
 .actions{
 
-  display:flex; gap:12px; justify-content:flex-end; align-items:center;
+  display:flex; gap:12px; align-items:center;
+
+  justify-content:space-between;         /* симметрия слева/справа */
 
   flex-wrap:wrap;
 
@@ -38,16 +42,13 @@ label{ font-size:14px; color:var(--color-muted); }
 
 
 
-/* мобильные: кнопки в линию на всю ширину */
+/* на очень узких — всё ровно и без переполнений */
 
-@media (max-width: 480px){
+@media (max-width:420px){
 
-  .actions{ justify-content:stretch; }
+  .actions{ gap:10px; }
 
-  .actions .btn{ flex:1; }
+  .input{ height:40px; }
 
 }
 
-
-
-.below{ margin-top:12px; display:flex; gap:12px; flex-wrap:wrap; }

@@ -20,31 +20,43 @@
 
 
 
-/* страничная обёртка */
-
-.page{ padding:24px; }
+.page{ padding:16px; }
 
 
 
-/* центрирующая обёртка для страниц с карточкой */
+/* центрируем блок с карточкой, без “лишнего” вертикального скролла */
 
 .stack{
 
-  min-height:calc(100dvh - var(--header-h)); /* без “скачущего” 100vh на мобайле */
+  /* используем svh, чтобы тулбары iOS не добавляли прокрутку */
 
-  display:grid; place-items:center; gap:20px; padding:16px;
+  min-height:calc(100svh - var(--header-h));
+
+  display:grid;
+
+  place-content:center;       /* и по вертикали, и по горизонтали */
+
+  gap:20px;
+
+  padding:16px;
 
 }
 
 
 
-/* карточки форм */
+/* карточка: всегда строго по центру и чуть уже на мобайле */
 
 .card{
 
-  width:clamp(320px, 92vw, 420px);
+  width:100%;
 
-  background:#fff; border-radius:var(--radius);
+  max-width:420px;            /* десктоп/планшет */
+
+  margin-inline:auto;         /* абсолютный центр по горизонтали */
+
+  background:#fff;
+
+  border-radius:var(--radius);
 
   box-shadow:0 6px 24px rgba(0,0,0,.06);
 
@@ -54,17 +66,20 @@
 
 
 
-/* мобильные правки */
+@media (max-width:640px){
 
-@media (max-width: 480px){
-
-  .page{ padding:16px; }
-
-  .card{ padding:20px; border-radius:12px; }
-
-  .nav{ gap:12px; }
-
-  .brand{ font-size:18px; }
+  .card{ max-width:380px; padding:20px; border-radius:12px; }
 
 }
 
+@media (max-width:420px){
+
+  .card{ max-width:340px; }
+
+}
+
+@media (max-width:360px){
+
+  .card{ max-width:320px; }
+
+}

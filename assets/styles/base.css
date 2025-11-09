@@ -14,8 +14,6 @@
 
 
 
-  /* высота хедера как переменная */
-
   --header-h:64px;
 
 }
@@ -26,13 +24,15 @@
 
 html,body{ height:100%; }
 
+html,body{ overflow-x:hidden; }          /* убираем горизонтальный скролл */
+
 
 
 body{
 
   font-family:'Inter', system-ui, sans-serif;
 
-  font-size:16px;            /* чтобы iOS не зумил инпуты */
+  font-size:16px;
 
   color:var(--color-text);
 
@@ -50,19 +50,16 @@ body{
 
   text-rendering:optimizeLegibility;
 
-  overscroll-behavior:y none;
-
-  -webkit-tap-highlight-color: rgba(0,0,0,0);
+  -webkit-tap-highlight-color:transparent;
 
 }
 
 
 
-/* мобайл: понижаем хедер */
+/* мобайл */
 
-@media (max-width: 640px){
+@media (max-width:640px){
 
   :root{ --header-h:56px; }
 
 }
-
