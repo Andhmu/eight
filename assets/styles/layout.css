@@ -30,29 +30,27 @@
 
 
 
-/* основной контейнер страницы:
-
-   центрирует контент и сам контролирует высоту окна */
+/* основной контейнер страницы */
 
 .page{
 
-  min-height:calc(100dvh - var(--header-h)); /* ← фикс скролла и мобильных адресных строк */
+  min-height:calc(100dvh - var(--header-h));
 
   display:grid;
 
-  align-content:center;     /* вертикальное центрирование сетки */
+  align-content:center;
 
-  justify-items:center;     /* горизонтальное центрирование карточки */
+  justify-items:center;
 
   gap:20px;
 
-  padding:var(--page-pad);
+  padding:var(--page-pad); /* создаёт симметричные боковые поля */
 
 }
 
 
 
-/* просто сетка-обёртка, без высот! */
+/* обёртка */
 
 .stack{
 
@@ -68,11 +66,11 @@
 
 
 
-/* карточка формы */
+/* карточка: ширина ограничена контейнером страницы */
 
 .card{
 
-  width:min(440px, 92vw);   /* одинаковая ширина для логина/регистрации/forgot */
+  width:min(440px, 100%);   /* ← ключевая правка: 100% вместо 92vw */
 
   background:#fff;
 
@@ -82,12 +80,12 @@
 
   padding:24px;
 
-  position:relative;        /* для тоста */
+  position:relative;
 
 }
 
 
 
-/* логотип на главной */
+/* крупный логотип */
 
 .brand-big{ font-size:48px; font-weight:700; opacity:.9; }
