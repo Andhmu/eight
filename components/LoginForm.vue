@@ -14,41 +14,83 @@
 
         <label>Email</label>
 
-        <input v-model="email" type="email" class="input" required />
+        <input
+
+          v-model="email"
+
+          type="email"
+
+          class="input"
+
+          required
+
+          inputmode="email"
+
+          autocomplete="email"
+
+          enterkeyhint="next"
+
+          @keyup.enter="focusPassword"
+
+        />
 
       </div>
 
 
 
-      <div class="field" v-if="showPassword">
+      <div class="field">
 
         <label>Пароль</label>
 
-        <input v-model="password" type="password" class="input" required />
+        <input
+
+          ref="passwordEl"
+
+          v-model="password"
+
+          type="password"
+
+          class="input"
+
+          required
+
+          autocomplete="current-password"
+
+          enterkeyhint="done"
+
+          @keyup.enter="onSubmit"
+
+        />
 
       </div>
+
+
+
+      <!-- Скрытый сабмиттер на случай странного поведения браузера -->
+
+      <button type="submit" style="display:none" aria-hidden="true" />
 
 
 
       <div class="actions">
 
-        <NuxtLink v-if="showForgot" class="link" to="/forgot">Забыли пароль?</NuxtLink>
+        <NuxtLink class="link" to="/forgot" style="margin-right:auto">
 
-        <button class="btn btn--primary" type="submit">{{ submitText }}</button>
+          Забыли пароль?
+
+        </NuxtLink>
+
+
+
+        <button class="btn btn--primary" type="submit">
+
+          {{ submitText }}
+
+        </button>
 
       </div>
 
     </form>
-
-
-
-    <div v-if="showSignup" class="below">
-
-      Нет аккаунта?
-
-      <NuxtLink class="link" to="/register">Зарегистрироваться</NuxtLink>
-
-    </div>
 
   </div>
 
@@ -62,27 +104,13 @@ import { ref } from 'vue'
 
 
 
-const props = withDefaults(defineProps<{
+const props = defineProps<{
 
   title: string
 
   submitText: string
 
-  showForgot?: boolean
-
-  showSignup?: boolean
-
-  showPassword?: boolean
-
-}>(), {
-
-  showForgot: true,
-
-  showSignup: true,
-
-  showPassword: true,
-
-})
+}>()
 
 
 
@@ -97,6 +125,16 @@ const emit = defineEmits<{
 const email = ref('')
 
 const password = ref('')
+
+const passwordEl = ref<HTMLInputElement | null>(null)
+
+
+
+function focusPassword() {
+
+  passwordEl.value?.focus()
+
+}
 
 
 

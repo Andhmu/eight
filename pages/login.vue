@@ -10,10 +10,6 @@
 
       submitText="Войти"
 
-      :showForgot="true"
-
-      :showSignup="true"
-
       @submit="login"
 
     />
@@ -33,6 +29,8 @@ import { useAuth } from '~/composables/UseAuth'
 
 
 const { signIn } = useAuth()
+
+
 
 async function login({ email, password }: { email: string; password: string }) {
 
