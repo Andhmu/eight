@@ -12,4 +12,4 @@
 
 @import './styles/toast.css';
 
-@import './styles/auth.css';   /* <-- добавили */
+@import './styles/forgot.css';  /* ← добавили стили страницы forgot */

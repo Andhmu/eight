@@ -4,18 +4,4 @@ h2{ font-size:22px; font-weight:600; }
 
 p{ margin:0 0 12px; line-height:1.6; }
 
-
-
-.brand-big{
-
-  font-weight:700; opacity:.9;
-
-  /* адаптивный размер логотипа */
-
-  font-size:clamp(36px, 8vw, 72px);
-
-  text-align:center;
-
-  pointer-events:none;       /* чтобы не ловил тап */
-
-}
+.brand-big{ font-size:48px; font-weight:700; opacity:.9; }

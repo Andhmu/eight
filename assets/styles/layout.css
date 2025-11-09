@@ -1,125 +1,93 @@
-.header {
+/* шапка */
 
-  height: var(--header-h);
+.header{
 
-  display: flex;
+  height:var(--header-h);
 
-  align-items: center;
+  display:flex;
 
-  justify-content: space-between;
+  align-items:center;
 
-  padding: 0 16px;
+  justify-content:space-between;
 
-  background: #fff;
+  padding:0 16px;
 
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  background:#fff;
 
-}
-
-
-
-.brand {
-
-  font-weight: 700;
-
-  font-size: 20px;
-
-  text-decoration: none;
-
-  color: var(--color-primary);
+  box-shadow:0 1px 3px rgba(0,0,0,.05);
 
 }
 
 
 
-.nav {
+.brand{ font-weight:700; font-size:20px; text-decoration:none; color:var(--color-primary); }
 
-  display: flex;
+.nav{ display:flex; gap:16px; }
 
-  gap: 16px;
+.link{ color:var(--color-muted); text-decoration:none; transition:color .2s; }
 
-}
-
-
-
-.link {
-
-  color: var(--color-muted);
-
-  text-decoration: none;
-
-  transition: color 0.2s;
-
-}
+.link:hover{ color:var(--color-primary); }
 
 
 
-.link:hover {
+/* основной контейнер страницы:
 
-  color: var(--color-primary);
+   центрирует контент и сам контролирует высоту окна */
 
-}
+.page{
 
+  min-height:calc(100dvh - var(--header-h)); /* ← фикс скролла и мобильных адресных строк */
 
+  display:grid;
 
-.page {
+  align-content:center;     /* вертикальное центрирование сетки */
 
-  /* 100dvh предотвращает скачки высоты на iOS */
+  justify-items:center;     /* горизонтальное центрирование карточки */
 
-  min-height: calc(100dvh - var(--header-h));
+  gap:20px;
 
-  padding: 24px;
+  padding:var(--page-pad);
 
 }
 
 
 
-.stack {
+/* просто сетка-обёртка, без высот! */
 
-  min-height: calc(100dvh - var(--header-h));
+.stack{
 
-  display: grid;
+  width:100%;
 
-  place-items: center;
+  display:grid;
 
-  gap: 20px;
+  justify-items:center;
 
-  padding: clamp(16px, 4vw, 24px); /* адаптивные отступы */
-
-}
-
-
-
-/* Универсальная карточка для всех auth-страниц */
-
-.card {
-
-  width: min(480px, 92vw);
-
-  background: #fff;
-
-  border-radius: var(--radius);
-
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.06);
-
-  padding: 24px;
-
-  margin-inline: auto;
+  gap:20px;
 
 }
 
 
 
-/* Мобильная корректировка */
+/* карточка формы */
 
-@media (max-width: 380px) {
+.card{
 
-  .card {
+  width:min(440px, 92vw);   /* одинаковая ширина для логина/регистрации/forgot */
 
-    width: min(440px, 94vw);
+  background:#fff;
 
-    padding: 20px;
+  border-radius:var(--radius);
 
-  }
+  box-shadow:0 6px 24px rgba(0,0,0,.06);
+
+  padding:24px;
+
+  position:relative;        /* для тоста */
 
 }
+
+
+
+/* логотип на главной */
+
+.brand-big{ font-size:48px; font-weight:700; opacity:.9; }

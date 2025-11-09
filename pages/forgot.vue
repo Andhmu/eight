@@ -1,10 +1,8 @@
 <template>
 
-  <div class="stack">
+  <div class="stack page-forgot">
 
     <div class="card">
-
-
 
       <!-- 🔔 Тост над формой -->
 
@@ -20,7 +18,11 @@
 
           </div>
 
-          <div class="toast__progress" :style="{ width: progress + '%' }"></div>
+          <div class="toast__progress">
+
+            <i :style="{ width: progress + '%' }"></i>
+
+          </div>
 
         </div>
 
@@ -84,9 +86,61 @@ const loading = ref(false)
 
 const error = ref<string | null>(null)
 
+
+
 const notice = ref(false)
 
 const progress = ref(0)
+
+let timer: number | null = null
+
+
+
+function startToastAndRedirect() {
+
+  notice.value = true
+
+  progress.value = 0
+
+
+
+  const duration = 5000
+
+  const steps = 50
+
+  const interval = duration / steps
+
+  let tick = 0
+
+
+
+  if (timer) {
+
+    clearInterval(timer)
+
+    timer = null
+
+  }
+
+  timer = window.setInterval(() => {
+
+    tick++
+
+    progress.value = Math.min(100, (tick / steps) * 100)
+
+    if (tick >= steps) {
+
+      clearInterval(timer!)
+
+      timer = null
+
+      navigateTo('/')
+
+    }
+
+  }, interval)
+
+}
 
 
 
@@ -98,15 +152,21 @@ async function sendResetLink() {
 
 
 
-  const { error: e } = await client.auth.resetPasswordForEmail(email.value, {
+  const { public: { SITE_URL } } = useRuntimeConfig()
 
-    redirectTo: 'http://localhost:3000/reset'
+  const base = (process.client ? window.location.origin : SITE_URL) || SITE_URL
 
-  })
+  const redirectTo = `${(base as string).replace(/\/$/, '')}/reset`
+
+
+
+  const { error: e } = await client.auth.resetPasswordForEmail(email.value, { redirectTo })
 
 
 
   loading.value = false
+
+
 
   if (e) {
 
@@ -118,39 +178,7 @@ async function sendResetLink() {
 
 
 
-  // ✅ Показываем тост на 5 секунд
-
-  notice.value = true
-
-  progress.value = 0
-
-
-
-  const duration = 5000 // 5 секунд
-
-  const steps = 50
-
-  const interval = duration / steps
-
-
-
-  let count = 0
-
-  const timer = setInterval(() => {
-
-    count++
-
-    progress.value = (count / steps) * 100
-
-    if (count >= steps) {
-
-      clearInterval(timer)
-
-      navigateTo('/')
-
-    }
-
-  }, interval)
+  startToastAndRedirect()
 
 }
 

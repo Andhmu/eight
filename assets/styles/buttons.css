@@ -1,50 +1,40 @@
-.btn {
+.btn{
 
-  display: inline-block;
+  display:inline-block;
 
-  padding: 10px 16px;
+  padding:10px 16px;
 
-  border-radius: var(--radius);
+  border-radius:var(--radius);
 
-  border: none;
+  border:none;
 
-  cursor: pointer;
+  cursor:pointer;
 
-  font-weight: 500;
+  font-weight:500;
 
-  text-decoration: none;
+  text-decoration:none;
 
-  text-align: center;
+  text-align:center;
 
-  transition: background 0.2s ease, color 0.2s ease, opacity 0.2s;
-
-}
-
-
-
-.btn-primary {
-
-  background: var(--color-primary);
-
-  color: #fff;
+  transition:background .2s ease, color .2s ease, opacity .2s;
 
 }
 
 
 
-.btn-light {
+.btn--primary{ background:var(--color-primary); color:#fff; }
 
-  background: #e7f0fd;
+.btn--light{ background:#e7f0fd; color:var(--color-primary); }
 
-  color: var(--color-primary);
-
-}
+.btn:hover{ opacity:.9; }
 
 
 
-.btn:hover {
+/* На узких экранах кнопка может растягиваться по ширине строки формы */
 
-  opacity: 0.9;
+@media (max-width:420px){
+
+  .btn{ width:100%; }
 
 }
 

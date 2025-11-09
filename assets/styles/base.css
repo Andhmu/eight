@@ -1,56 +1,65 @@
-:root {
+:root{
 
-  --color-primary: #0f172a;
+  --color-primary:#0f172a;
 
-  --color-accent: #3b82f6;
+  --color-accent:#3b82f6;
 
-  --color-text: #1e293b;
+  --color-text:#1e293b;
 
-  --color-muted: #64748b;
+  --color-muted:#64748b;
 
-  --color-bg: #f8fafc;
-
-  --radius: 10px;
-
-  --header-h: 64px; /* высота шапки */
-
-}
+  --color-bg:#f8fafc;
 
 
 
-html,
+  --radius:10px;
 
-body {
 
-  height: 100%;
 
-  overflow-x: hidden; /* убираем горизонтальный скролл */
+  /* размеры макета */
+
+  --header-h:64px;
+
+  --page-pad:24px;
 
 }
 
 
 
-body {
+*{ box-sizing:border-box; }
 
-  font-family: 'Inter', system-ui, sans-serif;
 
-  font-size: 16px;
 
-  color: var(--color-text);
+html, body{
 
-  background: var(--color-bg);
-
-  margin: 0;
+  height:100%;
 
 }
 
 
 
-* {
+body{
 
-  box-sizing: border-box;
+  font-family:'Inter', system-ui, sans-serif;
+
+  font-size:16px;
+
+  color:var(--color-text);
+
+  background:var(--color-bg);
+
+  margin:0;
+
+  /* не запрещаем, просто нормализуем поведение */
+
+  overflow-y:auto;
 
 }
 
 
 
+/* служебное */
+
+.error{ color:#b91c1c; }
+
+.center{ display:grid; place-items:center; }
