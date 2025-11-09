@@ -1,54 +1,86 @@
-.form{ display:grid; gap:12px; }         /* компактнее */
+.form {
 
-.field{ display:grid; gap:6px; }
+  display: grid;
 
-label{ font-size:13px; color:var(--color-muted); }
-
-
-
-.input{
-
-  height:42px;                           /* меньше высота на телефоне */
-
-  padding:10px 12px;
-
-  border:1px solid #d8dde6; border-radius:var(--radius);
-
-  outline:none; background:#fff;
-
-  transition:border-color .2s, box-shadow .2s;
-
-}
-
-.input:focus{
-
-  border-color:var(--color-accent);
-
-  box-shadow:0 0 0 3px rgba(59,130,246,.12);
+  gap: 14px;
 
 }
 
 
 
-.actions{
+.field {
 
-  display:flex; gap:12px; align-items:center;
+  display: grid;
 
-  justify-content:space-between;         /* симметрия слева/справа */
-
-  flex-wrap:wrap;
+  gap: 6px;
 
 }
 
 
 
-/* на очень узких — всё ровно и без переполнений */
+label {
 
-@media (max-width:420px){
+  font-size: 14px;
 
-  .actions{ gap:10px; }
+  color: var(--color-muted);
 
-  .input{ height:40px; }
+}
+
+
+
+.input {
+
+  padding: 10px 12px;
+
+  border: 1px solid #d8dde6;
+
+  border-radius: var(--radius);
+
+  outline: none;
+
+  background: #fff;
+
+  transition: border-color 0.2s;
+
+  width: 100%;
+
+}
+
+
+
+.input:focus {
+
+  border-color: var(--color-accent);
+
+}
+
+
+
+.actions {
+
+  display: flex;
+
+  gap: 12px;
+
+  justify-content: flex-end;
+
+  align-items: center;
+
+}
+
+
+
+.below {
+
+  margin-top: 12px;
+
+  display: flex;
+
+  gap: 12px;
+
+  flex-wrap: wrap;
+
+  justify-content: center;
 
 }
 

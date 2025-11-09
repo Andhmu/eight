@@ -1,65 +1,56 @@
-:root{
+:root {
 
-  --color-primary:#0f172a;
+  --color-primary: #0f172a;
 
-  --color-accent:#3b82f6;
+  --color-accent: #3b82f6;
 
-  --color-text:#1e293b;
+  --color-text: #1e293b;
 
-  --color-muted:#64748b;
+  --color-muted: #64748b;
 
-  --color-bg:#f8fafc;
+  --color-bg: #f8fafc;
 
-  --radius:10px;
+  --radius: 10px;
 
-
-
-  --header-h:64px;
+  --header-h: 64px; /* высота шапки */
 
 }
 
 
 
-*{ box-sizing:border-box; }
+html,
 
-html,body{ height:100%; }
+body {
 
-html,body{ overflow-x:hidden; }          /* убираем горизонтальный скролл */
+  height: 100%;
 
-
-
-body{
-
-  font-family:'Inter', system-ui, sans-serif;
-
-  font-size:16px;
-
-  color:var(--color-text);
-
-  background:var(--color-bg);
-
-  margin:0;
-
-
-
-  -webkit-font-smoothing:antialiased;
-
-  -moz-osx-font-smoothing:grayscale;
-
-  -webkit-text-size-adjust:100%;
-
-  text-rendering:optimizeLegibility;
-
-  -webkit-tap-highlight-color:transparent;
+  overflow-x: hidden; /* убираем горизонтальный скролл */
 
 }
 
 
 
-/* мобайл */
+body {
 
-@media (max-width:640px){
+  font-family: 'Inter', system-ui, sans-serif;
 
-  :root{ --header-h:56px; }
+  font-size: 16px;
+
+  color: var(--color-text);
+
+  background: var(--color-bg);
+
+  margin: 0;
 
 }
+
+
+
+* {
+
+  box-sizing: border-box;
+
+}
+
+
+

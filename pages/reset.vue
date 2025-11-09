@@ -1,7 +1,7 @@
 <!-- pages/reset.vue -->
 <template>
   <div class="stack">
-    <div class="card" style="min-width:360px">
+    <div class="card">
       <template v-if="stage === 'checking'">
         <h2>Сброс пароля</h2>
         <p>Проверяем ссылку…</p>
@@ -12,7 +12,7 @@
         <form class="form" @submit.prevent="save">
           <div class="field">
             <label>Пароль</label>
-            <input v-model="password" type="password" class="input" required minlength="6" />
+            <input v-model="password" type="password" clFass="input" required minlength="6" />
           </div>
           <div class="actions" style="justify-content:flex-end">
             <button class="btn btn--primary" type="submit" :disabled="loading">Сохранить</button>

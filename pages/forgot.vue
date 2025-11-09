@@ -2,7 +2,7 @@
 
   <div class="stack">
 
-    <div class="card" style="min-width:360px; position: relative;">
+    <div class="card">
 
 
 

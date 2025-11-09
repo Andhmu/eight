@@ -1,0 +1,42 @@
+/* Центрирование и отсутствие лишнего скролла */
+
+.auth {
+
+  min-height: calc(100svh - var(--header-h));
+
+  display: grid;
+
+  place-content: center;
+
+  padding: 16px;
+
+  overflow: hidden; /* убираем паразитный скролл на мобилках */
+
+}
+
+
+
+/* Единая ширина карточек авторизации/регистрации/восстановления */
+
+.card--auth {
+
+  width: 100%;
+
+  /* фиксируем одинаковую ширину и пробиваем любые более узкие переопределения */
+
+  max-width: 420px !important;
+
+  margin-inline: auto;
+
+}
+
+
+
+/* На очень маленьких экранах оставляем комфортные поля */
+
+@media (max-width: 480px) {
+
+  .card--auth { max-width: 92vw !important; }
+
+}
+
