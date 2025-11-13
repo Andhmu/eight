@@ -1,4 +1,6 @@
-/* шапка */
+/* assets/styles/layout.css */
+
+
 
 .header{
 
@@ -20,13 +22,47 @@
 
 
 
-.brand{ font-weight:700; font-size:20px; text-decoration:none; color:var(--color-primary); }
+.brand{
 
-.nav{ display:flex; gap:16px; }
+  font-weight:700;
 
-.link{ color:var(--color-muted); text-decoration:none; transition:color .2s; }
+  font-size:20px;
 
-.link:hover{ color:var(--color-primary); }
+  text-decoration:none;
+
+  color:var(--color-primary);
+
+}
+
+
+
+.nav{
+
+  display:flex;
+
+  gap:16px;
+
+}
+
+
+
+.link{
+
+  color:var(--color-muted);
+
+  text-decoration:none;
+
+  transition:color .2s;
+
+}
+
+
+
+.link:hover{
+
+  color:var(--color-primary);
+
+}
 
 
 
@@ -38,13 +74,19 @@
 
   display:grid;
 
-  align-content:center;
+  /* РАНЬШЕ было align-content:center → всё прыгало при изменении высоты */
+
+  align-content:start;              /* якорим контент к верху страницы */
 
   justify-items:center;
 
   gap:20px;
 
-  padding:var(--page-pad); /* создаёт симметричные боковые поля */
+  padding:var(--page-pad);
+
+  /* красивый отступ сверху, чтобы форма не прилипала к шапке */
+
+  padding-top:clamp(40px, 15vh, 80px);
 
 }
 
@@ -70,7 +112,7 @@
 
 .card{
 
-  width:min(440px, 100%);   /* ← ключевая правка: 100% вместо 92vw */
+  width:min(520px, 100%);   /* форма шире, чем раньше (было 440px) */
 
   background:#fff;
 
@@ -88,4 +130,12 @@
 
 /* крупный логотип */
 
-.brand-big{ font-size:48px; font-weight:700; opacity:.9; }
+.brand-big{
+
+  font-size:48px;
+
+  font-weight:700;
+
+  opacity:.9;
+
+}

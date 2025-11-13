@@ -1,3 +1,0 @@
-https://jagnezkthdwwbbwapjsx.supabase.co/auth/v1/verify
-?token=pkce_bc63c8fb79088e913c3dee68ba330e25aa78e4802878add9a0899fda
-&type=recovery&redirect_to=http://localhost:3000/reset

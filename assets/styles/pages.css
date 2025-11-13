@@ -1,5 +1,43 @@
-/* мелкие страницы/утилити */
+/* assets/styles/pages.css */
 
-.cta{ display:flex; gap:12px; flex-wrap:wrap; justify-content:center; }
 
-.profile-info{ display:grid; gap:12px; text-align:center; }
+
+/* Лёгкий layout для auth-страниц (index, login, forgot) */
+
+.auth-page {
+
+  width: 100%;
+
+  display: flex;
+
+  flex-direction: column;
+
+  align-items: center;
+
+}
+
+
+
+/* контейнер логотипа на auth-страницах */
+
+.auth-page__logo {
+
+  margin-bottom: 24px;
+
+  text-align: center;
+
+}
+
+
+
+/* немного уменьшаем логотип на очень маленьких экранах */
+
+@media (max-width: 480px) {
+
+  .brand-big {
+
+    font-size: 36px;
+
+  }
+
+}

@@ -2,28 +2,75 @@
 
 <template>
 
-  <header class="header">
+  <div>
 
-    <NuxtLink class="brand" to="/">eight ∞</NuxtLink>
+    <header class="header">
 
-
-
-    <nav class="nav">
-
-      <NuxtLink class="link" to="/login">Вход</NuxtLink>
-
-      <NuxtLink class="link" to="/register">Регистрация</NuxtLink>
-
-    </nav>
-
-  </header>
+      <NuxtLink :to="homePath" class="brand">eight ∞</NuxtLink>
 
 
 
-  <main class="page">
+      <nav class="nav">
 
-    <slot />
+        <template v-if="user">
 
-  </main>
+          <NuxtLink to="/feed" class="link">Лента</NuxtLink>
+
+          <NuxtLink to="/profile" class="link">Профиль</NuxtLink>
+
+          <button class="btn btn--light" @click="doSignOut">Выйти</button>
+
+        </template>
+
+        <template v-else>
+
+          <NuxtLink to="/login" class="link">Вход</NuxtLink>
+
+          <NuxtLink to="/register" class="link">Регистрация</NuxtLink>
+
+        </template>
+
+      </nav>
+
+    </header>
+
+
+
+    <main class="page">
+
+      <slot />
+
+    </main>
+
+  </div>
 
 </template>
+
+
+
+<script setup lang="ts">
+
+const user = useSupabaseUser()
+
+const router = useRouter()
+
+const { signOut } = useAuth()
+
+
+
+const homePath = computed(() => (user.value ? '/feed' : '/'))
+
+
+
+async function doSignOut() {
+
+  const ok = await signOut()
+
+  if (ok) router.push('/login')
+
+}
+
+</script>
+
+
+

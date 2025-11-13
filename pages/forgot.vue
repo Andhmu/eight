@@ -1,32 +1,12 @@
+<!-- pages/forgot.vue -->
+
+
+
 <template>
 
-  <div class="stack page-forgot">
+  <div class="auth-page">
 
-    <div class="card">
-
-      <!-- 🔔 Тост над формой -->
-
-      <transition name="slide-fade">
-
-        <div v-if="notice" class="toast">
-
-          <div class="toast__content">
-
-            <b>Проверьте почту</b><br />
-
-            Мы отправили ссылку для смены пароля.
-
-          </div>
-
-          <div class="toast__progress">
-
-            <i :style="{ width: progress + '%' }"></i>
-
-          </div>
-
-        </div>
-
-      </transition>
+    <div class="auth-page__card card">
 
 
 
@@ -34,15 +14,39 @@
 
 
 
-      <form class="form" @submit.prevent="sendResetLink">
+      <form class="form" novalidate @submit.prevent="sendReset">
+
+
 
         <div class="field">
 
           <label>Email</label>
 
-          <input v-model="email" type="email" class="input" required />
+          <input v-model="email" type="email" class="input" />
 
         </div>
+
+
+
+        <!-- Тост под полем -->
+
+        <transition name="slide-fade">
+
+          <div v-if="notice" class="toast toast--inline">
+
+            <div class="toast__content">
+
+              <b>{{ toastTitle }}</b><br />
+
+              {{ toastMessage }}
+
+            </div>
+
+            <div class="toast__progress" :style="{ width: progress + '%' }"></div>
+
+          </div>
+
+        </transition>
 
 
 
@@ -58,9 +62,9 @@
 
 
 
-        <p v-if="error" class="error">{{ error }}</p>
-
       </form>
+
+
 
     </div>
 
@@ -70,25 +74,31 @@
 
 
 
+
+
 <script setup lang="ts">
 
-import { ref } from 'vue'
+import { ref, onBeforeUnmount } from 'vue'
+
+import { useAuth } from '~/composables/UseAuth'
 
 
 
-const client = useSupabaseClient()
+const { reset, loading } = useAuth()
 
 
 
 const email = ref('')
 
-const loading = ref(false)
-
-const error = ref<string | null>(null)
 
 
+/* тоcт */
 
 const notice = ref(false)
+
+const toastTitle = ref('Проверьте почту')
+
+const toastMessage = ref('Если такой аккаунт существует — мы отправили ссылку для смены пароля.')
 
 const progress = ref(0)
 
@@ -96,21 +106,11 @@ let timer: number | null = null
 
 
 
-function startToastAndRedirect() {
+function showToast(ms = 5000) {
 
   notice.value = true
 
   progress.value = 0
-
-
-
-  const duration = 5000
-
-  const steps = 50
-
-  const interval = duration / steps
-
-  let tick = 0
 
 
 
@@ -122,55 +122,51 @@ function startToastAndRedirect() {
 
   }
 
+
+
+  const started = Date.now()
+
   timer = window.setInterval(() => {
 
-    tick++
+    const p = Math.min(100, ((Date.now() - started) / ms) * 100)
 
-    progress.value = Math.min(100, (tick / steps) * 100)
+    progress.value = p
 
-    if (tick >= steps) {
+
+
+    if (p >= 100) {
+
+      notice.value = false
 
       clearInterval(timer!)
 
       timer = null
 
-      navigateTo('/')
-
     }
 
-  }, interval)
+  }, 40)
 
 }
 
 
 
-async function sendResetLink() {
+function isEmail(v: string) {
 
-  loading.value = true
+  return /.+@.+\..+/.test(v)
 
-  error.value = null
-
-
-
-  const { public: { SITE_URL } } = useRuntimeConfig()
-
-  const base = (process.client ? window.location.origin : SITE_URL) || SITE_URL
-
-  const redirectTo = `${(base as string).replace(/\/$/, '')}/reset`
+}
 
 
 
-  const { error: e } = await client.auth.resetPasswordForEmail(email.value, { redirectTo })
+async function sendReset() {
 
+  if (!email.value) {
 
+    toastTitle.value = 'Ошибка'
 
-  loading.value = false
+    toastMessage.value = 'Введите email'
 
-
-
-  if (e) {
-
-    error.value = e.message
+    showToast()
 
     return
 
@@ -178,8 +174,39 @@ async function sendResetLink() {
 
 
 
-  startToastAndRedirect()
+  if (!isEmail(email.value)) {
+
+    toastTitle.value = 'Ошибка'
+
+    toastMessage.value = 'Введите корректный email'
+
+    showToast()
+
+    return
+
+  }
+
+
+
+  await reset(email.value)
+
+
+
+  toastTitle.value = 'Проверьте почту'
+
+  toastMessage.value = 'Если такой аккаунт существует — мы отправили ссылку для смены пароля.'
+
+  showToast()
 
 }
 
+
+
+onBeforeUnmount(() => {
+
+  if (timer) clearInterval(timer)
+
+})
+
 </script>
+

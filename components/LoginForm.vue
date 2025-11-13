@@ -8,7 +8,9 @@
 
 
 
-    <form class="form" @submit.prevent="onSubmit">
+    <!-- своя валидация, без нативных подсказок -->
+
+    <form class="form" novalidate @submit.prevent="onSubmit">
 
       <div class="field">
 
@@ -22,15 +24,11 @@
 
           class="input"
 
-          required
+          autocomplete="email"
 
           inputmode="email"
 
-          autocomplete="email"
-
-          enterkeyhint="next"
-
-          @keyup.enter="focusPassword"
+          :aria-invalid="Boolean(toastMessage)"
 
         />
 
@@ -38,13 +36,11 @@
 
 
 
-      <div class="field">
+      <div class="field" v-if="showPassword">
 
         <label>Пароль</label>
 
         <input
-
-          ref="passwordEl"
 
           v-model="password"
 
@@ -52,13 +48,9 @@
 
           class="input"
 
-          required
-
           autocomplete="current-password"
 
-          enterkeyhint="done"
-
-          @keyup.enter="onSubmit"
+          :aria-invalid="Boolean(toastMessage)"
 
         />
 
@@ -66,31 +58,47 @@
 
 
 
-      <!-- Скрытый сабмиттер на случай странного поведения браузера -->
+      <!-- инлайновый тост под полями -->
 
-      <button type="submit" style="display:none" aria-hidden="true" />
+      <transition name="slide-fade">
+
+        <div v-if="toastMessage" class="toast toast--inline" style="margin-top:8px">
+
+          <div class="toast__content">
+
+            <b v-if="toastTitle">{{ toastTitle }}</b><template v-if="toastTitle"><br /></template>
+
+            {{ toastMessage }}
+
+          </div>
+
+          <div class="toast__progress" :style="{ width: toastProgress + '%' }"></div>
+
+        </div>
+
+      </transition>
 
 
 
-      <div class="actions">
+      <div class="actions" style="justify-content:flex-end">
 
-        <NuxtLink class="link" to="/forgot" style="margin-right:auto">
+        <NuxtLink v-if="showForgot" class="link" to="/forgot">Забыли пароль?</NuxtLink>
 
-          Забыли пароль?
-
-        </NuxtLink>
-
-
-
-        <button class="btn btn--primary" type="submit">
-
-          {{ submitText }}
-
-        </button>
+        <button class="btn btn--primary" type="submit">{{ submitText }}</button>
 
       </div>
 
     </form>
+
+
+
+    <div v-if="showSignup" class="below">
+
+      Нет аккаунта?
+
+      <NuxtLink class="link" to="/register">Зарегистрироваться</NuxtLink>
+
+    </div>
 
   </div>
 
@@ -100,17 +108,47 @@
 
 <script setup lang="ts">
 
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 
 
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
 
   title: string
 
   submitText: string
 
-}>()
+  showForgot?: boolean
+
+  showSignup?: boolean
+
+  showPassword?: boolean
+
+
+
+  /** внешний тост от родителя (ошибка сервера) */
+
+  extMessage?: string | null
+
+  extTitle?: string | null
+
+  extTrigger?: number | null
+
+}>(), {
+
+  showForgot: true,
+
+  showSignup: true,
+
+  showPassword: true,
+
+  extMessage: null,
+
+  extTitle: null,
+
+  extTrigger: null
+
+})
 
 
 
@@ -126,22 +164,116 @@ const email = ref('')
 
 const password = ref('')
 
-const passwordEl = ref<HTMLInputElement | null>(null)
+
+
+/* локальный тост */
+
+const toastMessage = ref('')
+
+const toastTitle = ref('')
+
+const toastProgress = ref(0)
+
+let timer: number | null = null
 
 
 
-function focusPassword() {
+function startProgress(ms = 3000) {
 
-  passwordEl.value?.focus()
+  toastProgress.value = 0
+
+  if (timer) { clearInterval(timer); timer = null }
+
+  const start = Date.now()
+
+  timer = window.setInterval(() => {
+
+    const p = Math.min(100, ((Date.now() - start) / ms) * 100)
+
+    toastProgress.value = p
+
+    if (p >= 100) { hideToast() }
+
+  }, 40)
+
+}
+
+function showToast(message: string, title = 'Ошибка', ms = 3000) {
+
+  toastTitle.value = title
+
+  toastMessage.value = message
+
+  startProgress(ms)
+
+}
+
+function hideToast() {
+
+  toastMessage.value = ''
+
+  toastTitle.value = ''
+
+  toastProgress.value = 100
+
+  if (timer) { clearInterval(timer); timer = null }
 
 }
 
 
+
+function isEmail(v: string) {
+
+  return /.+@.+\..+/.test(v)
+
+}
+
+
+
+/** сабмит с валидацией: тост для неверного email/пустого пароля */
 
 function onSubmit() {
 
-  emit('submit', { email: email.value, password: password.value })
+  const e = email.value.trim()
+
+  const p = password.value
+
+
+
+  if (!e || !isEmail(e)) {
+
+    showToast('Введите корректный email')
+
+    return
+
+  }
+
+  if (props.showPassword && !p) {
+
+    showToast('Введите пароль')
+
+    return
+
+  }
+
+
+
+  emit('submit', { email: e, password: p })
 
 }
+
+
+
+/* ловим внешнюю серверную ошибку (неверная пара email/пароль) */
+
+watch(() => props.extTrigger, () => {
+
+  if (props.extMessage) {
+
+    showToast(props.extMessage, props.extTitle || 'Не удалось войти', 5000)
+
+  }
+
+})
 
 </script>
