@@ -8,33 +8,21 @@
 
       <NuxtLink :to="homePath" class="brand">eight ∞</NuxtLink>
 
+<nav class="nav">
 
+  <template v-if="user">
 
-      <nav class="nav">
+    <NuxtLink to="/feed" class="link">Лента</NuxtLink>
 
-        <template v-if="user">
+    <NuxtLink to="/profile" class="link">Профиль</NuxtLink>
 
-          <NuxtLink to="/feed" class="link">Лента</NuxtLink>
+    <button class="btn btn--light" @click="doSignOut">Выйти</button>
 
-          <NuxtLink to="/profile" class="link">Профиль</NuxtLink>
+  </template>
 
-          <button class="btn btn--light" @click="doSignOut">Выйти</button>
-
-        </template>
-
-        <template v-else>
-
-          <NuxtLink to="/login" class="link">Вход</NuxtLink>
-
-          <NuxtLink to="/register" class="link">Регистрация</NuxtLink>
-
-        </template>
-
-      </nav>
+</nav>
 
     </header>
-
-
 
     <main class="page">
 
@@ -49,6 +37,12 @@
 
 
 <script setup lang="ts">
+
+import { computed } from 'vue'
+
+import { useAuth } from '~/composables/auth/useAuth'
+
+
 
 const user = useSupabaseUser()
 
@@ -66,11 +60,8 @@ async function doSignOut() {
 
   const ok = await signOut()
 
-  if (ok) router.push('/login')
+  if (ok) router.push('/auth/login')
 
 }
 
 </script>
-
-
-

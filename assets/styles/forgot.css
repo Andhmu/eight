@@ -1,56 +1,25 @@
 /* Стили, касающиеся только страницы восстановления пароля */
-
 /* Привязаны к .page-forgot, чтобы не затронуть другие экраны */
-
-
-
 .page-forgot h2{
-
   margin: 0 0 12px;
-
   font-size: 22px;
-
   font-weight: 600;
-
   color: #0f172a;
-
 }
-
-
-
 .page-forgot .error{
-
   color: #b91c1c;
-
   font-size: 14px;
-
   margin-top: 8px;
-
 }
-
-
-
 /* Локальные кнопки можно чуть поджать, чтобы визуально совпадали со всей auth-линейкой */
-
 .page-forgot .btn{
-
   border: none;
-
   border-radius: 10px;
-
   padding: 10px 16px;
-
   font-weight: 600;
-
 }
-
-
-
 .page-forgot .btn--primary{
-
   background: #0f172a;
-
   color: #fff;
-
 }
 

@@ -1,4 +1,4 @@
-<!-- pages/login.vue -->
+<!-- pages/auth/login.vue -->
 
 <template></template>
 

@@ -1,43 +1,19 @@
 /* assets/styles/pages.css */
-
-
-
 /* Лёгкий layout для auth-страниц (index, login, forgot) */
-
 .auth-page {
-
   width: 100%;
-
   display: flex;
-
   flex-direction: column;
-
   align-items: center;
-
 }
-
-
-
 /* контейнер логотипа на auth-страницах */
-
 .auth-page__logo {
-
   margin-bottom: 24px;
-
   text-align: center;
-
 }
-
-
-
 /* немного уменьшаем логотип на очень маленьких экранах */
-
 @media (max-width: 480px) {
-
   .brand-big {
-
     font-size: 36px;
-
   }
-
 }

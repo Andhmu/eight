@@ -1,55 +1,25 @@
 /* assets/styles/forms.css */
-
 .form{ display:grid; gap:14px; }
-
 .field{ display:grid; gap:6px; }
-
 label{ font-size:14px; color:var(--color-muted); }
-
-
-
 .input{
-
   padding:10px 12px;
-
   border:1px solid #d8dde6;
-
   border-radius:var(--radius);
-
   outline:none;
-
   background:#fff;
-
   transition:border-color .2s ease;
-
   width:100%;
-
 }
-
 .input:focus{ border-color:var(--color-accent); }
-
-
-
 .actions{
-
   display:flex;
-
   gap:12px;
-
   justify-content:flex-end;
-
   align-items:center;
-
   flex-wrap:wrap;
-
 }
-
-
-
 /* Чтоб кнопка не “прилипала” к правому краю на очень узких телефонах */
-
 @media (max-width: 420px){
-
   .actions{ justify-content:center; }
-
 }

@@ -1,0 +1,8 @@
+@import './base.css';
+@import './layout.css';
+@import './forms.css';
+@import './buttons.css';
+@import './typography.css';
+@import './pages.css';
+@import './toast.css';
+@import './forgot.css';  /* ← добавили стили страницы forgot */

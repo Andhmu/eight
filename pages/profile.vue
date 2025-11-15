@@ -8,13 +8,9 @@
 
       <h2>Профиль</h2>
 
-
-
       <p><b>Email:</b> {{ user?.email }}</p>
 
       <p><b>ID:</b> {{ user?.id }}</p>
-
-      <!-- Кнопки «На главную» и «Выйти» убраны по ТЗ -->
 
     </div>
 
@@ -25,6 +21,8 @@
 
 
 <script setup lang="ts">
+
+definePageMeta({ middleware: ['auth-only'] })
 
 const user = useSupabaseUser()
 

@@ -7,4 +7,3 @@ export default defineNuxtRouteMiddleware(() => {
   if (!user.value) return navigateTo('/')
 
 })
-

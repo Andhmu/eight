@@ -4,10 +4,6 @@ export default defineNuxtRouteMiddleware(() => {
 
   const user = useSupabaseUser()
 
-  if (user.value) {
-
-    return navigateTo('/feed')
-
-  }
+  if (user.value) return navigateTo('/feed')
 
 })

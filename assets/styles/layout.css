@@ -1,141 +1,54 @@
 /* assets/styles/layout.css */
-
-
-
 .header{
-
   height:var(--header-h);
-
   display:flex;
-
   align-items:center;
-
   justify-content:space-between;
-
   padding:0 16px;
-
   background:#fff;
-
   box-shadow:0 1px 3px rgba(0,0,0,.05);
-
 }
-
-
-
 .brand{
-
   font-weight:700;
-
   font-size:20px;
-
   text-decoration:none;
-
   color:var(--color-primary);
-
 }
-
-
-
 .nav{
-
   display:flex;
-
   gap:16px;
-
 }
-
-
-
 .link{
-
   color:var(--color-muted);
-
   text-decoration:none;
-
   transition:color .2s;
-
 }
-
-
-
 .link:hover{
-
   color:var(--color-primary);
-
 }
-
-
-
 /* основной контейнер страницы */
-
 .page{
-
   min-height:calc(100dvh - var(--header-h));
-
   display:grid;
-
   /* РАНЬШЕ было align-content:center → всё прыгало при изменении высоты */
-
   align-content:start;              /* якорим контент к верху страницы */
-
   justify-items:center;
-
   gap:20px;
-
   padding:var(--page-pad);
-
   /* красивый отступ сверху, чтобы форма не прилипала к шапке */
-
   padding-top:clamp(40px, 15vh, 80px);
-
 }
-
-
-
-/* обёртка */
-
-.stack{
-
-  width:100%;
-
-  display:grid;
-
-  justify-items:center;
-
-  gap:20px;
-
-}
-
-
 
 /* карточка: ширина ограничена контейнером страницы */
-
 .card{
-
-  width:min(520px, 100%);   /* форма шире, чем раньше (было 440px) */
-
-  background:#fff;
-
-  border-radius:var(--radius);
-
-  box-shadow:0 6px 24px rgba(0,0,0,.06);
+  width:min(440px, 100%);   /* форма шире, чем раньше (было 440px) */
 
   padding:24px;
-
   position:relative;
-
 }
-
-
-
 /* крупный логотип */
-
 .brand-big{
-
   font-size:48px;
-
   font-weight:700;
-
   opacity:.9;
-
 }

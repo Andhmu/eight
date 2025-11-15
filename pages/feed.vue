@@ -20,10 +20,6 @@
 
 <script setup lang="ts">
 
-definePageMeta({
-
-  middleware: ['auth-only'], // ⬅ только для авторизованных
-
-})
+definePageMeta({ middleware: ['auth-only'] })
 
 </script>

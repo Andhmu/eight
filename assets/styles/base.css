@@ -1,67 +1,28 @@
 /* assets/styles/base.css */
-
 :root{
-
   --color-primary:#0f172a;
-
   --color-accent:#3b82f6;
-
   --color-text:#1e293b;
-
   --color-muted:#64748b;
-
   --color-bg:#f8fafc;
-
-
-
   --radius:10px;
-
-
-
   /* размеры макета */
-
   --header-h:64px;
-
   --page-pad:24px;
-
 }
-
-
-
 *{ box-sizing:border-box; }
-
-
-
 html, body{
-
   height:100%;
-
 }
-
-
-
 body{
-
   font-family:'Inter', system-ui, sans-serif;
-
   font-size:16px;
-
   color:var(--color-text);
-
   background:var(--color-bg);
-
   margin:0;
-
   overflow-y:auto;
-
   overflow-x:hidden; /* чтобы точно не было горизонтального скролла */
-
 }
-
-
-
 /* служебное */
-
 .error{ color:#b91c1c; }
-
 .center{ display:grid; place-items:center; }

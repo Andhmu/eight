@@ -4,11 +4,7 @@ export default defineNuxtConfig({
 
   modules: ['@nuxtjs/supabase'],
 
-  css: ['~/assets/main.css'],
-
-
-
-  // публичные переменные (чтобы были доступны и на клиенте)
+  css: ['~/assets/styles/main.css'],
 
   runtimeConfig: {
 
@@ -18,16 +14,13 @@ export default defineNuxtConfig({
 
       SUPABASE_KEY: process.env.SUPABASE_KEY,
 
-      // очень важно: базовый адрес сайта (локально и на проде)
-
       SITE_URL: process.env.SITE_URL || 'http://localhost:3000',
-      PASSWORD_RESET_MODE: process.env.PASSWORD_RESET_MODE || 'hash'
+
+      PASSWORD_RESET_MODE: process.env.PASSWORD_RESET_MODE || 'hash',
 
     },
 
   },
-
-
 
   app: {
 
@@ -56,10 +49,6 @@ export default defineNuxtConfig({
     },
 
   },
-
-
-
-  // отключаем авто-редиректы модуля, всё обрабатываем сами
 
   supabase: {
 
