@@ -5,4 +5,5 @@
 @import './typography.css';
 @import './pages.css';
 @import './toast.css';
-@import './forgot.css';  /* ← добавили стили страницы forgot */
+@import './forgot.css';
+@import './coins.css';  

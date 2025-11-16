@@ -50,10 +50,14 @@ export default defineNuxtConfig({
 
   },
 
-  supabase: {
-
-    redirect: false,
-
+supabase: {
+  redirect: false,
+  clientOptions: {
+    auth: {
+      persistSession: true,
+      detectSessionInUrl: true,
+    },
   },
+},
 
 })
