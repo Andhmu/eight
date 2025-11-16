@@ -1,23 +1,26 @@
 <!-- pages/auth/register.vue -->
 <template>
-  <div class="card">
-    <LoginForm
-      title="Регистрация"
-      submitText="Зарегистрироваться"
-      :loading="loading"
-      :showForgot="false"
-      :showSignup="false"
-      :showPassword="true"
-      @submit="register"
-      :extMessage="extMessage"
-      :extTitle="extTitle"
-      :extTrigger="extTrigger"
-    />
-  </div>
+  <AuthLayout>
+    <div class="card">
+      <LoginForm
+        title="Регистрация"
+        submitText="Зарегистрироваться"
+        :loading="loading"
+        :showForgot="false"
+        :showSignup="false"
+        :showPassword="true"
+        @submit="register"
+        :extMessage="extMessage"
+        :extTitle="extTitle"
+        :extTrigger="extTrigger"
+      />
+    </div>
+  </AuthLayout>
 </template>
 
 <script setup lang="ts">
 import { ref, watchEffect } from 'vue'
+import AuthLayout from '~/components/auth/AuthLayout.vue'
 import LoginForm from '~/components/auth/LoginForm.vue'
 import { useAuth } from '~/composables/auth/useAuth'
 

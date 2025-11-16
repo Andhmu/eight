@@ -1,10 +1,6 @@
 <!-- pages/index.vue -->
 <template>
-  <div class="auth-page" @mousemove="handleMove">
-    <div class="auth-page__logo brand-big" :style="logoStyle">
-      eight ∞
-    </div>
-
+  <AuthLayout>
     <div class="card">
       <LoginForm
         title="Вход"
@@ -19,11 +15,12 @@
         :extTrigger="extTrigger"
       />
     </div>
-  </div>
+  </AuthLayout>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watchEffect } from 'vue'
+import { ref, watchEffect } from 'vue'
+import AuthLayout from '~/components/auth/AuthLayout.vue'
 import LoginForm from '~/components/auth/LoginForm.vue'
 import { useAuth } from '~/composables/auth/useAuth'
 
@@ -35,21 +32,6 @@ const user = useSupabaseUser()
 watchEffect(() => {
   if (user.value) navigateTo('/feed')
 })
-
-const x = ref(0)
-const y = ref(0)
-
-function handleMove(e: MouseEvent) {
-  const cx = window.innerWidth / 2
-  const cy = window.innerHeight / 2
-  const k = window.innerWidth < 768 ? 0.015 : 0.02
-  x.value = (e.clientX - cx) * k
-  y.value = (e.clientY - cy) * k
-}
-
-const logoStyle = computed(() => ({
-  transform: `translate(${x.value}px, ${y.value}px)`,
-}))
 
 const extMessage = ref<string | null>(null)
 const extTitle = ref<string | null>(null)

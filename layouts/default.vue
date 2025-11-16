@@ -1,25 +1,22 @@
 <!-- layouts/default.vue -->
 <template>
   <div>
-    <header class="header">
-      <div class="header_left">
-        <NuxtLink :to="homePath" class="brand">
-          eight ∞
-        </NuxtLink>
+    <!-- Шапка показывается только в авторизованном состоянии -->
+    <AppHeader
+      v-if="user"
+      @open-profile-menu="openProfileMenu"
+    />
 
-        <!-- Блок с коинами (сам скрывается, если юзера нет) -->
-        <CoinsPill />
-      </div>
+    <!-- Правое выезжающее меню профиля -->
+    <ProfileMenu
+      v-if="user && isProfileMenuOpen"
+      @close="closeProfileMenu"
+      @go-cover="goToCover"
+      @go-settings="goToProfileSettings"
+      @logout="handleLogout"
+    />
 
-      <nav v-if="user" class="nav">
-        <NuxtLink to="/feed" class="link">Лента</NuxtLink>
-        <NuxtLink to="/profile" class="link">Профиль</NuxtLink>
-        <button class="btn btn-light" type="button" @click="doSignOut">
-          Выйти
-        </button>
-      </nav>
-    </header>
-
+    <!-- Основной контент -->
     <main class="page">
       <slot />
     </main>
@@ -27,34 +24,35 @@
 </template>
 
 <script setup lang="ts">
-import { computed, watch, watchEffect } from 'vue'
-import CoinsPill from '~/components/coins/CoinsPill.vue'
+/* ===============================
+   ИМПОРТЫ
+   =============================== */
+import { computed, ref, watch } from 'vue'
+import AppHeader from '~/components/layout/AppHeader.vue'
+import ProfileMenu from '~/components/layout/ProfileMenu.vue'
 import { useAuth } from '~/composables/auth/useAuth'
 import { useCoins } from '~/composables/coins/useCoins'
 
+/* ===============================
+   СОСТОЯНИЕ
+   =============================== */
 const user = useSupabaseUser()
 const router = useRouter()
 const { signOut } = useAuth()
 const coinsService = useCoins()
 
-const homePath = computed(() => (user.value ? '/feed' : '/'))
+const isProfileMenuOpen = ref(false)
 
-// Просто смотрим, что реально лежит в user
-watchEffect(() => {
-  console.log('[layout] user =', user.value)
-})
-
-// Привязываем сервис коинов к авторизации,
-// но берем userId не только из id, но и из sub
+/* ===============================
+   ПРИВЯЗКА КОИНОВ К АВТОРИЗАЦИИ
+   =============================== */
 watch(
   user,
   async (u) => {
     if (!process.client) return
 
     const raw = u as any
-    const userId = raw?.id ?? raw?.sub // ← ВАЖНО: берём sub, если id нет
-
-    console.log('[layout] computed userId =', userId)
+    const userId = raw?.id ?? raw?.sub // берём id или sub
 
     if (userId) {
       await coinsService.initForUser(userId)
@@ -65,9 +63,31 @@ watch(
   { immediate: true },
 )
 
-async function doSignOut() {
+/* ===============================
+   МЕТОДЫ ДЛЯ МЕНЮ ПРОФИЛЯ
+   =============================== */
+function openProfileMenu() {
+  isProfileMenuOpen.value = true
+}
+
+function closeProfileMenu() {
+  isProfileMenuOpen.value = false
+}
+
+async function goToCover() {
+  closeProfileMenu()
+  await router.push('/profile') // позже можно сделать отдельный маршрут
+}
+
+async function goToProfileSettings() {
+  closeProfileMenu()
+  await router.push('/profile') // тоже можно развести по роутам потом
+}
+
+async function handleLogout() {
   await coinsService.saveCoins()
   const ok = await signOut()
+  closeProfileMenu()
   if (ok) {
     router.push('/')
   }

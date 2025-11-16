@@ -1,7 +1,6 @@
 <!-- pages/auth/forgot.vue -->
-
 <template>
-  <div class="auth-page">
+  <AuthLayout>
     <div class="auth-page__card card">
       <h2>Восстановление пароля</h2>
 
@@ -28,11 +27,12 @@
         </div>
       </form>
     </div>
-  </div>
+  </AuthLayout>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import AuthLayout from '~/components/auth/AuthLayout.vue'
 import { useAuth } from '~/composables/auth/useAuth'
 import { useInlineToast } from '~/composables/ui/useInlineToast'
 
