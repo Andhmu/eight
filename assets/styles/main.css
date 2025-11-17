@@ -1,9 +1,18 @@
+/* assets/styles/main.css */
+
 @import './base.css';
 @import './layout.css';
+@import './header.css';
+
 @import './forms.css';
 @import './buttons.css';
 @import './typography.css';
+
 @import './pages.css';
 @import './toast.css';
 @import './forgot.css';
-@import './coins.css';  
+@import './feed.css';
+@import './coins.css';
+
+
+@import './profile.css';

@@ -24,18 +24,12 @@
 </template>
 
 <script setup lang="ts">
-/* ===============================
-   ИМПОРТЫ
-   =============================== */
-import { computed, ref, watch } from 'vue'
+import { ref, watch } from 'vue'
 import AppHeader from '~/components/layout/AppHeader.vue'
 import ProfileMenu from '~/components/layout/ProfileMenu.vue'
 import { useAuth } from '~/composables/auth/useAuth'
 import { useCoins } from '~/composables/coins/useCoins'
 
-/* ===============================
-   СОСТОЯНИЕ
-   =============================== */
 const user = useSupabaseUser()
 const router = useRouter()
 const { signOut } = useAuth()
@@ -43,16 +37,16 @@ const coinsService = useCoins()
 
 const isProfileMenuOpen = ref(false)
 
-/* ===============================
-   ПРИВЯЗКА КОИНОВ К АВТОРИЗАЦИИ
-   =============================== */
+/**
+ * Привязка сервиса коинов к авторизации
+ */
 watch(
   user,
   async (u) => {
     if (!process.client) return
 
     const raw = u as any
-    const userId = raw?.id ?? raw?.sub // берём id или sub
+    const userId = raw?.id ?? raw?.sub // берём id или sub от Supabase
 
     if (userId) {
       await coinsService.initForUser(userId)
@@ -63,9 +57,9 @@ watch(
   { immediate: true },
 )
 
-/* ===============================
-   МЕТОДЫ ДЛЯ МЕНЮ ПРОФИЛЯ
-   =============================== */
+/**
+ * Открытие / закрытие меню профиля
+ */
 function openProfileMenu() {
   isProfileMenuOpen.value = true
 }
@@ -74,16 +68,25 @@ function closeProfileMenu() {
   isProfileMenuOpen.value = false
 }
 
+/**
+ * Переход к "Моя обложка"
+ */
 async function goToCover() {
   closeProfileMenu()
   await router.push('/profile') // позже можно сделать отдельный маршрут
 }
 
+/**
+ * Переход к "Настройки профиля"
+ */
 async function goToProfileSettings() {
   closeProfileMenu()
-  await router.push('/profile') // тоже можно развести по роутам потом
+  await router.push('/profile') // позже разделим на отдельный экран настроек
 }
 
+/**
+ * Выход из аккаунта
+ */
 async function handleLogout() {
   await coinsService.saveCoins()
   const ok = await signOut()

@@ -1,0 +1,86 @@
+/* assets/styles/profile.css */
+
+/* Контейнер гостевого профиля */
+.profile-page {
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Карточка профиля */
+.profile-card {
+  background: #ffffff;
+  border-radius: var(--radius);
+  padding: 20px 18px;
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.08);
+}
+
+/* Шапка карточки */
+.profile-card__header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 10px;
+}
+
+/* Аватар */
+.profile-card__avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 999px;
+  background: radial-gradient(circle at 30% 0%, #e0f2fe, #c4b5fd);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.profile-card__avatar-fallback {
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+/* Текст в шапке */
+.profile-card__header-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.profile-card__badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 500;
+  background: rgba(148, 163, 184, 0.18);
+  color: #475569;
+}
+
+.profile-card__name {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.profile-card__meta {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--color-muted);
+}
+
+/* Тело карточки */
+.profile-card__body {
+  margin-top: 8px;
+}
+
+.profile-card__placeholder {
+  font-size: 0.9rem;
+  color: var(--color-text);
+  line-height: 1.5;
+}

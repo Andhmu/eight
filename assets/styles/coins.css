@@ -22,7 +22,8 @@
 
   font-size: 0.875rem;
   font-weight: 600;
-  /* цвет текста больше не задаём жёстко */
+
+  /* цвет текста берём общий */
   /* color: inherit; */
 
   display: flex;

@@ -1,0 +1,241 @@
+/* assets/styles/header.css */
+
+/* ==========================================
+   НОВАЯ ШАПКА ПРИЛОЖЕНИЯ (site-header)
+   ========================================== */
+
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+
+  display: flex;
+  flex-direction: column;
+
+  background: transparent;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* Верхняя полоса: счётчик слева, логотип ∞ справа */
+.header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 0 16px;
+}
+
+/* Логотип ∞ именно в шапке */
+.site-header .brand {
+  font-size: 3.6rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+  color: #0f172a;
+}
+
+/* Нижняя полоса шапки (меню) */
+.header-bottom {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  position: relative; /* нужно для псевдо-элемента */
+  padding: 6px 16px 8px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+
+/* сама линия */
+.header-bottom::after {
+  content: "";
+  position: absolute;
+  bottom: -1px;       /* линия прямо под нижней шапкой */
+  left: 0;
+  width: 100%;
+  height: 1px;
+
+  background: linear-gradient(
+    to left,
+    rgba(15, 23, 42, 0.18) 0%,    /* справа — тёмная точка */
+    rgba(15, 23, 42, 0.10) 35%,   /* дальше слабее */
+    rgba(15, 23, 42, 0.04) 65%,   /* почти незаметно */
+    rgba(15, 23, 42, 0.00) 100%   /* слева полностью исчезает */
+  );
+}
+
+/* Навигация в нижней шапке */
+.header-bottom .nav {
+  display: flex;
+  align-items: center;
+  gap: 0; /* разделители делаем бордерами */
+}
+
+/* Кнопки меню: без фона, без скруглений, вертикальные разделители */
+.nav-link {
+  padding: 4px 10px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  text-decoration: none;
+  color: #0f172a;
+  background: transparent;
+  border: none;
+  border-left: 1px solid rgba(148, 163, 184, 0.6);
+}
+
+/* первая кнопка без левой линии */
+.nav-link:first-child {
+  border-left: none;
+}
+
+/* отдельный класс для кнопки-профиля (button) */
+.nav-link-button {
+  cursor: pointer;
+}
+
+/* активный маршрут для NuxtLink */
+.nav-link.router-link-active {
+  color: #2563eb;
+  font-weight: 600;
+}
+
+/* лёгкий ховер */
+.nav-link:hover {
+  color: #1d4ed8;
+}
+
+/* ==========================================
+   ПРАВОЕ ВЫЕЗЖАЮЩЕЕ МЕНЮ ПРОФИЛЯ
+   ========================================== */
+
+.profile-menu-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+
+  display: flex;
+  justify-content: flex-end;
+
+  background: rgb(47 84 137 / 44%);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+}
+
+/* Сам слайдер справа */
+.profile-menu {
+  width: 260px;
+  max-width: 80%;
+  height: 100%;
+  padding: 16px 16px 24px;
+
+  background: #e8eefb;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+
+  box-shadow: -8px 0 24px rgba(15, 23, 42, 0.3);
+
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Шапка меню профиля */
+.profile-menu__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.profile-menu__title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+/* Кнопка закрытия меню профиля */
+.profile-menu__close {
+  width: 28px;
+  height: 28px;
+  border-radius: 9999px;
+  border: none;
+  background: rgba(148, 163, 184, 0.16);
+  color: #0f172a;
+  font-size: 0.8rem;
+  cursor: pointer;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  transition:
+    background 0.12s ease-out,
+    transform 0.12s ease-out;
+}
+
+.profile-menu__close:hover {
+  background: rgba(148, 163, 184, 0.26);
+  transform: translateY(-1px);
+}
+
+.profile-menu__close:active {
+  transform: translateY(0);
+}
+
+/* Пункты меню профиля */
+.profile-menu__item {
+  width: 100%;
+  text-align: left;
+
+  padding: 10px 8px;
+  border-radius: 8px;
+  border: none;
+
+  background: transparent;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #0f172a;
+
+  cursor: pointer;
+  transition:
+    background 0.12s ease-out,
+    color 0.12s ease-out;
+}
+
+.profile-menu__item:hover {
+  background: rgba(148, 163, 184, 0.12);
+}
+
+/* Пункт "Выйти" выделяем красным */
+.profile-menu__item--danger {
+  color: #b91c1c;
+}
+
+.profile-menu__item--danger:hover {
+  background: rgba(248, 113, 113, 0.12);
+}
+
+/* Анимация выезда меню справа */
+.profile-menu-enter-active,
+.profile-menu-leave-active {
+  transition: opacity 0.2s ease-out;
+}
+
+.profile-menu-enter-from,
+.profile-menu-leave-to {
+  opacity: 0;
+}
+
+.profile-menu-enter-active .profile-menu,
+.profile-menu-leave-active .profile-menu {
+  transition: transform 0.2s ease-out;
+}
+
+.profile-menu-enter-from .profile-menu {
+  transform: translateX(100%);
+}
+
+.profile-menu-leave-to .profile-menu {
+  transform: translateX(100%);
+}

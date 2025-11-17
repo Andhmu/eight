@@ -4,12 +4,21 @@
   --color-accent:#3b82f6;
   --color-text:#1e293b;
   --color-muted:#64748b;
-  --color-bg:#f8fafc;
+  --color-bg: #e8eefb;
   --radius:10px;
-  /* размеры макета */
+  /* размеры макета по умолчанию (десктоп / планшет) */
   --header-h:64px;
   --page-pad:24px;
 }
+
+/* более мягкие отступы и чуть меньшая шапка на мобилках */
+@media (max-width: 640px) {
+  :root {
+    --header-h:56px;
+    --page-pad:16px;
+  }
+}
+
 *{ box-sizing:border-box; }
 html, body{
   height:100%;
@@ -23,6 +32,7 @@ body{
   overflow-y:auto;
   overflow-x:hidden; /* чтобы точно не было горизонтального скролла */
 }
+
 /* служебное */
 .error{ color:#b91c1c; }
 .center{ display:grid; place-items:center; }

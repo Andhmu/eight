@@ -1,279 +1,70 @@
 /* assets/styles/layout.css */
-.header{
-  height:var(--header-h);
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  padding:0 16px;
-  background:#fff;
-  box-shadow:0 1px 3px rgba(0,0,0,.05);
-}
-.brand{
-  text-decoration:none;
-  color:var(--color-primary);
-}
-.nav{
-  display:flex;
-  gap:16px;
-}
-.link{
-  color:var(--color-muted);
-  text-decoration:none;
-  transition:color .2s;
-}
-.link:hover{
-  color:var(--color-primary);
-}
-/* основной контейнер страницы */
-.page{
-  min-height:calc(100dvh - var(--header-h));
-  display:grid;
-  /* РАНЬШЕ было align-content:center → всё прыгало при изменении высоты */
-  align-content:start;              /* якорим контент к верху страницы */
-  justify-items:center;
-  gap:20px;
-  padding:var(--page-pad);
-  /* красивый отступ сверху, чтобы форма не прилипала к шапке */
-  padding-top:clamp(40px, 15vh, 80px);
-}
-
-/* карточка: ширина ограничена контейнером страницы */
-.card{
-  width:min(440px, 100%);   /* форма шире, чем раньше (было 440px) */
-
-  padding:24px;
-  position:relative;
-}
-/* крупный логотип */
-.brand-big{
-  font-size:48px;
-  font-weight:700;
-  opacity:.9;
-}
-
-
-/* assets/styles/layout.css */
 
 /* ==========================================
-   ФОН СТРАНИЦЫ
+   ОБЩИЙ "СТАРЫЙ" HEADER (если где-то ещё используется .header/.link)
    ========================================== */
-.page {
-  min-height: 100vh;
-  padding: 80px 16px 24px; /* отступ сверху под шапку */
-  background: #e8eefb; /* светлый, приглушённый небесный */
-}
 
-/* ==========================================
-   ШАПКА (СТИКИ НАВЕРХУ)
-   ========================================== */
-.site-header {
-  position: sticky;
-  top: 0;
-  z-index: 50;
-  display: flex;
-  flex-direction: column;
-      background: #eaefff4f;
-}
-
-/* Верхняя полоса: того же цвета, что и фон */
-.header-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between; /* счётчик слева, логотип справа */
-
-  padding: 0px 16px;
-
-}
-
-/* Логотип в шапке: увеличенный символ ∞ справа */
-.brand {
-  font-size: 3.6rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-decoration: none;
-  color: #0f172a;
-}
-
-/* Нижняя полоса шапки (меню) */
-.header-bottom {
-  display: flex;
-  justify-content: flex-end; /* меню справа */
-  align-items: center;
-
-  padding: 6px 16px 8px;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-}
-
-/* ==========================================
-   НАВИГАЦИЯ В НИЖНЕЙ ШАПКЕ
-   ========================================== */
-.nav {
-  display: flex;
-  align-items: center;
-  gap: 0; /* разделители делаем бордерами */
-}
-
-/* Кнопки меню: без фона, без скруглений, вертикальные разделители */
-.nav-link {
-  padding: 4px 10px;
-  font-size: 0.85rem;
-  font-weight: 500;
-  text-decoration: none;
-  color: #0f172a;
-  background: transparent;
-  border: none;
-  border-left: 1px solid rgba(148, 163, 184, 0.6);
-}
-
-/* первая кнопка без левой линии */
-.nav-link:first-child {
-  border-left: none;
-}
-
-/* отдельный класс для кнопки-профиля (button) */
-.nav-link-button {
-  cursor: pointer;
-}
-
-/* активный маршрут для NuxtLink */
-.nav-link.router-link-active {
-  color: #2563eb;
-  font-weight: 600;
-}
-
-/* лёгкий ховер */
-.nav-link:hover {
-  color: #1d4ed8;
-}
-
-/* ==========================================
-   ПРАВОЕ ВЫЕЗЖАЮЩЕЕ МЕНЮ ПРОФИЛЯ
-   ========================================== */
-.profile-menu-backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 60;
-
-  background: rgba(20, 23, 32, 0.923);
-  display: flex;
-  justify-content: flex-end;
-}
-
-/* Сам слайдер справа */
-.profile-menu {
-  width: 260px;
-  max-width: 80%;
-  height: 100%;
-  padding: 16px 16px 24px;
-
-  background: #ebf3ffb8;
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-
-  box-shadow: -8px 0 24px rgba(15, 23, 42, 0.3);
-
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-/* Шапка меню профиля */
-.profile-menu__header {
+.header {
+  height: var(--header-h);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 12px;
+  padding: 0 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
-.profile-menu__title {
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: #0f172a;
+/* общий бренд (не шапка приложения) */
+.brand {
+  text-decoration: none;
+  color: var(--color-primary);
 }
 
-/* Кнопка закрытия меню профиля */
-.profile-menu__close {
-  width: 28px;
-  height: 28px;
-  border-radius: 9999px;
-  border: none;
-  background: rgba(148, 163, 184, 0.16);
-  color: #0f172a;
-  font-size: 0.8rem;
-  cursor: pointer;
+/* базовая навигация (если где-то ещё используешь .nav вне AppHeader) */
+.nav {
+  display: flex;
+  gap: 16px;
+}
+
+/* общий линк — используется, например, в auth/reset.vue */
+.link {
+  color: var(--color-muted);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.link:hover {
+  color: var(--color-primary);
+}
+
+/* ==========================================
+   КОНТЕЙНЕР СТРАНИЦЫ / КАРТОЧКИ
+   ========================================== */
+
+.page {
+  padding: var(--page-pad);
 
   display: flex;
-  align-items: center;
-  justify-content: center;
-
-  transition:
-    background 0.12s ease-out,
-    transform 0.12s ease-out;
+  flex-direction: column;
+  align-items: stretch;      /* растягиваем контент по ширине */
+  justify-content: flex-start;
 }
 
-.profile-menu__close:hover {
-  background: rgba(148, 163, 184, 0.26);
-  transform: translateY(-1px);
+/* Карточка общего назначения (auth, profile и др.) */
+.card {
+  width: min(440px, 100%);
+  margin: 0 auto;           /* центрируем по горизонтали */
+  padding: 24px;
+  position: relative;
 }
 
-.profile-menu__close:active {
-  transform: translateY(0);
-}
+/* Чуть более компактные карточки и отступы на узких экранах */
+@media (max-width: 480px) {
+  .page {
+    padding: 16px 12px;
+  }
 
-/* Пункты меню профиля */
-.profile-menu__item {
-  width: 100%;
-  text-align: left;
-
-  padding: 10px 8px;
-  border-radius: 8px;
-  border: none;
-
-  background: transparent;
-  font-size: 0.9rem;
-  font-weight: 500;
-  color: #0f172a;
-
-  cursor: pointer;
-  transition:
-    background 0.12s ease-out,
-    color 0.12s ease-out;
-}
-
-.profile-menu__item:hover {
-  background: rgba(148, 163, 184, 0.12);
-}
-
-/* Пункт "Выйти" выделяем красным */
-.profile-menu__item--danger {
-  color: #b91c1c;
-}
-
-.profile-menu__item--danger:hover {
-  background: rgba(248, 113, 113, 0.12);
-}
-
-/* Анимация выезда меню справа */
-.profile-menu-enter-active,
-.profile-menu-leave-active {
-  transition: opacity 0.2s ease-out;
-}
-
-.profile-menu-enter-from,
-.profile-menu-leave-to {
-  opacity: 0;
-}
-
-.profile-menu-enter-active .profile-menu,
-.profile-menu-leave-active .profile-menu {
-  transition: transform 0.2s ease-out;
-}
-
-.profile-menu-enter-from .profile-menu {
-  transform: translateX(100%);
-}
-
-.profile-menu-leave-to .profile-menu {
-  transform: translateX(100%);
+  .card {
+    padding: 18px;
+    border-radius: 10px;
+  }
 }

@@ -1,0 +1,251 @@
+/* assets/styles/feed.css */
+
+/* Основной контейнер ленты */
+.feed-page {
+  width: 100%;
+  max-width: 700px; /* компромисс: не узко как 440, не широко как 720 */
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Список элементов ленты */
+.feed-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Карточка записи в ленте */
+.feed-card {
+  background: #ffffff;
+  border-radius: var(--radius);
+  padding: 16px;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
+}
+
+/* Заголовок/шапка записи */
+.feed-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.feed-card__title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+/* Текст записи */
+.feed-card__body {
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: var(--color-text);
+}
+
+/* Пустая лента */
+.feed-empty {
+  text-align: center;
+  color: var(--color-muted);
+  font-size: 0.9rem;
+  padding: 24px 0;
+}
+
+/* ==========================================
+   КАРУСЕЛЬ ПОЛЬЗОВАТЕЛЕЙ + ПОИСК
+   ========================================== */
+
+.new-users {
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: var(--radius);
+  padding: 12px 12px 10px;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.04);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+
+  /* отступ снизу, чтобы не слипалось с лентой */
+  margin-bottom: 8px;
+}
+
+.new-users__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+/* Поле поиска в карусели */
+.new-users__search {
+  flex: 1 1 auto;
+  min-width: 0;
+
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.5);
+  background: rgba(248, 250, 252, 0.9);
+
+  font-size: 0.8rem;
+  color: var(--color-text);
+  outline: none;
+
+  transition:
+    border-color 0.15s ease-out,
+    box-shadow 0.15s ease-out,
+    background 0.15s ease-out;
+}
+
+.new-users__search::placeholder {
+  color: rgba(148, 163, 184, 0.9);
+}
+
+.new-users__search:focus {
+  border-color: rgba(59, 130, 246, 0.9);
+  background: #ffffff;
+  box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.25);
+}
+
+.new-users__refresh {
+  border: none;
+  background: transparent;
+  font-size: 0.75rem;
+  color: var(--color-muted);
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 999px;
+  transition:
+    background 0.15s ease-out,
+    color 0.15s ease-out;
+}
+
+.new-users__refresh:hover {
+  background: rgba(148, 163, 184, 0.15);
+  color: var(--color-primary);
+}
+
+.new-users__loading,
+.new-users__empty,
+.new-users__error {
+  font-size: 0.8rem;
+  color: var(--color-muted);
+  padding: 6px 2px 2px;
+}
+
+/* Вьюпорт карусели: отвечает за скролл */
+.new-users__viewport {
+  display: flex;
+  align-items: stretch;
+  overflow-x: auto;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  scrollbar-width: none; /* Firefox */
+}
+
+.new-users__viewport::-webkit-scrollbar {
+  display: none; /* Chrome/Safari */
+}
+
+/* Список карточек внутри вьюпорта */
+.new-users__list {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+}
+
+/* Элемент карусели (квадратик пользователя) */
+.new-users__item {
+  flex: 0 0 100px;
+  max-width: 100px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+
+  padding: 8px 6px;
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.45);
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.06);
+
+  cursor: pointer;
+  text-decoration: none; /* для NuxtLink */
+  color: inherit;
+
+  transition:
+    transform 0.12s ease-out,
+    box-shadow 0.12s ease-out,
+    border-color 0.12s ease-out,
+    background 0.12s ease-out;
+}
+
+.new-users__item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.12);
+  border-color: rgba(59, 130, 246, 0.6);
+}
+
+/* Аватар (кружочек) */
+.new-users__avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  background: radial-gradient(circle at 30% 0%, #e0f2fe, #c4b5fd);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 2px;
+}
+
+.new-users__avatar-fallback {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+/* Имя пользователя */
+.new-users__name {
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-align: center;
+  color: var(--color-text);
+  max-width: 96px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* подпись "с <дата>" */
+.new-users__since {
+  font-size: 0.7rem;
+  color: var(--color-muted);
+}
+
+/* ==========================================
+   МОБИЛЬНАЯ АДАПТИВНОСТЬ ЛЕНТЫ И КАРУСЕЛИ
+   ========================================== */
+
+@media (max-width: 640px) {
+  .feed-page {
+    max-width: 100%;
+    gap: 12px;
+  }
+
+  .feed-card {
+    padding: 14px;
+    border-radius: 10px;
+  }
+
+  .new-users {
+    padding: 10px 10px 8px;
+    margin-bottom: 10px;
+  }
+
+  .new-users__item {
+    flex: 0 0 92px;
+    max-width: 92px;
+  }
+}
