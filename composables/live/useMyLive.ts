@@ -6,8 +6,8 @@ export function useMyLive() {
   const client = useSupabaseClient()
   const authUser = useSupabaseUser()
 
-  const isLive = ref(false)                      // я сейчас в эфире?
-  const busy = ref(false)                        // защита от двойных кликов
+  const isLive = ref(false)
+  const busy = ref(false)
   const videoEl = ref<HTMLVideoElement | null>(null)
   const mediaStream = ref<MediaStream | null>(null)
 
@@ -40,7 +40,7 @@ export function useMyLive() {
     }
 
     try {
-      // 1. включаем камеру (только на клиенте)
+      // 1. Включаем камеру (только в браузере)
       if (process.client && videoEl.value) {
         const stream = await navigator.mediaDevices.getUserMedia({
           video: true,
@@ -49,9 +49,16 @@ export function useMyLive() {
 
         mediaStream.value = stream
         videoEl.value.srcObject = stream
+
+        // iOS / некоторые браузеры любят явный .play()
+        try {
+          await videoEl.value.play()
+        } catch (e) {
+          console.warn('[my-live] video play error (может быть нормой):', e)
+        }
       }
 
-      // 2. отмечаем в Supabase, что мы в эфире
+      // 2. Помечаем в Supabase, что мы в эфире
       const { error } = await client
         .from('profiles')
         .update({
@@ -83,6 +90,7 @@ export function useMyLive() {
     const raw = authUser.value as any
     const id: string | undefined = raw?.id ?? raw?.sub ?? undefined
 
+    // Камеру выключаем всегда
     stopCamera()
 
     if (id) {
