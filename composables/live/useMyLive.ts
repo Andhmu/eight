@@ -50,11 +50,10 @@ export function useMyLive() {
         mediaStream.value = stream
         videoEl.value.srcObject = stream
 
-        // iOS / некоторые браузеры любят явный .play()
         try {
           await videoEl.value.play()
         } catch (e) {
-          console.warn('[my-live] video play error (может быть нормой):', e)
+          console.warn('[my-live] video play error:', e)
         }
       }
 
@@ -69,7 +68,7 @@ export function useMyLive() {
 
       if (error) {
         console.error('[my-live] error set is_live = true:', error)
-        alert('Не удалось начать эфир. Попробуйте ещё раз.')
+        alert('Не удалось начать эфир (ограничения доступа в Supabase).')
         stopCamera()
       } else {
         isLive.value = true
@@ -90,7 +89,6 @@ export function useMyLive() {
     const raw = authUser.value as any
     const id: string | undefined = raw?.id ?? raw?.sub ?? undefined
 
-    // Камеру выключаем всегда
     stopCamera()
 
     if (id) {
