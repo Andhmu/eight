@@ -1,11 +1,13 @@
 /* assets/styles/coins.css */
-
 /* Только стили для счётчика коинов */
 
 .coins-pill {
   min-width: 44px;
   padding: 4px 12px;
   border-radius: 9999px;
+
+  border: none;
+  cursor: pointer;
 
   /* белый фон внутри + радужная рамка */
   background:
@@ -22,9 +24,6 @@
 
   font-size: 0.875rem;
   font-weight: 600;
-
-  /* цвет текста берём общий */
-  /* color: inherit; */
 
   display: flex;
   align-items: center;
