@@ -3,7 +3,7 @@
 /* Основной контейнер ленты */
 .feed-page {
   width: 100%;
-  max-width: 700px; /* компромисс: не узко как 440, не широко как 720 */
+  max-width: 700px; /* компромисс по ширине */
   margin: 0 auto;
   display: flex;
   flex-direction: column;
@@ -66,7 +66,6 @@
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
 
-  /* отступ снизу, чтобы не слипалось с лентой */
   margin-bottom: 8px;
 }
 
@@ -172,7 +171,7 @@
   box-shadow: 0 4px 10px rgba(15, 23, 42, 0.06);
 
   cursor: pointer;
-  text-decoration: none; /* для NuxtLink */
+  text-decoration: none;
   color: inherit;
 
   transition:
@@ -225,6 +224,193 @@
 }
 
 /* ==========================================
+   БЛОК "ПРЯМОЙ ЭФИР"
+   ========================================== */
+
+.live-now {
+  background: radial-gradient(circle at top, #fef9c3 0%, #e0f2fe 32%, #e5e7eb 100%);
+  border-radius: var(--radius);
+  padding: 12px 12px 12px;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.12);
+  position: relative;
+  overflow: hidden;
+}
+
+.live-now::before {
+  content: "";
+  position: absolute;
+  inset: -40%;
+  background: radial-gradient(circle at 0 0, rgba(56, 189, 248, 0.35), transparent 55%),
+              radial-gradient(circle at 100% 0, rgba(168, 85, 247, 0.3), transparent 55%);
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.live-now__header {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.live-now__title {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.live-now__go-live {
+  border: none;
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  background: rgba(15, 23, 42, 0.9);
+  color: #f9fafb;
+  cursor: pointer;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.5);
+  transition:
+    transform 0.12s ease-out,
+    box-shadow 0.12s ease-out,
+    background 0.12s ease-out,
+    opacity 0.12s ease-out;
+}
+
+.live-now__go-live:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 26px rgba(15, 23, 42, 0.7);
+  opacity: 0.95;
+}
+
+.live-now__go-live:active {
+  transform: translateY(0);
+}
+
+/* Ошибка/заглушки */
+.live-now__error,
+.live-now__placeholder {
+  position: relative;
+  font-size: 0.8rem;
+  color: #0f172a;
+  padding: 8px 4px 4px;
+}
+
+.live-now__badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #0f172a;
+  background: rgba(248, 250, 252, 0.85);
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  margin-bottom: 4px;
+}
+
+.live-now__badge--live {
+  background: rgba(248, 113, 113, 0.94);
+  color: #f9fafb;
+  border-color: rgba(220, 38, 38, 0.9);
+}
+
+.live-now__placeholder-text {
+  margin: 0;
+}
+
+/* "Видео-плеер" */
+.live-now__player {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.live-now__video {
+  position: relative;
+  border-radius: 14px;
+  padding: 10px 10px 12px;
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.92), rgba(15, 23, 42, 0.96));
+  overflow: hidden;
+}
+
+.live-now__video-glow {
+  position: absolute;
+  inset: -30%;
+  background: radial-gradient(circle at 0 0, rgba(56, 189, 248, 0.5), transparent 55%),
+              radial-gradient(circle at 100% 100%, rgba(249, 115, 22, 0.5), transparent 55%);
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.live-now__video-content {
+  position: relative;
+  z-index: 1;
+}
+
+.live-now__video-text {
+  margin: 0 0 2px;
+  font-size: 0.78rem;
+  color: #e5e7eb;
+}
+
+.live-now__host {
+  border: none;
+  padding: 0;
+  margin: 0;
+  background: transparent;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #facc15;
+  cursor: pointer;
+  text-decoration: none;
+
+  transition:
+    color 0.12s ease-out,
+    text-shadow 0.12s ease-out;
+}
+
+.live-now__host:hover {
+  color: #fbbf24;
+  text-shadow: 0 0 10px rgba(250, 204, 21, 0.8);
+}
+
+.live-now__hint {
+  margin: 4px 0 0;
+  font-size: 0.72rem;
+  color: #cbd5f5;
+}
+
+/* Метаданные под плеером */
+.live-now__meta {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 0.7rem;
+  color: #475569;
+  padding: 0 2px;
+}
+
+.live-now__meta-label {
+  font-weight: 500;
+}
+
+.live-now__meta-rotate {
+  font-style: italic;
+}
+
+/* ==========================================
    МОБИЛЬНАЯ АДАПТИВНОСТЬ ЛЕНТЫ И КАРУСЕЛИ
    ========================================== */
 
@@ -247,5 +433,9 @@
   .new-users__item {
     flex: 0 0 92px;
     max-width: 92px;
+  }
+
+  .live-now {
+    padding: 10px 10px 10px;
   }
 }

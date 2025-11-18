@@ -3,6 +3,9 @@
   <div class="feed-page">
     <!-- Блок с новыми пользователями -->
     <NewUsersCarousel />
+  <!-- Новый блок "Прямой эфир" -->
+
+    <LiveNowBlock />
 
     <!-- Основной список ленты (пока заглушка) -->
     <section class="feed-list">
@@ -22,6 +25,7 @@
 
 <script setup lang="ts">
 import NewUsersCarousel from '~~/components/feed/NewUsersCarousel.vue'
+import LiveNowBlock from '~~/components/feed/LiveNowBlock.vue'
 
 definePageMeta({
   middleware: ['auth-only'], // если у тебя другое имя middlewares — поправь

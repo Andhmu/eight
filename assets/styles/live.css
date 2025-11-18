@@ -1,0 +1,128 @@
+/* assets/styles/live.css */
+
+/* Отступы блока в ленте */
+.live-now {
+  margin-bottom: 16px;
+}
+
+/* Карточка прямого эфира наследует feed-card, просто чуть подстраиваем */
+.live-now__card {
+  padding: 12px 14px;
+}
+
+/* Заголовок и кнопка на одной линии */
+.live-now__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.live-now__title {
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+/* Тело карточки (контент эфира) */
+.live-now__body {
+  margin-top: 6px;
+}
+
+/* Кнопки "транслировать / завершить" */
+.live-now__go-live {
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: none;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 500;
+  background: rgba(37, 99, 235, 0.12);
+  color: #1d4ed8;
+  white-space: nowrap;
+}
+
+.live-now__go-live--stop {
+  background: rgba(239, 68, 68, 0.12);
+  color: #b91c1c;
+}
+
+/* Общий контейнер "плеера" / заглушки */
+.live-now__player,
+.live-now__placeholder {
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: rgba(248, 250, 252, 0.9);
+}
+
+/* Блок с видео (или его заглушкой) */
+.live-now__video {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* Когда видео реально есть (камера) */
+.live-now__video-element {
+  width: 100%;
+  border-radius: 10px;
+  background: #020617;
+  object-fit: cover;
+  max-height: 260px;
+}
+
+/* Небольшой бейдж в левом верхнем углу */
+.live-now__badge {
+  align-self: flex-start;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  background: rgba(15, 23, 42, 0.85);
+  color: #e5e7eb;
+}
+
+.live-now__badge--live {
+  background: linear-gradient(90deg, #ef4444, #f97316);
+}
+
+/* Текстовые подсказки */
+.live-now__placeholder-text,
+.live-now__hint {
+  margin-top: 4px;
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+/* Подсказка именно для собственного эфира */
+.live-now__hint--self {
+  margin-top: 6px;
+}
+
+/* Текст "идёт эфир пользователя ..." */
+.live-now__video-text {
+  font-size: 0.85rem;
+}
+
+/* Логин ведущего */
+.live-now__host {
+  border: none;
+  background: transparent;
+  color: #2563eb;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+}
+
+/* Подпись под блоком эфиров (про ротацию) */
+.live-now__meta {
+  margin-top: 6px;
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: #9ca3af;
+}
+
+.live-now__meta-label {
+  font-weight: 500;
+}

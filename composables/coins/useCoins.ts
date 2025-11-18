@@ -176,7 +176,7 @@ export function useCoins() {
 
       const now = Date.now()
 
-      if (now - lastSync > 10_000) {
+      if (now - lastSync > 2_000) {
 
         lastSync = now
 
