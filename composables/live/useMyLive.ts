@@ -1,13 +1,21 @@
 // composables/live/useMyLive.ts
-import { onBeforeUnmount, ref } from 'vue'
+import { nextTick, onBeforeUnmount, ref } from 'vue'
 import { useSupabaseClient, useSupabaseUser } from '#imports'
 
+/**
+ * Логика "я стример":
+ * - включает/выключает камеру
+ * - пишет is_live / live_started_at в public.profiles
+ * - отдаёт ref на <video> для локального предпросмотра
+ */
 export function useMyLive() {
   const client = useSupabaseClient()
   const authUser = useSupabaseUser()
 
   const isLive = ref(false)
   const busy = ref(false)
+
+  // ref на <video>, который ВЕЗДЕ будет один и тот же
   const videoEl = ref<HTMLVideoElement | null>(null)
   const mediaStream = ref<MediaStream | null>(null)
 
@@ -53,6 +61,9 @@ export function useMyLive() {
     }
 
     try {
+      // гарантируем, что <video> уже есть в DOM
+      await nextTick()
+
       if (process.client && videoEl.value) {
         const stream = await navigator.mediaDevices.getUserMedia({
           video: true,
@@ -64,7 +75,7 @@ export function useMyLive() {
         const v = videoEl.value
         v.srcObject = stream
         v.muted = true
-        // @ts-expect-error playsInline не описан в типах
+        // @ts-expect-error playsInline не в типах
         v.playsInline = true
 
         try {
@@ -80,6 +91,7 @@ export function useMyLive() {
         })
       }
 
+      // отмечаем в Supabase, что мы в эфире
       const { error } = await client
         .from('profiles')
         .update({
