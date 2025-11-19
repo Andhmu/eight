@@ -1,101 +1,82 @@
 <!-- components/feed/LiveNowBlock.vue -->
 <template>
-  <section class="live-now">
-    <!-- Оборачиваем всё в ту же карточку, что и лента -->
-    <article class="feed-card live-now__card">
-      <div class="feed-card__header live-now__header">
-        <h2 class="feed-card__title live-now__title">Прямой эфир</h2>
+  <section class="feed-card live-card">
+    <header class="feed-card__header live-card__header">
+      <h2 class="feed-card__title">Прямой эфир</h2>
 
-        <!-- Кнопка "транслировать меня" / "завершить эфир" -->
-        <button
-          v-if="!isLive"
-          type="button"
-          class="live-now__go-live"
-          @click="startLive"
-          :disabled="busy"
-        >
-          Транслировать меня
-        </button>
-        <button
-          v-else
-          type="button"
-          class="live-now__go-live live-now__go-live--stop"
-          @click="stopLive"
-          :disabled="busy"
-        >
-          Завершить эфир
-        </button>
+      <button
+        v-if="!isLive"
+        class="btn btn--light live-card__btn"
+        type="button"
+        :disabled="busy"
+        @click="handleStart"
+      >
+        Транслировать меня
+      </button>
+
+      <button
+        v-else
+        class="btn live-card__btn live-card__btn--danger"
+        type="button"
+        :disabled="busy"
+        @click="handleStop"
+      >
+        Завершить эфир
+      </button>
+    </header>
+
+    <!-- Когда Я в эфире -->
+    <div v-if="isLive" class="live-card__body live-card__body--self">
+      <div class="live-card__badge">ВЫ В ЭФИРЕ</div>
+
+      <div class="live-card__player">
+        <video
+          ref="videoEl"
+          autoplay
+          muted
+          playsinline
+        ></video>
       </div>
 
-      <div class="feed-card__body live-now__body">
-        <!-- ЕСЛИ Я В ЭФИРЕ → показываем мой превью -->
-        <div v-if="isLive" class="live-now__player">
-          <div class="live-now__video">
-            <div class="live-now__badge live-now__badge--live">
-              ВЫ В ЭФИРЕ
-            </div>
+      <p class="live-card__note">
+        Ваш эфир сейчас виден другим пользователям в блоке «Прямой эфир».
+      </p>
+    </div>
 
-            <video
-              ref="videoEl"
-              class="live-now__video-element"
-              autoplay
-              muted
-              playsinline
-            ></video>
-
-            <p class="live-now__hint live-now__hint--self">
-              Ваш эфир сейчас виден другим пользователям в блоке «Прямой эфир».
-            </p>
-          </div>
-        </div>
-
-        <!-- ЕСЛИ Я НЕ В ЭФИРЕ → режим просмотра чужого эфира -->
-        <template v-else>
-          <div v-if="error" class="live-now__error">
-            Не удалось загрузить эфир: {{ error }}
-          </div>
-
-          <div v-else-if="loading || !current">
-            <div class="live-now__placeholder">
-              <span class="live-now__badge">Эфир</span>
-              <p class="live-now__placeholder-text">
-                Сейчас нет активных эфиров или мы ещё ищем для вас что-то
-                интересное…
-              </p>
-            </div>
-          </div>
-
-          <div v-else class="live-now__player">
-            <div class="live-now__video live-now__video--placeholder">
-              <div class="live-now__badge live-now__badge--live">
-                LIVE
-              </div>
-
-              <p class="live-now__video-text">
-                Идёт эфир пользователя
-              </p>
-              <button
-                type="button"
-                class="live-now__host"
-                @click="goToProfile(current.id)"
-              >
-                @{{ current.username || 'user' }}
-              </button>
-              <p class="live-now__hint">
-                Нажмите на логин, чтобы продолжить смотреть на странице профиля.
-              </p>
-            </div>
-
-            <div class="live-now__meta">
-              <span class="live-now__meta-label">Случайный эфир</span>
-              <span class="live-now__meta-rotate">
-                эфир сменится через несколько секунд
-              </span>
-            </div>
-          </div>
-        </template>
+    <!-- Когда кто-то другой в эфире -->
+    <div
+      v-else-if="current && !loading"
+      class="live-card__body live-card__body--other"
+    >
+      <div class="live-card__badge live-card__badge--other">
+        Эфир
       </div>
-    </article>
+
+      <p class="live-card__text">
+        Сейчас в эфире
+        <button
+          type="button"
+          class="live-card__link"
+          @click="goToUser(current.id)"
+        >
+          @{{ current.username || 'пользователь' }}
+        </button>
+      </p>
+
+      <p class="live-card__note">
+        Нажмите на логин, чтобы зайти на его профиль и продолжить смотреть.
+      </p>
+    </div>
+
+    <!-- Когда эфиров нет -->
+    <div v-else class="live-card__body live-card__body--empty">
+      <div class="live-card__badge live-card__badge--idle">
+        Эфир
+      </div>
+      <p class="live-card__text">
+        Сейчас нет активных эфиров или мы ещё ищем для вас что-то интересное…
+      </p>
+    </div>
   </section>
 </template>
 
@@ -107,25 +88,27 @@ import { useMyLive } from '~/composables/live/useMyLive'
 
 const router = useRouter()
 
-// случайный текущий эфир (другие пользователи)
 const { current, loading, error, init } = useLiveNow()
-
-// мой эфир
-const {
-  isLive,
-  busy,
-  videoEl,
-  loadInitial,
-  startLive,
-  stopLive,
-} = useMyLive()
+const { isLive, busy, videoEl, loadInitial, startLive, stopLive } = useMyLive()
 
 onMounted(async () => {
   await loadInitial()
   await init()
+
+  if (error.value) {
+    console.error('[live-now] error:', error.value)
+  }
 })
 
-function goToProfile(id: string) {
-  router.push({ name: 'profile-id', params: { id } })
+function handleStart() {
+  void startLive()
+}
+
+function handleStop() {
+  void stopLive()
+}
+
+function goToUser(id: string) {
+  router.push(`/u/${id}`)
 }
 </script>
