@@ -27,8 +27,8 @@
     </div>
 
     <div class="feed-card__body live-card__body">
-      <!-- 1. Я в эфире — показываем мою камеру -->
-      <div v-if="isLive" class="live-card__video-wrapper">
+      <!-- 1. Мой эфир (видео-элемент ВСЕГДА в DOM, просто прячем его, когда не в эфире) -->
+      <div v-show="isLive" class="live-card__video-wrapper">
         <span class="live-card__badge">ВЫ В ЭФИРЕ</span>
 
         <video
@@ -46,7 +46,7 @@
 
       <!-- 2. Я не в эфире, но кто-то другой в эфире -->
       <div
-        v-else-if="hasCurrent && current"
+        v-if="!isLive && hasCurrent && current"
         class="live-card__viewer-info"
       >
         <p class="live-card__now">Сейчас в эфире</p>
@@ -78,7 +78,10 @@
       </div>
 
       <!-- 3. Никто не в эфире -->
-      <div v-else class="live-card__placeholder">
+      <div
+        v-if="!isLive && (!hasCurrent || !current)"
+        class="live-card__placeholder"
+      >
         <span class="live-card__badge live-card__badge--idle">Эфир</span>
         <p>
           Сейчас нет активных эфиров или мы ещё ищем для вас что-то
