@@ -2,6 +2,8 @@
 import { onBeforeUnmount, ref } from 'vue'
 import { useSupabaseClient, useSupabaseUser } from '#imports'
 
+type LiveChannel = any
+
 export function useMyLive() {
   const client = useSupabaseClient()
   const authUser = useSupabaseUser()
@@ -11,8 +13,7 @@ export function useMyLive() {
   const videoEl = ref<HTMLVideoElement | null>(null)
   const mediaStream = ref<MediaStream | null>(null)
 
-  // WebRTC + сигнальный канал через Supabase Realtime
-  const channel = ref<any | null>(null)
+  const channel = ref<LiveChannel | null>(null)
   const peers = new Map<string, RTCPeerConnection>()
 
   function getUserId(): string | null {
@@ -31,63 +32,61 @@ export function useMyLive() {
   }
 
   function createPeerConnection(viewerId: string): RTCPeerConnection {
-    const peer = new RTCPeerConnection({
+    const pc = new RTCPeerConnection({
       iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
     })
 
+    // отправляем свои дорожки зрителю
     if (mediaStream.value) {
       mediaStream.value.getTracks().forEach((track) => {
-        if (mediaStream.value) {
-          peer.addTrack(track, mediaStream.value)
-        }
+        pc.addTrack(track, mediaStream.value as MediaStream)
       })
     }
 
-    peer.onicecandidate = (ev) => {
+    // когда появились ICE-кандидаты — шлём их через Supabase
+    pc.onicecandidate = (ev) => {
       if (!ev.candidate || !channel.value) return
       channel.value.send({
         type: 'broadcast',
         event: 'ice-candidate',
         payload: {
+          from: 'streamer',
           viewerId,
           candidate: ev.candidate,
         },
       })
     }
 
-    peer.onconnectionstatechange = () => {
-      if (
-        peer.connectionState === 'disconnected' ||
-        peer.connectionState === 'failed' ||
-        peer.connectionState === 'closed'
-      ) {
-        peer.close()
+    pc.onconnectionstatechange = () => {
+      console.log('[my-live] viewer', viewerId, 'pc state:', pc.connectionState)
+      if (['failed', 'disconnected', 'closed'].includes(pc.connectionState)) {
         peers.delete(viewerId)
       }
     }
 
-    return peer
+    return pc
   }
 
   async function startSignalChannel(streamerId: string) {
-    const ch = client.channel(`live:${streamerId}`)
+    if (channel.value) return
 
-    // зритель подключился — создаём предложение
-    ch.on('broadcast', { event: 'viewer-join' }, async (payload) => {
+    const ch = client.channel(`live:${streamerId}`, {
+      config: { broadcast: { ack: true } },
+    })
+
+    // зритель подключился — создаём peer и шлём оффер
+    ch.on('broadcast', { event: 'viewer-join' }, async ({ payload }) => {
       const viewerId: string = payload.viewerId
-      if (!viewerId) return
+      console.log('[my-live] viewer-join', viewerId)
 
-      let peer = peers.get(viewerId)
-      if (!peer) {
-        peer = createPeerConnection(viewerId)
-        peers.set(viewerId, peer)
-      }
+      if (peers.has(viewerId)) return
+      const pc = createPeerConnection(viewerId)
+      peers.set(viewerId, pc)
 
       try {
-        const offer = await peer.createOffer()
-        await peer.setLocalDescription(offer)
-
-        ch.send({
+        const offer = await pc.createOffer()
+        await pc.setLocalDescription(offer)
+        channel.value?.send({
           type: 'broadcast',
           event: 'offer',
           payload: {
@@ -96,58 +95,54 @@ export function useMyLive() {
           },
         })
       } catch (e) {
-        console.error('[my-live] error creating offer:', e)
+        console.error('[my-live] error create/send offer', e)
       }
     })
 
-    // ответ зрителя
-    ch.on('broadcast', { event: 'answer' }, async (payload) => {
+    // получили answer от зрителя
+    ch.on('broadcast', { event: 'answer' }, async ({ payload }) => {
       const viewerId: string = payload.viewerId
-      const peer = peers.get(viewerId)
-      if (!peer) return
+      const pc = peers.get(viewerId)
+      if (!pc) return
+
       try {
-        await peer.setRemoteDescription(
+        await pc.setRemoteDescription(
           new RTCSessionDescription(payload.sdp),
         )
       } catch (e) {
-        console.error('[my-live] error setRemoteDescription(answer):', e)
+        console.error('[my-live] error setRemoteDescription(answer)', e)
       }
     })
 
     // ICE-кандидаты от зрителей
-    ch.on('broadcast', { event: 'ice-candidate' }, async (payload) => {
+    ch.on('broadcast', { event: 'ice-candidate' }, async ({ payload }) => {
+      if (payload.from !== 'viewer') return
       const viewerId: string = payload.viewerId
-      const peer = peers.get(viewerId)
-      if (!peer) return
+      const pc = peers.get(viewerId)
+      if (!pc) return
+
       try {
-        await peer.addIceCandidate(
-          new RTCIceCandidate(payload.candidate),
-        )
+        await pc.addIceCandidate(new RTCIceCandidate(payload.candidate))
       } catch (e) {
-        console.error('[my-live] error addIceCandidate:', e)
+        console.warn('[my-live] error addIceCandidate from viewer', e)
       }
     })
 
     const { status } = await ch.subscribe()
-    console.log('[my-live] channel subscribe status:', status)
-
+    console.log('[my-live] channel subscribe status', status)
     channel.value = ch
   }
 
-  async function stopSignalChannel() {
+  function stopSignalChannel() {
     if (channel.value) {
-      try {
-        await channel.value.unsubscribe()
-      } catch (e) {
-        console.warn('[my-live] error unsubscribe channel:', e)
-      }
+      console.log('[my-live] stop signal channel')
+      channel.value.unsubscribe()
       channel.value = null
     }
     peers.forEach((pc) => pc.close())
     peers.clear()
   }
 
-  // подтягиваем флаг is_live при заходе
   async function loadInitial() {
     const id = getUserId()
     if (!id) return
@@ -175,7 +170,7 @@ export function useMyLive() {
     }
 
     try {
-      // включаем камеру/микрофон
+      // камера + микрофон
       if (process.client && videoEl.value) {
         const stream = await navigator.mediaDevices.getUserMedia({
           video: true,
@@ -187,22 +182,20 @@ export function useMyLive() {
         const v = videoEl.value
         v.srcObject = stream
         v.muted = true
+        // @ts-expect-error playsInline
         v.playsInline = true
 
         try {
           await v.play()
-          console.log('[my-live] video started')
+          console.log('[my-live] preview started')
         } catch (e) {
           console.warn('[my-live] video play error:', e)
         }
       } else {
-        console.warn('[my-live] no video element or not client', {
-          client: process.client,
-          videoEl: videoEl.value,
-        })
+        console.warn('[my-live] no video element or not client')
       }
 
-      // отмечаем в профиле, что в эфире
+      // отмечаем в профиле
       const { error } = await client
         .from('profiles')
         .update({
@@ -215,16 +208,14 @@ export function useMyLive() {
         console.error('[my-live] error set is_live = true:', error)
         alert('Не удалось начать эфир (ограничения доступа в Supabase).')
         stopCamera()
-        await stopSignalChannel()
       } else {
-        await startSignalChannel(id)
         isLive.value = true
+        await startSignalChannel(id)
       }
     } catch (e) {
       console.error('[my-live] error starting live (getUserMedia):', e)
       alert('Не удалось получить доступ к камере/микрофону.')
       stopCamera()
-      await stopSignalChannel()
     } finally {
       busy.value = false
     }
@@ -237,14 +228,12 @@ export function useMyLive() {
     const id = getUserId()
 
     stopCamera()
-    await stopSignalChannel()
+    stopSignalChannel()
 
     if (id) {
       const { error } = await client
         .from('profiles')
-        .update({
-          is_live: false,
-        })
+        .update({ is_live: false })
         .eq('id', id)
 
       if (error) {
@@ -258,7 +247,7 @@ export function useMyLive() {
 
   onBeforeUnmount(() => {
     stopCamera()
-    void stopSignalChannel()
+    stopSignalChannel()
   })
 
   return {

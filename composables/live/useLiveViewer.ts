@@ -1,19 +1,21 @@
 // composables/live/useLiveViewer.ts
-import { onBeforeUnmount, ref } from 'vue'
+import { onBeforeUnmount, ref, watch } from 'vue'
 import { useSupabaseClient, useSupabaseUser } from '#imports'
 
-export function useLiveViewer() {
+type LiveChannel = any
+
+export function useLiveViewer(streamerIdRef: () => string | null) {
   const client = useSupabaseClient()
   const authUser = useSupabaseUser()
 
   const videoEl = ref<HTMLVideoElement | null>(null)
   const isWatching = ref(false)
-  const loading = ref(false)
-  const error = ref<string | null>(null)
+  const busy = ref(false)
+  const errorText = ref<string | null>(null)
 
-  const channel = ref<any | null>(null)
+  const channel = ref<LiveChannel | null>(null)
   const pc = ref<RTCPeerConnection | null>(null)
-  const viewerId = ref<string | null>(null)
+  const viewerId = ref<string>('')
 
   function getViewerId(): string {
     const raw = authUser.value as any
@@ -22,7 +24,7 @@ export function useLiveViewer() {
     return 'anon-' + Math.random().toString(36).slice(2)
   }
 
-  function createPeerConnection(): RTCPeerConnection {
+  function createPeerConnection(streamerId: string, vId: string) {
     const peer = new RTCPeerConnection({
       iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
     })
@@ -31,98 +33,108 @@ export function useLiveViewer() {
       const [remoteStream] = ev.streams
       if (videoEl.value) {
         videoEl.value.srcObject = remoteStream
+        // @ts-expect-error playsInline
         videoEl.value.playsInline = true
       }
     }
 
     peer.onicecandidate = (ev) => {
-      if (!ev.candidate || !channel.value || !viewerId.value) return
+      if (!ev.candidate || !channel.value) return
       channel.value.send({
         type: 'broadcast',
         event: 'ice-candidate',
         payload: {
-          viewerId: viewerId.value,
+          from: 'viewer',
+          viewerId: vId,
           candidate: ev.candidate,
         },
       })
     }
 
+    peer.onconnectionstatechange = () => {
+      console.log('[viewer] pc state:', peer.connectionState)
+    }
+
     return peer
   }
 
-  async function startWatching(streamerId: string) {
-    if (isWatching.value || loading.value) return
-    if (!streamerId) {
-      error.value = 'Не указан стример'
-      return
+  async function startWatching() {
+    const streamerId = streamerIdRef()
+    if (!streamerId || !process.client) return
+    if (busy.value || isWatching.value) return
+
+    busy.value = true
+    errorText.value = null
+
+    try {
+      viewerId.value = getViewerId()
+
+      const ch = client.channel(`live:${streamerId}`, {
+        config: { broadcast: { ack: true } },
+      })
+
+      const localPc = createPeerConnection(streamerId, viewerId.value)
+      pc.value = localPc
+
+      // оффер от стримера
+      ch.on('broadcast', { event: 'offer' }, async ({ payload }) => {
+        if (payload.viewerId !== viewerId.value) return
+        try {
+          await localPc.setRemoteDescription(
+            new RTCSessionDescription(payload.sdp),
+          )
+          const answer = await localPc.createAnswer()
+          await localPc.setLocalDescription(answer)
+
+          channel.value?.send({
+            type: 'broadcast',
+            event: 'answer',
+            payload: {
+              viewerId: viewerId.value,
+              sdp: answer,
+            },
+          })
+        } catch (e) {
+          console.error('[viewer] error handle offer', e)
+        }
+      })
+
+      // ICE от стримера
+      ch.on('broadcast', { event: 'ice-candidate' }, async ({ payload }) => {
+        if (payload.from !== 'streamer') return
+        if (payload.viewerId !== viewerId.value) return
+        try {
+          await localPc.addIceCandidate(new RTCIceCandidate(payload.candidate))
+        } catch (e) {
+          console.warn('[viewer] error addIceCandidate from streamer', e)
+        }
+      })
+
+      const { status } = await ch.subscribe()
+      console.log('[viewer] channel subscribe status', status)
+      channel.value = ch
+
+      // говорим стримеру, что хотим смотреть
+      ch.send({
+        type: 'broadcast',
+        event: 'viewer-join',
+        payload: {
+          viewerId: viewerId.value,
+        },
+      })
+
+      isWatching.value = true
+    } catch (e) {
+      console.error('[viewer] error startWatching', e)
+      errorText.value = 'Не удалось подключиться к эфиру.'
+    } finally {
+      busy.value = false
     }
-
-    loading.value = true
-    error.value = null
-
-    viewerId.value = getViewerId()
-    pc.value = createPeerConnection()
-
-    const ch = client.channel(`live:${streamerId}`)
-
-    // получаем offer от стримера
-    ch.on('broadcast', { event: 'offer' }, async (payload) => {
-      if (!pc.value || payload.viewerId !== viewerId.value) return
-      try {
-        await pc.value.setRemoteDescription(
-          new RTCSessionDescription(payload.sdp),
-        )
-        const answer = await pc.value.createAnswer()
-        await pc.value.setLocalDescription(answer)
-
-        ch.send({
-          type: 'broadcast',
-          event: 'answer',
-          payload: {
-            viewerId: viewerId.value,
-            sdp: answer,
-          },
-        })
-      } catch (e) {
-        console.error('[viewer] error handle offer', e)
-      }
-    })
-
-    // ICE от стримера
-    ch.on('broadcast', { event: 'ice-candidate' }, async (payload) => {
-      if (!pc.value || payload.viewerId !== viewerId.value) return
-      try {
-        await pc.value.addIceCandidate(
-          new RTCIceCandidate(payload.candidate),
-        )
-      } catch (e) {
-        console.error('[viewer] error addIceCandidate', e)
-      }
-    })
-
-    const { status } = await ch.subscribe()
-    console.log('[viewer] channel subscribe status:', status)
-
-    channel.value = ch
-
-    // даём знать стримеру, что мы хотим подключиться
-    ch.send({
-      type: 'broadcast',
-      event: 'viewer-join',
-      payload: { viewerId: viewerId.value },
-    })
-
-    isWatching.value = true
-    loading.value = false
   }
 
-  async function stopWatching() {
+  function stopWatching() {
     if (channel.value) {
-      try {
-        await channel.value.unsubscribe()
-      } catch (e) {
-        console.warn('[viewer] error unsubscribe channel:', e)
-      }
+      channel.value.unsubscribe()
       channel.value = null
     }
     if (pc.value) {
@@ -139,11 +151,22 @@ export function useLiveViewer() {
     stopWatching()
   })
 
+  // если поменялся streamerId — перезапускаем просмотр
+  watch(
+    streamerIdRef,
+    (val, oldVal) => {
+      if (val === oldVal) return
+      stopWatching()
+      if (val) startWatching()
+    },
+    { immediate: false },
+  )
+
   return {
     videoEl,
     isWatching,
-    loading,
-    error,
+    busy,
+    errorText,
     startWatching,
     stopWatching,
   }

@@ -1,13 +1,12 @@
 // composables/live/useLiveNow.ts
-import { computed, onBeforeUnmount, ref } from 'vue'
+import { onBeforeUnmount, ref } from 'vue'
 import { useSupabaseClient, useSupabaseUser } from '#imports'
 
 export interface LiveCandidate {
   id: string
   email: string | null
-  username: string | null
+  display_name: string | null
   live_started_at: string | null
-  is_live: boolean
 }
 
 export function useLiveNow() {
@@ -17,38 +16,40 @@ export function useLiveNow() {
   const candidates = ref<LiveCandidate[]>([])
   const current = ref<LiveCandidate | null>(null)
   const loading = ref(false)
+
   const rotationTimer = ref<number | null>(null)
 
-  function getUserId(): string | null {
+  function getMyId(): string | null {
     const raw = authUser.value as any
     return raw?.id ?? raw?.sub ?? null
   }
 
   async function loadCandidates() {
     loading.value = true
-    const myId = getUserId()
+    const myId = getMyId()
 
-    let query = client
+    const { data, error } = await client
       .from('profiles')
-      .select('id, email, username, live_started_at, is_live')
+      .select('id, email, display_name, live_started_at')
       .eq('is_live', true)
       .order('live_started_at', { ascending: false })
-      .limit(20)
-
-    if (myId) {
-      query = query.neq('id', myId)
-    }
-
-    const { data, error } = await query
 
     if (error) {
-      console.error('[live-now] loadCandidates error:', error)
+      console.error('[live-now] loadCandidates error', error)
       candidates.value = []
-    } else {
-      candidates.value = (data || []) as LiveCandidate[]
-      console.log('[live-now] candidates loaded:', candidates.value)
+      current.value = null
+      loading.value = false
+      return
     }
 
+    let list = (data || []) as LiveCandidate[]
+
+    // убираем себя из списка зрителя
+    if (myId) {
+      list = list.filter((u) => u.id !== myId)
+    }
+
+    candidates.value = list
     loading.value = false
   }
 
@@ -58,9 +59,9 @@ export function useLiveNow() {
       current.value = null
       return
     }
+
     const idx = Math.floor(Math.random() * list.length)
     current.value = list[idx]
-    console.log('[live-now] picked:', current.value)
   }
 
   function stopRotation() {
@@ -74,34 +75,27 @@ export function useLiveNow() {
     if (!process.client) return
 
     stopRotation()
-
     await loadCandidates()
     pickRandom()
+
+    const intervalMs = candidates.value.length > 1 ? 60_000 : 120_000
 
     rotationTimer.value = window.setInterval(async () => {
       await loadCandidates()
       pickRandom()
-    }, 60_000)
-  }
-
-  async function reloadNow() {
-    await loadCandidates()
-    pickRandom()
+    }, intervalMs)
   }
 
   onBeforeUnmount(() => {
     stopRotation()
   })
 
-  const hasCurrent = computed(() => !!current.value)
-
   return {
     candidates,
     current,
-    hasCurrent,
     loading,
     startRotation,
     stopRotation,
-    reloadNow,
+    refresh: loadCandidates,
   }
 }
