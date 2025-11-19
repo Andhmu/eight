@@ -26,11 +26,10 @@
     </div>
 
     <div class="feed-card__body live-card__body">
-      <!-- Когда мы в эфире: показываем СВОЮ камеру -->
+      <!-- Когда вы в эфире: показывает превью вашей камеры -->
       <div v-if="isLive" class="live-card__video-wrapper">
         <span class="live-card__badge">ВЫ В ЭФИРЕ</span>
 
-        <!-- ВАЖНО: ref="videoEl" берётся прямо из useMyLive -->
         <video
           ref="videoEl"
           class="live-card__player"
@@ -48,7 +47,7 @@
       <div v-else class="live-card__placeholder">
         <span class="live-card__badge live-card__badge--idle">Эфир</span>
         <p>
-          Сейчас нет активных эфиров или вы ещё не начали свой эфир.
+          Сейчас нет активных эфиров или мы ещё ищем для вас что-то интересное…
         </p>
       </div>
     </div>
@@ -59,11 +58,9 @@
 import { onMounted } from 'vue'
 import { useMyLive } from '~/composables/live/useMyLive'
 
-// Берём всё ТОЛЬКО из useMyLive
 const { isLive, busy, videoEl, loadInitial, startLive, stopLive } = useMyLive()
 
 onMounted(() => {
-  // При заходе на ленту подтягиваем is_live из Supabase
   loadInitial()
 })
 </script>

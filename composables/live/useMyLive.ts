@@ -1,39 +1,21 @@
 // composables/live/useMyLive.ts
-import { onBeforeUnmount, ref } from 'vue'
+import { nextTick, onBeforeUnmount, ref } from 'vue'
 import { useSupabaseClient, useSupabaseUser } from '#imports'
 
 export function useMyLive() {
   const client = useSupabaseClient()
   const authUser = useSupabaseUser()
 
-  // в эфире ли сейчас этот пользователь
   const isLive = ref(false)
   const busy = ref(false)
-
-  // элемент <video>, в который выводим локальную камеру
   const videoEl = ref<HTMLVideoElement | null>(null)
   const mediaStream = ref<MediaStream | null>(null)
-
-  // ---- ВСПОМОГАТЕЛЬНЫЕ ШТУКИ -----------------------------------
 
   function getUserId(): string | null {
     const raw = authUser.value as any
     return raw?.id ?? raw?.sub ?? null
   }
 
-  function stopCamera() {
-    if (mediaStream.value) {
-      mediaStream.value.getTracks().forEach((t) => t.stop())
-      mediaStream.value = null
-    }
-    if (videoEl.value) {
-      videoEl.value.srcObject = null
-    }
-  }
-
-  // ---- НАЧАЛЬНАЯ ЗАГРУЗКА СОСТОЯНИЯ ----------------------------
-
-  // Если в БД уже стоит is_live = true — подтягиваем это
   async function loadInitial() {
     const id = getUserId()
     if (!id) return
@@ -46,12 +28,18 @@ export function useMyLive() {
 
     if (!error && data?.is_live) {
       isLive.value = true
-    } else {
-      isLive.value = false
     }
   }
 
-  // ---- ЗАПУСК ЭФИРА --------------------------------------------
+  function stopCamera() {
+    if (mediaStream.value) {
+      mediaStream.value.getTracks().forEach((t) => t.stop())
+      mediaStream.value = null
+    }
+    if (videoEl.value) {
+      videoEl.value.srcObject = null
+    }
+  }
 
   async function startLive() {
     if (busy.value) return
@@ -65,7 +53,14 @@ export function useMyLive() {
     }
 
     try {
-      // 1. Включаем камеру и микрофон
+      // 1. Сначала показываем блок эфира, чтобы появился <video ref="videoEl">
+      isLive.value = true
+
+      if (process.client) {
+        await nextTick()
+      }
+
+      // 2. Включаем камеру/микрофон
       if (process.client && videoEl.value) {
         const stream = await navigator.mediaDevices.getUserMedia({
           video: true,
@@ -93,7 +88,7 @@ export function useMyLive() {
         })
       }
 
-      // 2. Отмечаем в Supabase, что пользователь в эфире
+      // 3. Помечаем в Supabase, что мы в эфире
       const { error } = await client
         .from('profiles')
         .update({
@@ -106,19 +101,17 @@ export function useMyLive() {
         console.error('[my-live] error set is_live = true:', error)
         alert('Не удалось начать эфир (ограничения доступа в Supabase).')
         stopCamera()
-      } else {
-        isLive.value = true
+        isLive.value = false
       }
     } catch (e) {
       console.error('[my-live] error starting live (getUserMedia):', e)
       alert('Не удалось получить доступ к камере/микрофону.')
       stopCamera()
+      isLive.value = false
     } finally {
       busy.value = false
     }
   }
-
-  // ---- ОСТАНОВКА ЭФИРА -----------------------------------------
 
   async function stopLive() {
     if (busy.value) return
@@ -126,10 +119,8 @@ export function useMyLive() {
 
     const id = getUserId()
 
-    // 1. Выключаем камеру
     stopCamera()
 
-    // 2. Сбрасываем флаг is_live в БД
     if (id) {
       const { error } = await client
         .from('profiles')
@@ -147,7 +138,6 @@ export function useMyLive() {
     busy.value = false
   }
 
-  // выключаем камеру, если уходим со страницы
   onBeforeUnmount(() => {
     stopCamera()
   })
