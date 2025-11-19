@@ -40,7 +40,7 @@ export function useMyLive() {
     }
 
     try {
-      // 1. Включаем камеру/микрофон (только в браузере)
+      // 1. Камера/микрофон
       if (process.client && videoEl.value) {
         const stream = await navigator.mediaDevices.getUserMedia({
           video: true,
@@ -51,10 +51,7 @@ export function useMyLive() {
 
         const v = videoEl.value
         v.srcObject = stream
-
-        // важные штуки для iOS / мобильных
-        v.muted = true       // чтобы автоплей не блокировался
-  
+        v.muted = true
         v.playsInline = true
 
         try {
@@ -67,7 +64,7 @@ export function useMyLive() {
         console.warn('[my-live] no video element or not client')
       }
 
-      // 2. Помечаем в Supabase, что мы в эфире
+      // 2. Обновляем профиль в Supabase
       const { error } = await client
         .from('profiles')
         .update({
