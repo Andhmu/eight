@@ -26,11 +26,11 @@
     </div>
 
     <div class="feed-card__body live-card__body">
-      <!-- Блок, когда Я в эфире -->
-      <div v-if="isLive" class="live-card__my-wrapper">
+      <!-- Мой эфир: блок ВСЕГДА в DOM, только прячем через v-show -->
+      <div v-show="isLive" class="live-card__my-wrapper">
         <span class="live-card__badge">ВЫ В ЭФИРЕ</span>
 
-        <!-- ВАЖНО: video всегда в DOM, ref приходит из useMyLive -->
+        <!-- ВАЖНО: этот <video> существует всегда -->
         <video
           ref="myVideoEl"
           class="live-card__player"
@@ -44,8 +44,8 @@
         </p>
       </div>
 
-      <!-- Блок, когда Я НЕ в эфире: показываем чужой эфир или заглушку -->
-      <div v-else>
+      <!-- Когда я НЕ в эфире — показываем текущий чужой эфир или заглушку -->
+      <div v-show="!isLive">
         <div v-if="currentLive" class="live-card__current">
           <p class="live-card__text">
             Сейчас в эфире
@@ -95,7 +95,7 @@
           </div>
 
           <div class="live-viewer__body">
-            <!-- ЗДЕСЬ ПОТОМ БУДЕТ WebRTC-видео -->
+            <!-- Здесь потом будет WebRTC-видео -->
             <div class="live-viewer__placeholder">
               <p>Здесь будет прямая трансляция этого пользователя.</p>
               <p class="live-viewer__note">
@@ -128,7 +128,6 @@ const currentLive = computed(() => current.value)
 
 const currentName = computed(() => {
   if (!currentLive.value) return ''
-  // позже можно добавить display_name / username
   return currentLive.value.email ?? currentLive.value.id
 })
 
