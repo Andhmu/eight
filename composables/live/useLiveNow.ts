@@ -1,11 +1,11 @@
 // composables/live/useLiveNow.ts
-import { onBeforeUnmount, ref } from 'vue'
+import { computed, onBeforeUnmount, ref } from 'vue'
 import { useSupabaseClient, useSupabaseUser } from '#imports'
 
-interface LiveCandidate {
+export interface LiveCandidate {
   id: string
   email: string | null
-  is_live: boolean
+  created_at: string | null
   live_started_at: string | null
 }
 
@@ -18,44 +18,31 @@ export function useLiveNow() {
   const loading = ref(false)
 
   const rotationTimer = ref<number | null>(null)
-  const reloadTimer = ref<number | null>(null)
 
-  function getMyId(): string | null {
+  function getUserId(): string | null {
     const raw = authUser.value as any
     return raw?.id ?? raw?.sub ?? null
   }
 
   async function loadCandidates() {
     loading.value = true
-
-    const myId = getMyId()
+    const me = getUserId()
 
     const { data, error } = await client
       .from('profiles')
-      .select('id, email, is_live, live_started_at')
+      .select('id, email, created_at, live_started_at')
       .eq('is_live', true)
+      .neq('id', me ?? '______') // чтобы себя не видеть
       .order('live_started_at', { ascending: false })
-      .limit(20)
 
     if (error) {
-      console.error('[live-now] loadCandidates error:', error)
+      console.error('[live-now] loadCandidates error', error)
       candidates.value = []
-      loading.value = false
-      current.value = null
-      return
+    } else {
+      candidates.value = (data || []) as LiveCandidate[]
     }
 
-    let list = (data ?? []) as LiveCandidate[]
-
-    // не показываем самого себя в списке
-    if (myId) {
-      list = list.filter((u) => u.id !== myId)
-    }
-
-    candidates.value = list
     loading.value = false
-
-    pickRandom()
   }
 
   function pickRandom() {
@@ -64,27 +51,8 @@ export function useLiveNow() {
       current.value = null
       return
     }
-
     const idx = Math.floor(Math.random() * list.length)
     current.value = list[idx]
-  }
-
-  function startRotation() {
-    // останавливаем, если вдруг уже крутится
-    stopRotation()
-
-    // первый запрос
-    void loadCandidates()
-
-    // просто переключаем случайного раз в 15 секунд
-    rotationTimer.value = window.setInterval(() => {
-      pickRandom()
-    }, 15_000)
-
-    // а список из базы обновляем, допустим, раз в минуту
-    reloadTimer.value = window.setInterval(() => {
-      void loadCandidates()
-    }, 60_000)
   }
 
   function stopRotation() {
@@ -92,25 +60,39 @@ export function useLiveNow() {
       clearInterval(rotationTimer.value)
       rotationTimer.value = null
     }
-    if (reloadTimer.value !== null) {
-      clearInterval(reloadTimer.value)
-      reloadTimer.value = null
-    }
+  }
+
+  async function startRotation() {
+    if (!process.client) return
+
+    stopRotation()
+    await loadCandidates()
+    pickRandom()
+
+    if (!candidates.value.length) return
+
+    // если только один стример: обновляем список раз в 2 минуты
+    const intervalMs =
+      candidates.value.length === 1 ? 120_000 : 60_000
+
+    rotationTimer.value = window.setInterval(async () => {
+      await loadCandidates()
+      pickRandom()
+    }, intervalMs)
   }
 
   onBeforeUnmount(() => {
     stopRotation()
   })
 
-  return {
-    // текущий показываемый стример
-    current,
-    // весь список (если понадобится)
-    candidates,
-    loading,
+  const currentLive = computed(() => current.value)
 
+  return {
+    candidates,
+    currentLive,
+    loading,
+    reload: loadCandidates,
     startRotation,
     stopRotation,
-    reload: loadCandidates,
   }
 }
