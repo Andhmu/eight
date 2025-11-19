@@ -27,7 +27,7 @@
     </div>
 
     <div class="feed-card__body live-card__body">
-      <!-- 1. Когда Я в эфире — показываем мою камеру -->
+      <!-- 1. Я в эфире — показываем мою камеру -->
       <div v-if="isLive" class="live-card__video-wrapper">
         <span class="live-card__badge">ВЫ В ЭФИРЕ</span>
 
@@ -44,59 +44,148 @@
         </p>
       </div>
 
-      <!-- 2. Когда я НЕ в эфире, но кто-то другой в эфире -->
+      <!-- 2. Я не в эфире, но кто-то другой в эфире -->
       <div
         v-else-if="hasCurrent && current"
         class="live-card__viewer-info"
       >
         <p class="live-card__now">Сейчас в эфире</p>
         <p class="live-card__viewer-name">
-          {{ current.username || current.email || 'Пользователь' }}
+          {{ currentName }}
         </p>
         <p v-if="formattedStartedAt" class="live-card__viewer-time">
           в эфире с {{ formattedStartedAt }}
         </p>
 
-        <button
-          type="button"
-          class="live-card__watch-btn"
-          @click="goToProfile"
-        >
-          Перейти в профиль как гость
-        </button>
+        <div class="live-card__viewer-actions">
+          <button
+            type="button"
+            class="live-card__watch-btn"
+            :disabled="viewerLoading"
+            @click="openStreamPanel"
+          >
+            Смотреть эфир
+          </button>
+
+          <button
+            type="button"
+            class="live-card__profile-btn"
+            @click="goToProfile"
+          >
+            В профиль
+          </button>
+        </div>
       </div>
 
       <!-- 3. Никто не в эфире -->
       <div v-else class="live-card__placeholder">
         <span class="live-card__badge live-card__badge--idle">Эфир</span>
         <p>
-          Сейчас нет активных эфиров или мы ещё ищем для вас что-то интересное…
+          Сейчас нет активных эфиров или мы ещё ищем для вас что-то
+          интересное…
         </p>
       </div>
     </div>
   </section>
+
+  <!-- Выезжающая справа панель просмотра эфира -->
+  <transition name="live-viewer">
+    <div
+      v-if="isViewerOpen && current"
+      class="live-viewer-backdrop"
+      @click.self="closeStreamPanel"
+    >
+      <aside class="live-viewer">
+        <div class="live-viewer__header">
+          <div class="live-viewer__title-group">
+            <div class="live-viewer__title">
+              Эфир {{ currentName }}
+            </div>
+            <div
+              v-if="formattedStartedAt"
+              class="live-viewer__subtitle"
+            >
+              в эфире с {{ formattedStartedAt }}
+            </div>
+          </div>
+
+          <button
+            type="button"
+            class="live-viewer__close"
+            @click="closeStreamPanel"
+          >
+            ✕
+          </button>
+        </div>
+
+        <div class="live-viewer__body">
+          <div class="live-viewer__video-wrapper">
+            <video
+              ref="viewerVideoEl"
+              class="live-viewer__video"
+              autoplay
+              playsinline
+            ></video>
+          </div>
+
+          <button
+            type="button"
+            class="live-viewer__profile-btn"
+            @click="goToProfile"
+          >
+            Перейти в профиль
+          </button>
+        </div>
+      </aside>
+    </div>
+  </transition>
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted } from 'vue'
+import {
+  computed,
+  nextTick,
+  onBeforeUnmount,
+  onMounted,
+  ref,
+  watch,
+} from 'vue'
 import { useRouter } from '#imports'
 import { useMyLive } from '~/composables/live/useMyLive'
 import { useLiveNow } from '~/composables/live/useLiveNow'
+import { useLiveViewer } from '~/composables/live/useLiveViewer'
 
 const router = useRouter()
 
-// Мой собственный эфир (камера)
-const { isLive, busy, videoEl, loadInitial, startLive, stopLive } = useMyLive()
+// мой собственный эфир
+const { isLive, busy, videoEl, loadInitial, startLive, stopLive } =
+  useMyLive()
 
-// Список чужих лайвов / рандомный текущий
+// список чужих эфиров
 const {
   current,
   hasCurrent,
   loading: liveLoading,
   startRotation,
   stopRotation,
-  reloadNow,
 } = useLiveNow()
+
+// просмотр чужого эфира
+const isViewerOpen = ref(false)
+const {
+  videoEl: viewerVideoEl,
+  isWatching,
+  loading: viewerLoading,
+  startWatching,
+  stopWatching,
+} = useLiveViewer()
+
+const currentName = computed(
+  () =>
+    current.value?.username ||
+    current.value?.email ||
+    'Пользователь',
+)
 
 const formattedStartedAt = computed(() => {
   if (!current.value?.live_started_at) return ''
@@ -112,6 +201,20 @@ async function goToProfile() {
   await router.push(`/profile/${current.value.id}`)
 }
 
+async function openStreamPanel() {
+  if (!current.value) return
+  isViewerOpen.value = true
+  await nextTick()
+  await startWatching(current.value.id)
+}
+
+async function closeStreamPanel() {
+  isViewerOpen.value = false
+  if (isWatching.value) {
+    await stopWatching()
+  }
+}
+
 onMounted(() => {
   loadInitial()
   startRotation()
@@ -119,5 +222,13 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   stopRotation()
+  void stopWatching()
+})
+
+// если текущий стрим исчез — закрываем панель
+watch(current, (val) => {
+  if (!val && isViewerOpen.value) {
+    void closeStreamPanel()
+  }
 })
 </script>

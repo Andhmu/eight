@@ -1,4 +1,3 @@
-
 // composables/live/useLiveNow.ts
 import { computed, onBeforeUnmount, ref } from 'vue'
 import { useSupabaseClient, useSupabaseUser } from '#imports'
@@ -37,7 +36,6 @@ export function useLiveNow() {
       .limit(20)
 
     if (myId) {
-      // себя из списка убираем
       query = query.neq('id', myId)
     }
 
@@ -80,7 +78,6 @@ export function useLiveNow() {
     await loadCandidates()
     pickRandom()
 
-    // обновляем список и выбираем стрима раз в минуту
     rotationTimer.value = window.setInterval(async () => {
       await loadCandidates()
       pickRandom()

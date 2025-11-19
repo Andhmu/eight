@@ -1,128 +1,199 @@
 /* assets/styles/live.css */
 
-/* Отступы блока в ленте */
-.live-now {
-  margin-bottom: 16px;
+/* --- информация о текущем эфире в карточке --- */
+
+.live-card__viewer-info {
+  display: grid;
+  gap: 8px;
 }
 
-/* Карточка прямого эфира наследует feed-card, просто чуть подстраиваем */
-.live-now__card {
-  padding: 12px 14px;
+.live-card__now {
+  font-size: 0.85rem;
+  color: #64748b;
 }
 
-/* Заголовок и кнопка на одной линии */
-.live-now__header {
+.live-card__viewer-name {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.live-card__viewer-time {
+  font-size: 0.85rem;
+  color: #94a3b8;
+}
+
+.live-card__viewer-actions {
+  margin-top: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.live-card__watch-btn,
+.live-card__profile-btn {
+  border-radius: 999px;
+  border: none;
+  padding: 6px 14px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: transform 0.12s ease-out, box-shadow 0.12s ease-out,
+    background 0.12s ease-out, color 0.12s ease-out;
+}
+
+.live-card__watch-btn {
+  background: #0f172a;
+  color: #f9fafb;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.35);
+}
+
+.live-card__watch-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.4);
+}
+
+.live-card__profile-btn {
+  background: #e5edff;
+  color: #1e293b;
+}
+
+.live-card__profile-btn:hover {
+  background: #dbeafe;
+}
+
+/* --- выезжающая панель просмотра эфира --- */
+
+.live-viewer-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: flex;
+  justify-content: flex-end;
+  background: rgba(15, 23, 42, 0.4);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.live-viewer {
+  width: min(420px, 100%);
+  height: 100%;
+  padding: 16px 16px 20px;
+  background: rgba(248, 250, 252, 0.98);
+  box-shadow: -10px 0 30px rgba(15, 23, 42, 0.45);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.live-viewer__header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
+  margin-bottom: 4px;
 }
 
-.live-now__title {
-  font-size: 0.95rem;
-  font-weight: 600;
-}
-
-/* Тело карточки (контент эфира) */
-.live-now__body {
-  margin-top: 6px;
-}
-
-/* Кнопки "транслировать / завершить" */
-.live-now__go-live {
-  padding: 6px 10px;
-  border-radius: 999px;
-  border: none;
-  cursor: pointer;
-  font-size: 0.8rem;
-  font-weight: 500;
-  background: rgba(37, 99, 235, 0.12);
-  color: #1d4ed8;
-  white-space: nowrap;
-}
-
-.live-now__go-live--stop {
-  background: rgba(239, 68, 68, 0.12);
-  color: #b91c1c;
-}
-
-/* Общий контейнер "плеера" / заглушки */
-.live-now__player,
-.live-now__placeholder {
-  border-radius: 12px;
-  padding: 10px 12px;
-  background: rgba(248, 250, 252, 0.9);
-}
-
-/* Блок с видео (или его заглушкой) */
-.live-now__video {
-  position: relative;
+.live-viewer__title-group {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
 }
 
-/* Когда видео реально есть (камера) */
-.live-now__video-element {
+.live-viewer__title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.live-viewer__subtitle {
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+.live-viewer__close {
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  border: none;
+  background: rgba(148, 163, 184, 0.2);
+  color: #0f172a;
+  font-size: 0.9rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.12s ease-out, transform 0.12s ease-out;
+}
+
+.live-viewer__close:hover {
+  background: rgba(148, 163, 184, 0.3);
+  transform: translateY(-1px);
+}
+
+.live-viewer__body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.live-viewer__video-wrapper {
+  flex: 1;
+  border-radius: 18px;
+  padding: 6px;
+  background: radial-gradient(circle at 0 0, #e0f2fe, #e0e7ff);
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+}
+
+.live-viewer__video {
   width: 100%;
-  border-radius: 10px;
+  border-radius: 14px;
   background: #020617;
   object-fit: cover;
-  max-height: 260px;
 }
 
-/* Небольшой бейдж в левом верхнем углу */
-.live-now__badge {
+.live-viewer__profile-btn {
   align-self: flex-start;
-  padding: 2px 8px;
   border-radius: 999px;
-  font-size: 0.7rem;
-  font-weight: 600;
-  background: rgba(15, 23, 42, 0.85);
-  color: #e5e7eb;
-}
-
-.live-now__badge--live {
-  background: linear-gradient(90deg, #ef4444, #f97316);
-}
-
-/* Текстовые подсказки */
-.live-now__placeholder-text,
-.live-now__hint {
-  margin-top: 4px;
-  font-size: 0.8rem;
-  color: #6b7280;
-}
-
-/* Подсказка именно для собственного эфира */
-.live-now__hint--self {
-  margin-top: 6px;
-}
-
-/* Текст "идёт эфир пользователя ..." */
-.live-now__video-text {
-  font-size: 0.85rem;
-}
-
-/* Логин ведущего */
-.live-now__host {
   border: none;
-  background: transparent;
-  color: #2563eb;
-  font-weight: 600;
-  cursor: pointer;
-  padding: 0;
-}
-
-/* Подпись под блоком эфиров (про ротацию) */
-.live-now__meta {
-  margin-top: 6px;
-  display: flex;
-  justify-content: space-between;
-  font-size: 0.75rem;
-  color: #9ca3af;
-}
-
-.live-now__meta-label {
+  padding: 8px 16px;
+  font-size: 0.85rem;
   font-weight: 500;
+  cursor: pointer;
+  background: #e5edff;
+  color: #1e293b;
+}
+
+/* анимация выезда справа */
+
+.live-viewer-enter-active,
+.live-viewer-leave-active {
+  transition: opacity 0.18s ease-out;
+}
+
+.live-viewer-enter-from,
+.live-viewer-leave-to {
+  opacity: 0;
+}
+
+.live-viewer-enter-active .live-viewer,
+.live-viewer-leave-active .live-viewer {
+  transition: transform 0.2s ease-out;
+}
+
+.live-viewer-enter-from .live-viewer {
+  transform: translateX(100%);
+}
+
+.live-viewer-leave-to .live-viewer {
+  transform: translateX(100%);
+}
+
+@media (max-width: 480px) {
+  .live-viewer {
+    width: 100%;
+  }
 }
