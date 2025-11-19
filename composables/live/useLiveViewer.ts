@@ -33,7 +33,6 @@ export function useLiveViewer(streamerIdRef: () => string | null) {
       const [remoteStream] = ev.streams
       if (videoEl.value) {
         videoEl.value.srcObject = remoteStream
-        // @ts-expect-error playsInline
         videoEl.value.playsInline = true
       }
     }

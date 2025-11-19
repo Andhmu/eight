@@ -4,160 +4,147 @@
     <div class="feed-card__header live-card__header">
       <h2 class="feed-card__title">Прямой эфир</h2>
 
-      <!-- Кнопка "транслировать меня" / "завершить эфир" -->
+      <!-- Кнопка запуска / остановки своего эфира -->
       <button
-        v-if="!my.isLive"
+        v-if="!isLive"
         type="button"
         class="live-card__action live-card__action--start"
-        :disabled="my.busy"
-        @click="my.startLive"
+        :disabled="busy"
+        @click="handleStartLive"
       >
         Транслировать меня
       </button>
+
       <button
         v-else
         type="button"
         class="live-card__action live-card__action--stop"
-        :disabled="my.busy"
-        @click="my.stopLive"
+        :disabled="busy"
+        @click="handleStopLive"
       >
         Завершить эфир
       </button>
     </div>
 
     <div class="feed-card__body live-card__body">
-      <!-- Мой эфир (превью) -->
-      <div v-if="my.isLive" class="live-card__video-wrapper">
+      <!-- Блок собственного эфира -->
+      <div v-if="isLive" class="live-card__my-wrapper">
         <span class="live-card__badge">ВЫ В ЭФИРЕ</span>
+
+        <!-- video всегда существует, просто скрывается, если эфира нет -->
         <video
-          ref="myVideo"
+          ref="videoEl"
           class="live-card__player"
           autoplay
           muted
           playsinline
         ></video>
+
         <p class="live-card__hint">
           Ваш эфир сейчас виден другим пользователям в блоке «Прямой эфир».
         </p>
       </div>
 
-      <!-- Если сам не в эфире — показываем текущего стримера -->
-      <div v-else class="live-card__viewer">
-        <p v-if="now.loading">Ищем интересный эфир…</p>
+      <!-- Когда сам не в эфире -->
+      <div v-else class="live-card__viewer-wrapper">
+        <!-- Если есть кто-то в эфире -->
+        <div v-if="current" class="live-card__current">
+          <div class="live-card__current-main">
+            <p class="live-card__status">Сейчас в эфире</p>
 
-        <template v-else-if="now.current">
-          <p class="live-card__text">
-            Сейчас в эфире
-            <b>{{ now.current.display_name || now.current.email }}</b>
-            <span class="live-card__since" v-if="now.current.live_started_at">
-              с {{ formatTime(now.current.live_started_at) }}
-            </span>
-          </p>
+            <p class="live-card__name">
+              {{ current.display_name || fallbackInitial(current.email) }}
+            </p>
+            <p class="live-card__email">
+              {{ current.email }}
+            </p>
 
-          <div class="live-card__viewer-actions">
-            <button
-              type="button"
-              class="live-card__action live-card__action--watch"
-              @click="openViewer"
-            >
-              Смотреть эфир
-            </button>
+            <p v-if="current.live_started_at" class="live-card__started-at">
+              в эфире с {{ formatTime(current.live_started_at) }}
+            </p>
 
-            <NuxtLink
-              class="live-card__profile-link"
-              :to="`/profile/${now.current.id}`"
-            >
-              Профиль как гость
-            </NuxtLink>
+            <p class="live-card__subtitle">
+              Нажмите, чтобы перейти к трансляции как гость.
+            </p>
           </div>
-        </template>
 
-        <p v-else class="live-card__text">
-          Сейчас нет активных эфиров или мы ещё ищем для вас что-то
-          интересное…
-        </p>
+          <button
+            type="button"
+            class="live-card__watch-button"
+            @click="openViewer"
+          >
+            Перейти к эфиру
+          </button>
+        </div>
+
+        <!-- Если пока никто не стримит -->
+        <div v-else class="live-card__placeholder">
+          <span class="live-card__badge live-card__badge--idle">Эфир</span>
+          <p>
+            Сейчас нет активных эфиров или мы ещё ищем для вас что-то интересное…
+          </p>
+        </div>
       </div>
     </div>
 
-    <!-- Выезжающая справа панель со стримом другого пользователя -->
-    <transition name="profile-menu">
-      <div
-        v-if="viewerOpen && now.current"
-        class="profile-menu-backdrop"
-        @click.self="closeViewer"
-      >
-        <aside class="profile-menu live-viewer">
-          <div class="profile-menu__header">
-            <span class="profile-menu__title">
-              Эфир —
-              {{ now.current.display_name || now.current.email }}
-            </span>
-            <button
-              type="button"
-              class="profile-menu__close"
-              @click="closeViewer"
-            >
-              ✕
-            </button>
-          </div>
-
-          <div class="live-viewer__video-wrap">
-            <video
-              ref="viewerVideo"
-              class="live-viewer__video"
-              autoplay
-              playsinline
-            ></video>
-          </div>
-
-          <p v-if="viewer.errorText" class="error" style="margin-top:8px">
-            {{ viewer.errorText }}
-          </p>
-        </aside>
-      </div>
-    </transition>
+    <!-- Выезжающая панель просмотра эфира -->
+    <LiveViewerDrawer
+      v-if="showViewer && current"
+      :profile="current"
+      @close="closeViewer"
+    />
   </section>
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, computed } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import LiveViewerDrawer from '~/components/live/LiveViewerDrawer.vue'
 import { useMyLive } from '~/composables/live/useMyLive'
 import { useLiveNow } from '~/composables/live/useLiveNow'
-import { useLiveViewer } from '~/composables/live/useLiveViewer'
 
-const my = useMyLive()
-const now = useLiveNow()
+const { isLive, busy, videoEl, loadInitial, startLive, stopLive } = useMyLive()
+const { current, startRotation, stopRotation } = useLiveNow()
 
-const viewerOpen = ref(false)
-
-const myVideo = my.videoEl
-
-// текущий id стримера для просмотра (если панель открыта)
-const currentStreamerId = computed(() => (viewerOpen.value && now.current ? now.current.id : null))
-
-const viewer = useLiveViewer(() => currentStreamerId.value)
-const viewerVideo = viewer.videoEl
+const showViewer = ref(false)
 
 onMounted(() => {
-  my.loadInitial()
-  now.startRotation()
+  // подтягиваем статус is_live и запускаем ротацию кандидатов
+  loadInitial()
+  startRotation()
 })
 
+onBeforeUnmount(() => {
+  stopRotation()
+})
+
+function handleStartLive() {
+  // видеодом-элемент уже есть (video всегда в DOM), поэтому
+  // navigator.mediaDevices.getUserMedia отработает корректно
+  void startLive()
+}
+
+function handleStopLive() {
+  void stopLive()
+}
+
 function openViewer() {
-  viewerOpen.value = true
-  viewer.startWatching()
+  showViewer.value = true
 }
 
 function closeViewer() {
-  viewerOpen.value = false
-  viewer.stopWatching()
+  showViewer.value = false
 }
 
-function formatTime(iso: string) {
-  const d = new Date(iso)
-  return d.toLocaleTimeString('ru-RU', {
-    hour: '2-digit',
-    minute: '2-digit',
-  })
+function fallbackInitial(email: string | null): string {
+  if (!email) return 'Пользователь'
+  return email.split('@')[0] || email
+}
+
+function formatTime(value: string | null): string {
+  if (!value) return ''
+  const d = new Date(value)
+  const hh = d.getHours().toString().padStart(2, '0')
+  const mm = d.getMinutes().toString().padStart(2, '0')
+  return `${hh}:${mm}`
 }
 </script>
