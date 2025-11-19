@@ -26,11 +26,12 @@
     </div>
 
     <div class="feed-card__body live-card__body">
-      <!-- Когда в эфире -->
-      <div v-if="isLive" class="live-card__video-wrapper">
-        <span class="live-card__badge">ВЫ В ЭФИРЕ</span>
+      <!-- ВИДЕО всегда в DOM, просто состояние меняется вокруг него -->
+      <div class="live-card__video-wrapper">
+        <!-- бейдж "вы в эфире" только когда идёт эфир -->
+        <span v-if="isLive" class="live-card__badge">ВЫ В ЭФИРЕ</span>
 
-        <!-- ВАЖНО: ref="videoEl" берётся из useMyLive -->
+        <!-- ВАЖНО: ref="videoEl" из useMyLive -->
         <video
           ref="videoEl"
           class="live-card__player"
@@ -39,17 +40,19 @@
           playsinline
         ></video>
 
-        <p class="live-card__hint">
+        <!-- Подпись под видео, когда в эфире -->
+        <p v-if="isLive" class="live-card__hint">
           Ваш эфир сейчас виден другим пользователям в блоке «Прямой эфир».
         </p>
-      </div>
 
-      <!-- Когда не в эфире -->
-      <div v-else class="live-card__placeholder">
-        <span class="live-card__badge live-card__badge--idle">Эфир</span>
-        <p>
-          Сейчас нет активных эфиров или мы ещё ищем для вас что-то интересное…
-        </p>
+        <!-- Заглушка, когда НЕ в эфире -->
+        <div v-else class="live-card__placeholder">
+          <span class="live-card__badge live-card__badge--idle">Эфир</span>
+          <p>
+            Сейчас нет активных эфиров или мы ещё ищем для вас что-то
+            интересное…
+          </p>
+        </div>
       </div>
     </div>
   </section>
@@ -59,14 +62,10 @@
 import { onMounted } from 'vue'
 import { useMyLive } from '~/composables/live/useMyLive'
 
-/**
- * Берём videoEl прямо из композабла и используем его в шаблоне.
- * НИКАКИХ своих ref('') для видео тут больше не создаём.
- */
 const { isLive, busy, videoEl, loadInitial, startLive, stopLive } = useMyLive()
 
 onMounted(() => {
-  // Подтягиваем состояние is_live из Supabase при заходе на страницу
+  // Подтягиваем is_live из Supabase при заходе на страницу
   loadInitial()
 })
 </script>

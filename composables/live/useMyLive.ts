@@ -27,12 +27,26 @@ export function useMyLive() {
     }
   }
 
+  function getUserId(): string | null {
+    const raw = authUser.value as any
+    return raw?.id ?? raw?.sub ?? null
+  }
+
+  function stopCamera() {
+    if (mediaStream.value) {
+      mediaStream.value.getTracks().forEach((t) => t.stop())
+      mediaStream.value = null
+    }
+    if (videoEl.value) {
+      videoEl.value.srcObject = null
+    }
+  }
+
   async function startLive() {
     if (busy.value) return
     busy.value = true
 
-    const raw = authUser.value as any
-    const id: string | undefined = raw?.id ?? raw?.sub ?? undefined
+    const id = getUserId()
     if (!id) {
       busy.value = false
       alert('Чтобы начать эфир, нужно войти в аккаунт.')
@@ -40,7 +54,7 @@ export function useMyLive() {
     }
 
     try {
-      // 1. Камера/микрофон
+      // 1. Включаем камеру/микрофон (только в браузере)
       if (process.client && videoEl.value) {
         const stream = await navigator.mediaDevices.getUserMedia({
           video: true,
@@ -52,6 +66,7 @@ export function useMyLive() {
         const v = videoEl.value
         v.srcObject = stream
         v.muted = true
+ 
         v.playsInline = true
 
         try {
@@ -61,10 +76,13 @@ export function useMyLive() {
           console.warn('[my-live] video play error:', e)
         }
       } else {
-        console.warn('[my-live] no video element or not client')
+        console.warn('[my-live] no video element or not client', {
+          client: process.client,
+          videoEl: videoEl.value,
+        })
       }
 
-      // 2. Обновляем профиль в Supabase
+      // 2. Помечаем в Supabase, что мы в эфире
       const { error } = await client
         .from('profiles')
         .update({
@@ -93,8 +111,7 @@ export function useMyLive() {
     if (busy.value) return
     busy.value = true
 
-    const raw = authUser.value as any
-    const id: string | undefined = raw?.id ?? raw?.sub ?? undefined
+    const id = getUserId()
 
     stopCamera()
 
@@ -113,16 +130,6 @@ export function useMyLive() {
 
     isLive.value = false
     busy.value = false
-  }
-
-  function stopCamera() {
-    if (mediaStream.value) {
-      mediaStream.value.getTracks().forEach((t) => t.stop())
-      mediaStream.value = null
-    }
-    if (videoEl.value) {
-      videoEl.value.srcObject = null
-    }
   }
 
   onBeforeUnmount(() => {
