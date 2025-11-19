@@ -4,6 +4,7 @@
     <div class="feed-card__header live-card__header">
       <h2 class="feed-card__title">Прямой эфир</h2>
 
+      <!-- Кнопка для запуска / остановки своего эфира -->
       <button
         v-if="!isLive"
         type="button"
@@ -26,7 +27,7 @@
     </div>
 
     <div class="feed-card__body live-card__body">
-      <!-- Когда вы в эфире: показывает превью вашей камеры -->
+      <!-- 1. Когда Я в эфире — показываем мою камеру -->
       <div v-if="isLive" class="live-card__video-wrapper">
         <span class="live-card__badge">ВЫ В ЭФИРЕ</span>
 
@@ -43,7 +44,29 @@
         </p>
       </div>
 
-      <!-- Когда не в эфире -->
+      <!-- 2. Когда я НЕ в эфире, но кто-то другой в эфире -->
+      <div
+        v-else-if="hasCurrent && current"
+        class="live-card__viewer-info"
+      >
+        <p class="live-card__now">Сейчас в эфире</p>
+        <p class="live-card__viewer-name">
+          {{ current.username || current.email || 'Пользователь' }}
+        </p>
+        <p v-if="formattedStartedAt" class="live-card__viewer-time">
+          в эфире с {{ formattedStartedAt }}
+        </p>
+
+        <button
+          type="button"
+          class="live-card__watch-btn"
+          @click="goToProfile"
+        >
+          Перейти в профиль как гость
+        </button>
+      </div>
+
+      <!-- 3. Никто не в эфире -->
       <div v-else class="live-card__placeholder">
         <span class="live-card__badge live-card__badge--idle">Эфир</span>
         <p>
@@ -55,12 +78,46 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { computed, onBeforeUnmount, onMounted } from 'vue'
+import { useRouter } from '#imports'
 import { useMyLive } from '~/composables/live/useMyLive'
+import { useLiveNow } from '~/composables/live/useLiveNow'
 
+const router = useRouter()
+
+// Мой собственный эфир (камера)
 const { isLive, busy, videoEl, loadInitial, startLive, stopLive } = useMyLive()
+
+// Список чужих лайвов / рандомный текущий
+const {
+  current,
+  hasCurrent,
+  loading: liveLoading,
+  startRotation,
+  stopRotation,
+  reloadNow,
+} = useLiveNow()
+
+const formattedStartedAt = computed(() => {
+  if (!current.value?.live_started_at) return ''
+  const d = new Date(current.value.live_started_at)
+  return d.toLocaleTimeString(undefined, {
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+})
+
+async function goToProfile() {
+  if (!current.value) return
+  await router.push(`/profile/${current.value.id}`)
+}
 
 onMounted(() => {
   loadInitial()
+  startRotation()
+})
+
+onBeforeUnmount(() => {
+  stopRotation()
 })
 </script>
