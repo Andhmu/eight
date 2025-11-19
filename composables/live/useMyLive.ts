@@ -1,5 +1,5 @@
 // composables/live/useMyLive.ts
-import { onBeforeUnmount, ref } from 'vue'
+import { nextTick, onBeforeUnmount, ref } from 'vue'
 import { useSupabaseClient, useSupabaseUser } from '#imports'
 
 export function useMyLive() {
@@ -11,21 +11,7 @@ export function useMyLive() {
   const videoEl = ref<HTMLVideoElement | null>(null)
   const mediaStream = ref<MediaStream | null>(null)
 
-  async function loadInitial() {
-    const raw = authUser.value as any
-    const id: string | undefined = raw?.id ?? raw?.sub ?? undefined
-    if (!id) return
-
-    const { data, error } = await client
-      .from('profiles')
-      .select('is_live')
-      .eq('id', id)
-      .maybeSingle()
-
-    if (!error && data?.is_live) {
-      isLive.value = true
-    }
-  }
+  // --- вспомогательные функции ---
 
   function getUserId(): string | null {
     const raw = authUser.value as any
@@ -42,6 +28,26 @@ export function useMyLive() {
     }
   }
 
+  // --- начальное состояние ---
+
+  async function loadInitial() {
+    const id = getUserId()
+    if (!id) return
+
+    const { data, error } = await client
+      .from('profiles')
+      .select('is_live')
+      .eq('id', id)
+      .maybeSingle()
+
+    if (!error && data?.is_live) {
+      // если в базе помечено, что мы в эфире — локально тоже включим флаг
+      isLive.value = true
+    }
+  }
+
+  // --- запуск эфира ---
+
   async function startLive() {
     if (busy.value) return
     busy.value = true
@@ -54,35 +60,39 @@ export function useMyLive() {
     }
 
     try {
-      // 1. Включаем камеру/микрофон (только в браузере)
-      if (process.client && videoEl.value) {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: true,
-          audio: true,
-        })
+      // 1. Локально включаем флаг, чтобы Vue отрисовал <video ref="videoEl">
+      isLive.value = true
 
-        mediaStream.value = stream
+      // ждём, пока DOM обновится и видео реально появится
+      if (process.client) {
+        await nextTick()
 
         const v = videoEl.value
-        v.srcObject = stream
-        v.muted = true
- 
-        v.playsInline = true
+        if (v) {
+          // 2. Просим доступ к камере/микрофону
+          const stream = await navigator.mediaDevices.getUserMedia({
+            video: true,
+            audio: true,
+          })
 
-        try {
-          await v.play()
-          console.log('[my-live] video started')
-        } catch (e) {
-          console.warn('[my-live] video play error:', e)
+          mediaStream.value = stream
+          v.srcObject = stream
+
+          v.muted = true
+          v.playsInline = true
+
+          try {
+            await v.play()
+            console.log('[my-live] video started')
+          } catch (e) {
+            console.warn('[my-live] video play error:', e)
+          }
+        } else {
+          console.warn('[my-live] video element not found after nextTick')
         }
-      } else {
-        console.warn('[my-live] no video element or not client', {
-          client: process.client,
-          videoEl: videoEl.value,
-        })
       }
 
-      // 2. Помечаем в Supabase, что мы в эфире
+      // 3. Отмечаем в Supabase, что мы в эфире
       const { error } = await client
         .from('profiles')
         .update({
@@ -94,18 +104,21 @@ export function useMyLive() {
       if (error) {
         console.error('[my-live] error set is_live = true:', error)
         alert('Не удалось начать эфир (ограничения доступа в Supabase).')
+        // откатываем локальное состояние
+        isLive.value = false
         stopCamera()
-      } else {
-        isLive.value = true
       }
     } catch (e) {
       console.error('[my-live] error starting live (getUserMedia):', e)
       alert('Не удалось получить доступ к камере/микрофону.')
+      isLive.value = false
       stopCamera()
     } finally {
       busy.value = false
     }
   }
+
+  // --- остановка эфира ---
 
   async function stopLive() {
     if (busy.value) return
@@ -113,6 +126,7 @@ export function useMyLive() {
 
     const id = getUserId()
 
+    // сразу выключаем камеру локально
     stopCamera()
 
     if (id) {
