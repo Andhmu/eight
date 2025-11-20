@@ -1,29 +1,41 @@
 // composables/live/useMyLive.ts
-import { onBeforeUnmount, ref } from 'vue'
+import { nextTick, onBeforeUnmount, ref } from 'vue'
 import { useSupabaseClient, useSupabaseUser } from '#imports'
-
-type LiveSignalChannel = any
 
 export function useMyLive() {
   const client = useSupabaseClient()
   const authUser = useSupabaseUser()
 
+  // состояние
   const isLive = ref(false)
   const busy = ref(false)
 
+  // сюда из компонента привязывается <video>
   const videoEl = ref<HTMLVideoElement | null>(null)
+
+  // текущий MediaStream (камера+микрофон)
   const mediaStream = ref<MediaStream | null>(null)
 
-  const signalChannel = ref<LiveSignalChannel | null>(null)
-  const peers = new Map<string, RTCPeerConnection>()
+  // --- вспомогалки ---
 
-  function getStreamerId(): string | null {
+  function getUserId(): string | null {
     const raw = authUser.value as any
     return raw?.id ?? raw?.sub ?? null
   }
 
+  function stopCamera() {
+    if (mediaStream.value) {
+      mediaStream.value.getTracks().forEach((t) => t.stop())
+      mediaStream.value = null
+    }
+    if (videoEl.value) {
+      videoEl.value.srcObject = null
+    }
+  }
+
+  // подтягиваем is_live при заходе на страницу
   async function loadInitial() {
-    const id = getStreamerId()
+    const id = getUserId()
     if (!id) return
 
     const { data, error } = await client
@@ -37,198 +49,59 @@ export function useMyLive() {
     }
   }
 
-  function stopCamera() {
-    if (mediaStream.value) {
-      mediaStream.value.getTracks().forEach((t) => t.stop())
-      mediaStream.value = null
-    }
-    if (videoEl.value) {
-      videoEl.value.srcObject = null
-    }
-  }
-
-  function closeAllPeers() {
-    peers.forEach((pc) => pc.close())
-    peers.clear()
-  }
-
-  async function stopSignalChannel() {
-    if (signalChannel.value) {
-      try {
-        signalChannel.value.unsubscribe()
-      } catch (e) {
-        console.warn('[my-live] channel unsubscribe error', e)
-      }
-      signalChannel.value = null
-    }
-    closeAllPeers()
-  }
-
-  function createPeerForViewer(
-    streamerId: string,
-    viewerId: string,
-  ): RTCPeerConnection {
-    const peer = new RTCPeerConnection({
-      iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
-    })
-
-    // Отправляем локальный стрим зрителю
-    if (mediaStream.value) {
-      mediaStream.value.getTracks().forEach((track) => {
-        peer.addTrack(track, mediaStream.value as MediaStream)
-      })
-    }
-
-    // Когда у нас появляется ICE-кандидат — отправляем его зрителю
-    peer.onicecandidate = (ev) => {
-      if (!ev.candidate || !signalChannel.value) return
-
-      signalChannel.value.send({
-        type: 'broadcast',
-        event: 'ice',
-        payload: {
-          viewerId,
-          candidate: ev.candidate,
-        },
-      })
-    }
-
-    peer.onconnectionstatechange = () => {
-      console.log(
-        '[my-live] peer state for viewer',
-        viewerId,
-        peer.connectionState,
-      )
-      if (
-        peer.connectionState === 'failed' ||
-        peer.connectionState === 'disconnected' ||
-        peer.connectionState === 'closed'
-      ) {
-        peer.close()
-        peers.delete(viewerId)
-      }
-    }
-
-    peers.set(viewerId, peer)
-    return peer
-  }
-
-  async function startSignalChannel(streamerId: string) {
-    if (!process.client) return
-    if (signalChannel.value) return
-
-    const ch = client.channel(`live:${streamerId}`, {
-      config: {
-        broadcast: { self: false },
-      },
-    })
-
-    // Зритель зашёл смотреть эфир
-    ch.on('broadcast', { event: 'viewer-join' }, async ({ payload }) => {
-      const viewerId: string = payload.viewerId
-      console.log('[my-live] viewer-join', viewerId)
-
-      let pc = peers.get(viewerId)
-      if (!pc) {
-        pc = createPeerForViewer(streamerId, viewerId)
-      }
-
-      try {
-        const offer = await pc.createOffer()
-        await pc.setLocalDescription(offer)
-
-        signalChannel.value?.send({
-          type: 'broadcast',
-          event: 'offer',
-          payload: {
-            viewerId,
-            sdp: offer,
-          },
-        })
-      } catch (e) {
-        console.error('[my-live] error creating offer', e)
-      }
-    })
-
-    // Зритель прислал answer
-    ch.on('broadcast', { event: 'viewer-answer' }, async ({ payload }) => {
-      const viewerId: string = payload.viewerId
-      const sdp = payload.sdp
-      const pc = peers.get(viewerId)
-      if (!pc) {
-        console.warn('[my-live] answer for unknown viewer', viewerId)
-        return
-      }
-
-      try {
-        await pc.setRemoteDescription(new RTCSessionDescription(sdp))
-      } catch (e) {
-        console.error('[my-live] error setRemoteDescription(answer)', e)
-      }
-    })
-
-    // ICE-кандидаты от зрителя
-    ch.on('broadcast', { event: 'viewer-ice' }, async ({ payload }) => {
-      const viewerId: string = payload.viewerId
-      const candidate = payload.candidate
-      const pc = peers.get(viewerId)
-      if (!pc) return
-
-      try {
-        await pc.addIceCandidate(new RTCIceCandidate(candidate))
-      } catch (e) {
-        console.error('[my-live] error addIceCandidate from viewer', e)
-      }
-    })
-
-    await new Promise<void>((resolve) => {
-      ch.subscribe((status: string) => {
-        console.log('[my-live] channel status', status)
-        if (status === 'SUBSCRIBED') resolve()
-      })
-    })
-
-    signalChannel.value = ch
-  }
+  // --- старт эфира ---
 
   async function startLive() {
     if (busy.value) return
     busy.value = true
 
-    const id = getStreamerId()
+    const id = getUserId()
     if (!id) {
       busy.value = false
-      alert('Чтобы начать эфир, войдите в аккаунт.')
+      alert('Чтобы начать эфир, нужно войти в аккаунт.')
       return
     }
 
     try {
-      if (process.client && videoEl.value) {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: true,
-          audio: true,
-        })
+      // 1. сразу считаем, что мы "в эфире",
+      // чтобы отрендерился блок с <video>
+      isLive.value = true
 
-        mediaStream.value = stream
+      if (process.client) {
+        // ждём, пока Vue смонтирует <video ref="videoEl">
+        await nextTick()
 
-        const v = videoEl.value
-        v.srcObject = stream
-        v.muted = true
-        // @ts-expect-error playsInline не в типах
-        v.playsInline = true
+        if (videoEl.value) {
+          const stream = await navigator.mediaDevices.getUserMedia({
+            video: true,
+            audio: true,
+          })
 
-        try {
-          await v.play()
-          console.log('[my-live] local video started')
-        } catch (e) {
-          console.warn('[my-live] video play error', e)
+          mediaStream.value = stream
+
+          const v = videoEl.value
+          v.srcObject = stream
+          v.muted = true
+          // @ts-expect-error playsInline нет в типах, но в браузере есть
+          v.playsInline = true
+
+          try {
+            await v.play()
+            console.log('[my-live] video started')
+          } catch (e) {
+            console.warn('[my-live] video play error:', e)
+          }
+        } else {
+          console.warn('[my-live] no video element after nextTick', {
+            client: process.client,
+            videoEl: videoEl.value,
+          })
         }
       } else {
-        console.warn('[my-live] no video element or not client')
+        console.warn('[my-live] startLive called on server side')
       }
 
-      await startSignalChannel(id)
-
+      // 2. помечаем в Supabase, что мы в эфире
       const { error } = await client
         .from('profiles')
         .update({
@@ -238,31 +111,31 @@ export function useMyLive() {
         .eq('id', id)
 
       if (error) {
-        console.error('[my-live] error set is_live = true', error)
-        alert('Не удалось пометить профиль как «в эфире».')
+        console.error('[my-live] error set is_live = true:', error)
+        alert('Не удалось начать эфир (ограничения доступа в Supabase).')
+        // откатываем состояние
+        isLive.value = false
         stopCamera()
-        await stopSignalChannel()
-      } else {
-        isLive.value = true
       }
     } catch (e) {
-      console.error('[my-live] error starting live', e)
+      console.error('[my-live] error starting live (getUserMedia):', e)
       alert('Не удалось получить доступ к камере/микрофону.')
+      isLive.value = false
       stopCamera()
-      await stopSignalChannel()
     } finally {
       busy.value = false
     }
   }
 
+  // --- стоп эфира ---
+
   async function stopLive() {
     if (busy.value) return
     busy.value = true
 
-    const id = getStreamerId()
+    const id = getUserId()
 
     stopCamera()
-    await stopSignalChannel()
 
     if (id) {
       const { error } = await client
@@ -273,7 +146,7 @@ export function useMyLive() {
         .eq('id', id)
 
       if (error) {
-        console.error('[my-live] error set is_live = false', error)
+        console.error('[my-live] error set is_live = false:', error)
       }
     }
 
@@ -283,7 +156,6 @@ export function useMyLive() {
 
   onBeforeUnmount(() => {
     stopCamera()
-    void stopSignalChannel()
   })
 
   return {
