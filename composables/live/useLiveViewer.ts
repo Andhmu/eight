@@ -29,28 +29,19 @@ export function useLiveViewer() {
   }
 
   function createPeerConnection(): RTCPeerConnection {
+    console.log('[viewer] createPeerConnection')
     const peer = new RTCPeerConnection({
       iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
     })
 
     peer.ontrack = (ev) => {
       const [remoteStream] = ev.streams
-      console.log('[viewer] ontrack, got remote stream', remoteStream?.id)
+      console.log('[viewer] ontrack, got stream', remoteStream)
       if (videoEl.value && remoteStream) {
-        const v = videoEl.value
-        v.srcObject = remoteStream
+        videoEl.value.srcObject = remoteStream
         // @ts-expect-error playsInline нет в типах
-        v.playsInline = true
-        v.autoplay = true
-        v.muted = true
-        v
-          .play()
-          .then(() => {
-            console.log('[viewer] video playback started')
-          })
-          .catch((e) => {
-            console.warn('[viewer] video play error', e)
-          })
+        videoEl.value.playsInline = true
+        videoEl.value.autoplay = true
       }
     }
 
@@ -95,18 +86,23 @@ export function useLiveViewer() {
   async function openForStreamer(id: string) {
     if (!process.client) return
 
+    // закрываем прошлое соединение
     stopPeer()
     stopSignalChannel()
 
     streamerId.value = id
     viewerId.value = getViewerId()
 
+    console.log('[viewer] openForStreamer', id, 'viewerId', viewerId.value)
+
     const ch = client.channel(`live-${id}`, {
       config: { broadcast: { self: false } },
     })
 
-    ch.on('broadcast', { event: 'offer' }, async (payload: LiveSignalPayload) => {
-      const p = payload as any
+    // получили offer от стримера
+    ch.on('broadcast', { event: 'offer' }, async (msg: any) => {
+      const payload = msg?.payload as LiveSignalPayload | undefined
+      const p: any = payload || {}
       if (p.viewerId !== viewerId.value || !p.offer) return
 
       console.log('[viewer] got offer from streamer')
@@ -128,40 +124,42 @@ export function useLiveViewer() {
             answer,
           },
         })
+        console.log('[viewer] answer sent')
       } catch (e) {
         console.error('[viewer] error handle offer:', e)
       }
     })
 
-    ch.on(
-      'broadcast',
-      { event: 'ice-candidate' },
-      async (payload: LiveSignalPayload) => {
-        const p = payload as any
-        if (p.viewerId !== viewerId.value || !p.candidate) return
-        if (!pc.value) return
+    // ICE от стримера
+    ch.on('broadcast', { event: 'ice-candidate' }, async (msg: any) => {
+      const payload = msg?.payload as LiveSignalPayload | undefined
+      const p: any = payload || {}
+      if (p.viewerId !== viewerId.value || !p.candidate) return
+      if (!pc.value) return
 
-        try {
-          await pc.value.addIceCandidate(new RTCIceCandidate(p.candidate))
-        } catch (e) {
-          console.warn('[viewer] error add ICE from streamer:', e)
-        }
-      },
-    )
-
-    channel.value = ch
-    pc.value = createPeerConnection()
+      try {
+        await pc.value.addIceCandidate(new RTCIceCandidate(p.candidate))
+      } catch (e) {
+        console.warn('[viewer] error add ICE from streamer:', e)
+      }
+    })
 
     await ch.subscribe((status) => {
       console.log('[viewer] channel status', status)
-      if (status === 'SUBSCRIBED' && viewerId.value) {
-        ch.send({
-          type: 'broadcast',
-          event: 'viewer-join',
-          payload: { viewerId: viewerId.value },
-        })
-      }
     })
+
+    channel.value = ch
+
+    // создаём peer заранее
+    pc.value = createPeerConnection()
+
+    // сообщаем стримеру, что хотим смотреть
+    ch.send({
+      type: 'broadcast',
+      event: 'viewer-join',
+      payload: { viewerId: viewerId.value },
+    })
+    console.log('[viewer] viewer-join sent')
 
     isWatching.value = true
   }
