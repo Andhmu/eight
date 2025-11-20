@@ -1,32 +1,71 @@
 // composables/live/useLiveViewer.ts
 import { onBeforeUnmount, ref } from 'vue'
 import { useSupabaseClient, useSupabaseUser } from '#imports'
-import type { LiveCandidate } from './useLiveNow'
 
-type LiveSignalChannel = any
+type LiveSignalPayload =
+  | { viewerId: string }
+  | { viewerId: string; offer: RTCSessionDescriptionInit }
+  | { viewerId: string; answer: RTCSessionDescriptionInit }
+  | { viewerId: string; candidate: RTCIceCandidateInit }
 
 export function useLiveViewer() {
   const client = useSupabaseClient()
   const authUser = useSupabaseUser()
 
-  const videoEl = ref<HTMLVideoElement | null>(null)
   const isWatching = ref(false)
-  const busy = ref(false)
+  const videoEl = ref<HTMLVideoElement | null>(null)
 
-  const panelOpen = ref(false)
-  const currentStreamer = ref<LiveCandidate | null>(null)
+  const streamerId = ref<string | null>(null)
+  const viewerId = ref<string | null>(null)
 
-  const channel = ref<LiveSignalChannel | null>(null)
+  const channel = ref<ReturnType<typeof client.channel> | null>(null)
   const pc = ref<RTCPeerConnection | null>(null)
 
   function getViewerId(): string {
     const raw = authUser.value as any
     const id: string | undefined = raw?.id ?? raw?.sub ?? undefined
     if (id) return id
-    return `anon-${Math.random().toString(36).slice(2)}`
+
+    // гость – временный id
+    return 'anon-' + Math.random().toString(36).slice(2)
   }
 
-  function cleanupPeer() {
+  function createPeerConnection(): RTCPeerConnection {
+    const peer = new RTCPeerConnection({
+      iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
+    })
+
+    peer.ontrack = (ev) => {
+      const [remoteStream] = ev.streams
+      if (videoEl.value && remoteStream) {
+        videoEl.value.srcObject = remoteStream
+        // @ts-expect-error playsInline нет в типах
+        videoEl.value.playsInline = true
+        videoEl.value.autoplay = true
+      }
+    }
+
+    peer.onicecandidate = (ev) => {
+      if (!ev.candidate || !channel.value || !viewerId.value) return
+
+      channel.value.send({
+        type: 'broadcast',
+        event: 'ice-candidate',
+        payload: {
+          viewerId: viewerId.value,
+          candidate: ev.candidate.toJSON(),
+        },
+      })
+    }
+
+    peer.onconnectionstatechange = () => {
+      console.log('[viewer] pc state:', peer.connectionState)
+    }
+
+    return peer
+  }
+
+  function stopPeer() {
     if (pc.value) {
       pc.value.close()
       pc.value = null
@@ -36,164 +75,105 @@ export function useLiveViewer() {
     }
   }
 
-  async function cleanupChannel() {
+  function stopSignalChannel() {
     if (channel.value) {
-      try {
-        channel.value.unsubscribe()
-      } catch (e) {
-        console.warn('[viewer] channel unsubscribe error', e)
-      }
+      console.log('[viewer] stop signal channel')
+      channel.value.unsubscribe()
       channel.value = null
     }
   }
 
-  function createPeerConnection(
-    streamerId: string,
-    viewerId: string,
-  ): RTCPeerConnection {
-    const peer = new RTCPeerConnection({
-      iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
-    })
+  async function openForStreamer(id: string) {
+    if (!process.client) return
 
-    peer.ontrack = (ev) => {
-      const [remoteStream] = ev.streams
-      if (videoEl.value) {
-        videoEl.value.srcObject = remoteStream
-        // @ts-expect-error playsInline не в типах
-        videoEl.value.playsInline = true
-      }
-    }
+    // закрываем предыдущую
+    stopPeer()
+    stopSignalChannel()
 
-    peer.onicecandidate = (ev) => {
-      if (!ev.candidate || !channel.value) return
+    streamerId.value = id
+    viewerId.value = getViewerId()
 
-      channel.value.send({
-        type: 'broadcast',
-        event: 'viewer-ice',
-        payload: {
-          viewerId,
-          candidate: ev.candidate,
-        },
-      })
-    }
-
-    peer.onconnectionstatechange = () => {
-      console.log('[viewer] peer state', peer.connectionState)
-      if (
-        peer.connectionState === 'failed' ||
-        peer.connectionState === 'disconnected' ||
-        peer.connectionState === 'closed'
-      ) {
-        cleanupPeer()
-      }
-    }
-
-    pc.value = peer
-    return peer
-  }
-
-  async function connectToStreamer(streamer: LiveCandidate) {
-    if (busy.value) return
-    busy.value = true
-
-    const streamerId = streamer.id
-    const viewerId = getViewerId()
-
-    await cleanupChannel()
-    cleanupPeer()
-
-    if (!process.client) {
-      busy.value = false
-      return
-    }
-
-    const ch = client.channel(`live:${streamerId}`, {
+    const ch = client.channel(`live-${id}`, {
       config: { broadcast: { self: false } },
     })
 
-    // Получаем offer от стримера
-    ch.on('broadcast', { event: 'offer' }, async ({ payload }) => {
-      if (payload.viewerId !== viewerId) return
+    // получили offer от стримера
+    ch.on('broadcast', { event: 'offer' }, async (payload: LiveSignalPayload) => {
+      const p = payload as any
+      if (p.viewerId !== viewerId.value || !p.offer) return
 
       console.log('[viewer] got offer from streamer')
-      const sdp = payload.sdp
+
+      if (!pc.value) {
+        pc.value = createPeerConnection()
+      }
+
       try {
-        const peer = pc.value ?? createPeerConnection(streamerId, viewerId)
-        await peer.setRemoteDescription(new RTCSessionDescription(sdp))
+        await pc.value.setRemoteDescription(new RTCSessionDescription(p.offer))
+        const answer = await pc.value.createAnswer()
+        await pc.value.setLocalDescription(answer)
 
-        const answer = await peer.createAnswer()
-        await peer.setLocalDescription(answer)
-
-        channel.value?.send({
+        ch.send({
           type: 'broadcast',
-          event: 'viewer-answer',
+          event: 'answer',
           payload: {
-            viewerId,
-            sdp: answer,
+            viewerId: viewerId.value,
+            answer,
           },
         })
       } catch (e) {
-        console.error('[viewer] error handling offer', e)
+        console.error('[viewer] error handle offer:', e)
       }
     })
 
-    // ICE-кандидаты от стримера
-    ch.on('broadcast', { event: 'ice' }, async ({ payload }) => {
-      if (payload.viewerId !== viewerId) return
-      const candidate = payload.candidate
+    // ICE от стримера
+    ch.on('broadcast', { event: 'ice-candidate' }, async (payload: LiveSignalPayload) => {
+      const p = payload as any
+      if (p.viewerId !== viewerId.value || !p.candidate) return
       if (!pc.value) return
 
       try {
-        await pc.value.addIceCandidate(new RTCIceCandidate(candidate))
+        await pc.value.addIceCandidate(new RTCIceCandidate(p.candidate))
       } catch (e) {
-        console.error('[viewer] error addIceCandidate from streamer', e)
+        console.warn('[viewer] error add ICE from streamer:', e)
       }
     })
 
-    await new Promise<void>((resolve) => {
-      ch.subscribe((status: string) => {
-        console.log('[viewer] channel status', status)
-        if (status === 'SUBSCRIBED') resolve()
-      })
+    await ch.subscribe((status) => {
+      console.log('[viewer] channel status', status)
     })
 
     channel.value = ch
 
-    // говорим стримеру, что хотим смотреть
-    channel.value.send({
+    // создаём peer заранее
+    pc.value = createPeerConnection()
+
+    // даём знать стримеру, что хотим смотреть
+    ch.send({
       type: 'broadcast',
       event: 'viewer-join',
-      payload: { viewerId },
+      payload: { viewerId: viewerId.value },
     })
 
     isWatching.value = true
-    busy.value = false
   }
 
-  async function watchStreamer(streamer: LiveCandidate) {
-    currentStreamer.value = streamer
-    panelOpen.value = true
-    await connectToStreamer(streamer)
-  }
-
-  async function stopWatching() {
-    await cleanupChannel()
-    cleanupPeer()
+  function closeViewer() {
     isWatching.value = false
-    panelOpen.value = false
+    streamerId.value = null
+
+    stopPeer()
+    stopSignalChannel()
   }
 
   onBeforeUnmount(() => {
-    void stopWatching()
+    closeViewer()
   })
 
   return {
-    videoEl,
     isWatching,
-    busy,
-    panelOpen,
-    currentStreamer,
-    watchStreamer,
-    stopWatching,
+    videoEl,
+    openForStreamer,
+    closeViewer,
   }
 }

@@ -1,45 +1,58 @@
 // composables/live/useLiveNow.ts
-import { ref } from 'vue'
-import { useSupabaseClient } from '#imports'
+import { computed, onBeforeUnmount, ref } from 'vue'
+import { useSupabaseClient, useSupabaseUser } from '#imports'
 
 export interface LiveCandidate {
   id: string
-  email: string
-  display_name: string | null
+  email: string | null
   live_started_at: string | null
 }
 
 export function useLiveNow() {
   const client = useSupabaseClient()
+  const authUser = useSupabaseUser()
 
+  const loading = ref(false)
   const candidates = ref<LiveCandidate[]>([])
   const current = ref<LiveCandidate | null>(null)
-  const loading = ref(false)
   const rotationTimer = ref<number | null>(null)
+
+  function getUserId(): string | null {
+    const raw = authUser.value as any
+    return raw?.id ?? raw?.sub ?? null
+  }
 
   async function loadCandidates() {
     loading.value = true
+    try {
+      const { data, error } = await client
+        .from('profiles')
+        .select('id,email,live_started_at,is_live')
+        .eq('is_live', true)
+        .order('live_started_at', { ascending: false })
 
-    const { data, error } = await client
-      .from('profiles')
-      .select('id, email, live_started_at, display_name, is_live')
-      .eq('is_live', true)
-      .order('live_started_at', { ascending: false })
+      if (error) {
+        console.error('[live-now] loadCandidates error', error)
+        candidates.value = []
+      } else {
+        const me = getUserId()
+        const filtered = (data || []).filter((row: any) => row.id !== me)
 
-    if (error) {
-      console.error('[live-now] loadCandidates error', error)
-      candidates.value = []
-      current.value = null
-    } else {
-      candidates.value = (data ?? []) as LiveCandidate[]
+        candidates.value = filtered.map(
+          (row: any): LiveCandidate => ({
+            id: row.id,
+            email: row.email ?? null,
+            live_started_at: row.live_started_at ?? null,
+          }),
+        )
+      }
+
       if (!candidates.value.length) {
         current.value = null
-      } else if (!current.value) {
-        pickRandom()
       }
+    } finally {
+      loading.value = false
     }
-
-    loading.value = false
   }
 
   function pickRandom() {
@@ -53,7 +66,7 @@ export function useLiveNow() {
   }
 
   function stopRotation() {
-    if (rotationTimer.value != null) {
+    if (rotationTimer.value !== null) {
       clearInterval(rotationTimer.value)
       rotationTimer.value = null
     }
@@ -64,22 +77,25 @@ export function useLiveNow() {
 
     stopRotation()
     await loadCandidates()
+    pickRandom()
 
-    // если только один стример — просто иногда обновляем список,
-    // если несколько — каждые 60 сек переключаем случайного
-    if (candidates.value.length <= 1) {
-      rotationTimer.value = window.setInterval(loadCandidates, 120_000)
-    } else {
-      rotationTimer.value = window.setInterval(() => {
-        pickRandom()
-      }, 60_000)
-    }
+    rotationTimer.value = window.setInterval(async () => {
+      await loadCandidates()
+      pickRandom()
+    }, 60_000) // раз в минуту
   }
 
+  onBeforeUnmount(() => {
+    stopRotation()
+  })
+
+  const hasCandidates = computed(() => !!current.value)
+
   return {
+    loading,
     candidates,
     current,
-    loading,
+    hasCandidates,
     loadCandidates,
     startRotation,
     stopRotation,

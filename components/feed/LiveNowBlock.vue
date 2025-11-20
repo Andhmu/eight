@@ -4,21 +4,21 @@
     <div class="feed-card__header live-card__header">
       <h2 class="feed-card__title">Прямой эфир</h2>
 
+      <!-- Кнопка стримера -->
       <button
         v-if="!isLive"
         type="button"
         class="live-card__action live-card__action--start"
-        :disabled="myBusy"
-        @click="startLive"
+        :disabled="busy"
+        @click="onStartClick"
       >
         Транслировать меня
       </button>
-
       <button
         v-else
         type="button"
         class="live-card__action live-card__action--stop"
-        :disabled="myBusy"
+        :disabled="busy"
         @click="stopLive"
       >
         Завершить эфир
@@ -26,9 +26,9 @@
     </div>
 
     <div class="feed-card__body live-card__body">
-      <!-- Мой эфир -->
+      <!-- Я сам в эфире -->
       <div v-if="isLive" class="live-card__video-wrapper">
-        <span class="live-card__badge live-card__badge--live">ВЫ В ЭФИРЕ</span>
+        <span class="live-card__badge">ВЫ В ЭФИРЕ</span>
 
         <video
           ref="myVideoEl"
@@ -43,95 +43,82 @@
         </p>
       </div>
 
-      <!-- Когда не в эфире -->
-      <div v-else class="live-card__placeholder">
-        <span class="live-card__badge live-card__badge--idle">Эфир</span>
-        <p>
-          Сейчас нет активных эфиров или мы ещё ищем для вас что-то
-          интересное…
-        </p>
-      </div>
+      <!-- Я не в эфире – показываем чужие -->
+      <div v-else>
+        <!-- Текущий рекомендованный эфир -->
+        <div v-if="current">
+          <p class="live-card__now">
+            Сейчас в эфире
+          </p>
+          <p class="live-card__user-email">
+            {{ current.email || 'Пользователь' }}
+          </p>
+          <p class="live-card__since" v-if="current.live_started_at">
+            в эфире с {{ formatTime(current.live_started_at) }}
+          </p>
 
-      <!-- Блок с рандомным стримом -->
-      <div
-        v-if="currentLive && !isCurrentMine"
-        class="live-card__now"
-      >
-        <p class="live-card__now-text">
-          Сейчас в эфире
-          <strong>
-            {{ currentLive.display_name || currentLive.email }}
-          </strong>
-          <span v-if="currentLive.live_started_at">
-            (с {{ formatTime(currentLive.live_started_at) }})
-          </span>
-        </p>
+          <button
+            type="button"
+            class="live-card__watch-btn"
+            @click="openViewer"
+          >
+            Перейти к трансляции
+          </button>
+        </div>
 
-        <button
-          type="button"
-          class="live-card__now-button"
-          :disabled="viewerBusy"
-          @click="openViewer"
-        >
-          Перейти к трансляции
-        </button>
+        <!-- Если никого нет -->
+        <div v-else class="live-card__placeholder">
+          <span class="live-card__badge live-card__badge--idle">Эфир</span>
+          <p>Сейчас нет активных эфиров или мы ещё ищем для вас что-то интересное…</p>
+        </div>
       </div>
     </div>
 
-    <!-- Панель просмотра чужого стрима -->
-    <teleport to="body">
-      <div
-        v-if="viewerPanelOpen && currentStreamer"
-        class="live-viewer-backdrop"
-        @click.self="closeViewer"
-      >
-        <div class="live-viewer-panel">
-          <header class="live-viewer-header">
-            <div class="live-viewer-title">
+    <!-- Выезжающая панель со стримом -->
+    <transition name="live-sheet">
+      <div v-if="viewerOpen" class="live-sheet">
+        <div class="live-sheet__backdrop" @click="closeViewer"></div>
+
+        <div class="live-sheet__panel">
+          <header class="live-sheet__header">
+            <div class="live-sheet__title">
               Эфир
-              {{ currentStreamer.display_name || currentStreamer.email }}
+              <span v-if="current?.email"> {{ current.email }}</span>
             </div>
-            <button
-              type="button"
-              class="live-viewer-close"
-              @click="closeViewer"
-            >
-              ✕
+            <button class="live-sheet__close" type="button" @click="closeViewer">
+              ×
             </button>
           </header>
 
-          <div class="live-viewer-body">
+          <main class="live-sheet__body">
             <video
               ref="viewerVideoEl"
-              class="live-viewer-video"
+              class="live-sheet__video"
               autoplay
               playsinline
               controls
             ></video>
 
-            <p class="live-viewer-hint">
-              Если видео не появилось через несколько секунд, попробуйте
-              закрыть и открыть трансляцию ещё раз.
+            <p class="live-sheet__hint">
+              Если видео не появилось через несколько секунд, попробуйте закрыть
+              и открыть трансляцию ещё раз.
             </p>
-          </div>
+          </main>
         </div>
       </div>
-    </teleport>
+    </transition>
   </section>
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted } from 'vue'
-import { useSupabaseUser } from '#imports'
+import { computed, onMounted, ref } from 'vue'
 import { useMyLive } from '~/composables/live/useMyLive'
 import { useLiveNow } from '~/composables/live/useLiveNow'
 import { useLiveViewer } from '~/composables/live/useLiveViewer'
 
-const authUser = useSupabaseUser()
-
 const {
   isLive,
-  busy: myBusy,
+  busy,
   videoEl: myVideoEl,
   loadInitial,
   startLive,
@@ -140,243 +127,217 @@ const {
 
 const {
   current,
-  loading: liveNowLoading,
   startRotation,
-  stopRotation,
-  loadCandidates,
 } = useLiveNow()
 
 const {
-  videoEl: viewerVideoEl,
   isWatching,
-  busy: viewerBusy,
-  panelOpen: viewerPanelOpen,
-  currentStreamer,
-  watchStreamer,
-  stopWatching,
+  videoEl: viewerVideoEl,
+  openForStreamer,
+  closeViewer: closeViewerInternal,
 } = useLiveViewer()
+
+const viewerOpen = computed(() => isWatching.value)
+
+function formatTime(ts: string): string {
+  const d = new Date(ts)
+  return d.toLocaleTimeString('ru-RU', {
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+}
+
+async function onStartClick() {
+  await startLive()
+}
+
+function openViewer() {
+  if (!current.value) return
+  openForStreamer(current.value.id)
+}
+
+function closeViewer() {
+  closeViewerInternal()
+}
 
 onMounted(async () => {
   await loadInitial()
-  await loadCandidates()
   await startRotation()
 })
-
-onBeforeUnmount(() => {
-  stopRotation()
-  void stopWatching()
-})
-
-const currentLive = computed(() => current.value || null)
-
-const isCurrentMine = computed(() => {
-  const userId = (authUser.value as any)?.id ?? (authUser.value as any)?.sub
-  if (!userId || !currentLive.value) return false
-  return currentLive.value.id === userId
-})
-
-function formatTime(iso: string | null): string {
-  if (!iso) return ''
-  const d = new Date(iso)
-  const hh = String(d.getHours()).padStart(2, '0')
-  const mm = String(d.getMinutes()).padStart(2, '0')
-  return `${hh}:${mm}`
-}
-
-async function openViewer() {
-  if (!currentLive.value) return
-  await watchStreamer(currentLive.value)
-}
-
-async function closeViewer() {
-  await stopWatching()
-}
 </script>
 
 <style scoped>
-.live-card {
-  margin-top: 16px;
+.live-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
-/* Кнопки «транслировать / завершить» */
 .live-card__action {
-  min-width: 160px;
   border-radius: 999px;
-  padding: 8px 18px;
-  font-size: 14px;
+  padding: 0.4rem 1.2rem;
+  font-size: 0.85rem;
   border: none;
   cursor: pointer;
-  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.12);
-  transition: transform 0.12s ease, box-shadow 0.12s ease, opacity 0.12s ease;
-}
-
-.live-card__action:disabled {
-  opacity: 0.6;
-  cursor: default;
-  box-shadow: none;
+  box-shadow: 0 8px 16px rgba(15, 23, 42, 0.18);
 }
 
 .live-card__action--start {
-  background: linear-gradient(135deg, #466bff, #7f7bff);
+  background: linear-gradient(135deg, #4f46e5, #6366f1);
   color: #fff;
 }
 
 .live-card__action--stop {
-  background: linear-gradient(135deg, #ff6b6b, #ff9f7f);
+  background: linear-gradient(135deg, #f97373, #fb7185);
   color: #fff;
 }
 
-/* Видео блока */
+.live-card__body {
+  margin-top: 0.75rem;
+}
+
 .live-card__video-wrapper {
-  position: relative;
   background: #020617;
-  border-radius: 24px;
-  padding: 12px 12px 16px;
+  border-radius: 1.25rem;
+  padding: 0.75rem;
   color: #e5e7eb;
 }
 
 .live-card__player {
-  display: block;
   width: 100%;
-  border-radius: 18px;
+  border-radius: 1rem;
   background: #020617;
-  max-height: 260px;
-  object-fit: cover;
 }
 
 .live-card__hint {
-  margin-top: 8px;
-  font-size: 13px;
+  margin-top: 0.5rem;
+  font-size: 0.8rem;
   opacity: 0.8;
 }
 
 .live-card__badge {
-  position: absolute;
-  top: 10px;
-  left: 14px;
-  padding: 4px 12px;
+  display: inline-block;
+  margin-bottom: 0.5rem;
+  padding: 0.25rem 0.75rem;
   border-radius: 999px;
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 600;
-}
-
-.live-card__badge--live {
-  background: #fb5a36;
-  color: #fff7ed;
+  background: #f97316;
+  color: #fff;
 }
 
 .live-card__badge--idle {
-  position: static;
-  display: inline-flex;
-  margin-bottom: 6px;
-  background: #0f172a;
-  color: #e5e7eb;
-}
-
-/* Плейсхолдер, когда не в эфире */
-.live-card__placeholder {
-  border-radius: 20px;
-  padding: 16px 18px;
-  background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(18px);
-  font-size: 14px;
-}
-
-/* Блок «сейчас в эфире» под основным */
-.live-card__now {
-  margin-top: 14px;
-  padding-top: 10px;
-  border-top: 1px dashed rgba(15, 23, 42, 0.08);
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 10px;
-  font-size: 14px;
-}
-
-.live-card__now-text strong {
-  font-weight: 600;
-}
-
-.live-card__now-button {
-  margin-left: auto;
-  border-radius: 999px;
-  padding: 6px 14px;
-  border: none;
-  font-size: 13px;
-  cursor: pointer;
-  background: #0f172a;
+  background: #111827;
   color: #f9fafb;
 }
 
-/* Выезжающая панель просмотра */
-.live-viewer-backdrop {
+.live-card__placeholder {
+  background: #f9fafb;
+  border-radius: 1.25rem;
+  padding: 0.75rem;
+  font-size: 0.9rem;
+  color: #111827;
+}
+
+.live-card__now {
+  font-weight: 600;
+}
+
+.live-card__user-email {
+  margin-top: 0.25rem;
+  font-weight: 500;
+}
+
+.live-card__since {
+  margin-top: 0.15rem;
+  font-size: 0.8rem;
+  opacity: 0.8;
+}
+
+.live-card__watch-btn {
+  margin-top: 0.75rem;
+  padding: 0.4rem 1rem;
+  border-radius: 999px;
+  border: none;
+  cursor: pointer;
+  font-size: 0.85rem;
+  background: linear-gradient(135deg, #0ea5e9, #22c55e);
+  color: white;
+}
+
+/* sheet */
+
+.live-sheet-enter-active,
+.live-sheet-leave-active {
+  transition: opacity 0.2s ease, transform 0.25s ease;
+}
+
+.live-sheet-enter-from,
+.live-sheet-leave-to {
+  opacity: 0;
+  transform: translateY(16px);
+}
+
+.live-sheet {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.45);
-  backdrop-filter: blur(12px);
+  z-index: 40;
   display: flex;
-  justify-content: flex-end;
-  z-index: 60;
+  justify-content: center;
+  align-items: flex-end;
 }
 
-.live-viewer-panel {
-  width: min(420px, 100%);
-  height: 100%;
+.live-sheet__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.35);
+  backdrop-filter: blur(8px);
+}
+
+.live-sheet__panel {
+  position: relative;
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto 1rem;
   background: #f9fafb;
-  box-shadow: -24px 0 40px rgba(15, 23, 42, 0.25);
-  border-radius: 24px 0 0 24px;
-  padding: 18px 18px 24px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+  border-radius: 1.5rem;
+  padding: 0.75rem 1rem 1rem;
+  box-shadow: 0 20px 60px rgba(15, 23, 42, 0.3);
 }
 
-.live-viewer-header {
+.live-sheet__header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-weight: 600;
-  font-size: 15px;
+  margin-bottom: 0.5rem;
 }
 
-.live-viewer-close {
+.live-sheet__title {
+  font-weight: 600;
+}
+
+.live-sheet__close {
   border: none;
   background: transparent;
-  font-size: 20px;
+  font-size: 1.4rem;
+  line-height: 1;
   cursor: pointer;
 }
 
-.live-viewer-body {
-  flex: 1;
+.live-sheet__body {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 0.5rem;
 }
 
-.live-viewer-video {
+.live-sheet__video {
   width: 100%;
-  border-radius: 20px;
+  border-radius: 1rem;
   background: #020617;
-  max-height: 320px;
-  object-fit: cover;
 }
 
-.live-viewer-hint {
-  font-size: 13px;
-  color: #6b7280;
-}
-
-/* Мобильные правки */
-@media (max-width: 640px) {
-  .live-viewer-panel {
-    width: 100%;
-    border-radius: 20px 20px 0 0;
-    justify-content: flex-start;
-  }
-
-  .live-viewer-backdrop {
-    align-items: flex-end;
-  }
+.live-sheet__hint {
+  font-size: 0.8rem;
+  color: #4b5563;
 }
 </style>
