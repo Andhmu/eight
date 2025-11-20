@@ -26,6 +26,26 @@ export function useLiveViewer() {
     return finalId
   }
 
+  function attachRemoteStream(remoteStream: MediaStream) {
+    const v = videoEl.value
+    if (!v) {
+      console.warn('[viewer] ontrack, но videoEl ещё нет')
+      return
+    }
+
+    v.srcObject = remoteStream
+    v.muted = true // чтобы браузер не блокировал автоплей
+    ;(v as any).playsInline = true
+
+    v.play()
+      .then(() => {
+        console.log('[viewer] видео запущено')
+      })
+      .catch((e) => {
+        console.warn('[viewer] ошибка при video.play()', e)
+      })
+  }
+
   function createPeerConnection(
     streamerId: string,
     viewerId: string,
@@ -36,11 +56,8 @@ export function useLiveViewer() {
 
     peer.ontrack = (ev) => {
       const [remoteStream] = ev.streams
-      if (videoEl.value) {
-        videoEl.value.srcObject = remoteStream
-        ;(videoEl.value as any).playsInline = true
-        console.log('[viewer] got remote stream from', streamerId)
-      }
+      console.log('[viewer] ontrack от', streamerId)
+      attachRemoteStream(remoteStream)
     }
 
     peer.onicecandidate = (ev) => {
@@ -73,11 +90,11 @@ export function useLiveViewer() {
     try {
       const ch = client.channel(`live:${streamerId}`)
 
-      // Приходит offer от стримера
+      // Получаем offer от стримера
       ch.on('broadcast', { event: 'offer' }, async (payload: any) => {
         if (payload.viewerId !== viewerId) return
 
-        console.log('[viewer] got offer from', streamerId)
+        console.log('[viewer] получили offer от', streamerId)
 
         if (!pc.value) {
           pc.value = createPeerConnection(streamerId, viewerId)
@@ -100,7 +117,7 @@ export function useLiveViewer() {
             },
           })
         } catch (e) {
-          console.error('[viewer] error handle offer/answer', e)
+          console.error('[viewer] ошибка при обработке offer/answer', e)
         }
       })
 
@@ -114,7 +131,7 @@ export function useLiveViewer() {
             new RTCIceCandidate(payload.candidate),
           )
         } catch (e) {
-          console.warn('[viewer] error add ICE', e)
+          console.warn('[viewer] ошибка add ICE', e)
         }
       })
 
@@ -122,7 +139,7 @@ export function useLiveViewer() {
       console.log('[viewer] channel subscribe status', status)
       channel.value = ch
 
-      // Говорим стримеру, что мы хотим смотреть
+      // Говорим стримеру, что хотим смотреть
       await ch.send({
         type: 'broadcast',
         event: 'viewer-join',
