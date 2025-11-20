@@ -4,7 +4,6 @@
     <div class="feed-card__header live-card__header">
       <h2 class="feed-card__title">Прямой эфир</h2>
 
-      <!-- Кнопка стримера -->
       <button
         v-if="!isLive"
         type="button"
@@ -46,9 +45,7 @@
       <!-- Я не в эфире – показываем чужие -->
       <div v-else>
         <div v-if="current">
-          <p class="live-card__now">
-            Сейчас в эфире
-          </p>
+          <p class="live-card__now">Сейчас в эфире</p>
           <p class="live-card__user-email">
             {{ current.email || 'Пользователь' }}
           </p>
@@ -125,10 +122,7 @@ const {
   stopLive,
 } = useMyLive()
 
-const {
-  current,
-  startRotation,
-} = useLiveNow()
+const { current, startRotation } = useLiveNow()
 
 const {
   isWatching,
@@ -165,6 +159,9 @@ onMounted(async () => {
   await startRotation()
 })
 </script>
+
+<!-- стили оставляю как у тебя, можешь не менять -->
+
 
 <style scoped>
 .live-card__header {
