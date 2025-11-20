@@ -26,11 +26,10 @@
     </div>
 
     <div class="feed-card__body live-card__body">
-      <!-- Мой эфир: блок ВСЕГДА в DOM, только прячем через v-show -->
+      <!-- Мой эфир — блок всегда в DOM, только прячем/показываем -->
       <div v-show="isLive" class="live-card__my-wrapper">
         <span class="live-card__badge">ВЫ В ЭФИРЕ</span>
 
-        <!-- ВАЖНО: этот <video> существует всегда -->
         <video
           ref="myVideoEl"
           class="live-card__player"
@@ -44,7 +43,7 @@
         </p>
       </div>
 
-      <!-- Когда я НЕ в эфире — показываем текущий чужой эфир или заглушку -->
+      <!-- Когда я не в эфире — показываем случайный чужой эфир / заглушку -->
       <div v-show="!isLive">
         <div v-if="currentLive" class="live-card__current">
           <p class="live-card__text">
@@ -58,6 +57,7 @@
           <button
             type="button"
             class="live-card__watch-btn"
+            :disabled="viewerBusy"
             @click="openViewer"
           >
             Перейти к трансляции
@@ -73,7 +73,7 @@
       </div>
     </div>
 
-    <!-- Выдвижная панель просмотра чужого эфира -->
+    <!-- Выезжающая панель просмотра чужого эфира -->
     <transition name="live-viewer">
       <div
         v-if="isViewerOpen && currentLive"
@@ -95,14 +95,19 @@
           </div>
 
           <div class="live-viewer__body">
-            <!-- Здесь потом будет WebRTC-видео -->
-            <div class="live-viewer__placeholder">
-              <p>Здесь будет прямая трансляция этого пользователя.</p>
-              <p class="live-viewer__note">
-                Сейчас мы показываем статус эфира и профиль. Передачу видео
-                подключим следующим шагом через WebRTC.
-              </p>
-            </div>
+            <video
+              ref="viewerVideoEl"
+              class="live-viewer__player"
+              autoplay
+              playsinline
+            ></video>
+
+            <p v-if="viewerError" class="live-viewer__error">
+              {{ viewerError }}
+            </p>
+            <p v-else-if="!isWatchingViewer" class="live-viewer__note">
+              Подключаемся к эфиру…
+            </p>
           </div>
         </aside>
       </div>
@@ -114,13 +119,30 @@
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useMyLive } from '~/composables/live/useMyLive'
 import { useLiveNow } from '~/composables/live/useLiveNow'
+import { useLiveViewer } from '~/composables/live/useLiveViewer'
 
-// Стример: моя камера + is_live
-const { isLive, busy, videoEl: myVideoEl, loadInitial, startLive, stopLive } =
-  useMyLive()
+// Мой эфир
+const {
+  isLive,
+  busy,
+  videoEl: myVideoEl,
+  loadInitial,
+  startLive,
+  stopLive,
+} = useMyLive()
 
-// Зритель: кто сейчас в эфире + ротация
+// Кандидаты «кто сейчас в эфире»
 const { current, startRotation, stopRotation } = useLiveNow()
+
+// Просмотр чужого эфира
+const {
+  videoEl: viewerVideoEl,
+  isWatching: isWatchingViewer,
+  busy: viewerBusy,
+  error: viewerError,
+  startWatching,
+  stopWatching,
+} = useLiveViewer()
 
 const isViewerOpen = ref(false)
 
@@ -140,12 +162,15 @@ const startedAt = computed(() => {
   })
 })
 
-function openViewer() {
+async function openViewer() {
+  if (!currentLive.value) return
   isViewerOpen.value = true
+  await startWatching(currentLive.value.id)
 }
 
-function closeViewer() {
+async function closeViewer() {
   isViewerOpen.value = false
+  await stopWatching()
 }
 
 onMounted(async () => {
@@ -155,5 +180,6 @@ onMounted(async () => {
 
 onUnmounted(() => {
   stopRotation()
+  void stopWatching()
 })
 </script>
