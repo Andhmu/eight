@@ -42,7 +42,7 @@
         </p>
       </div>
 
-      <!-- Я не в эфире – показываем чужие -->
+      <!-- Я не в эфире – показываем чужие эфиры -->
       <div v-else>
         <div v-if="current">
           <p class="live-card__now">Сейчас в эфире</p>
@@ -64,14 +64,12 @@
 
         <div v-else class="live-card__placeholder">
           <span class="live-card__badge live-card__badge--idle">Эфир</span>
-          <p>
-            Сейчас нет активных эфиров или мы ещё ищем для вас что-то интересное…
-          </p>
+          <p>Сейчас нет активных эфиров или мы ещё ищем для вас что-то интересное…</p>
         </div>
       </div>
     </div>
 
-    <!-- Выезжающая панель со стримом -->
+    <!-- Выезжающая панель -->
     <transition name="live-sheet">
       <div v-if="viewerOpen" class="live-sheet">
         <div class="live-sheet__backdrop" @click="closeViewer"></div>
@@ -82,7 +80,11 @@
               Эфир
               <span v-if="current?.email"> {{ current.email }}</span>
             </div>
-            <button class="live-sheet__close" type="button" @click="closeViewer">
+            <button
+              class="live-sheet__close"
+              type="button"
+              @click="closeViewer"
+            >
               ×
             </button>
           </header>
@@ -97,8 +99,8 @@
             ></video>
 
             <p class="live-sheet__hint">
-              Если видео не появилось через несколько секунд, попробуйте закрыть
-              и открыть трансляцию ещё раз.
+              Если видео не появилось через несколько секунд, попробуйте
+              закрыть и открыть трансляцию ещё раз.
             </p>
           </main>
         </div>
@@ -135,10 +137,7 @@ const viewerOpen = computed(() => isWatching.value)
 
 function formatTime(ts: string): string {
   const d = new Date(ts)
-  return d.toLocaleTimeString('ru-RU', {
-    hour: '2-digit',
-    minute: '2-digit',
-  })
+  return d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })
 }
 
 async function onStartClick() {

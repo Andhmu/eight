@@ -17,7 +17,6 @@ export function useMyLive() {
   const videoEl = ref<HTMLVideoElement | null>(null)
   const mediaStream = ref<MediaStream | null>(null)
 
-  // WebRTC / signaling
   const channel = ref<ReturnType<typeof client.channel> | null>(null)
   const peers = new Map<string, RTCPeerConnection>()
 
@@ -30,13 +29,7 @@ export function useMyLive() {
 
   async function startCamera() {
     if (!process.client) return
-
     console.log('[my-live] startCamera called')
-
-    if (!navigator.mediaDevices?.getUserMedia) {
-      console.error('[my-live] getUserMedia not supported')
-      throw new Error('Браузер не поддерживает камеру')
-    }
 
     const stream = await navigator.mediaDevices.getUserMedia({
       video: true,
@@ -64,6 +57,7 @@ export function useMyLive() {
   }
 
   function stopCamera() {
+    console.log('[my-live] stopCamera')
     if (mediaStream.value) {
       mediaStream.value.getTracks().forEach((t) => t.stop())
       mediaStream.value = null
@@ -73,27 +67,7 @@ export function useMyLive() {
     }
   }
 
-  // ---------- SIGNALING-КАНАЛ ДЛЯ СТРИМЕРА ----------
-
-  async function sendSignal(
-    event: 'offer' | 'answer' | 'ice-candidate',
-    payload: any,
-  ) {
-    if (!channel.value) return
-
-    // включаем ack, чтобы видеть ошибки с сервера
-    const { status, error } = await channel.value.send({
-      type: 'broadcast',
-      event,
-      payload,
-    })
-
-    if (status === 'error') {
-      console.error('[my-live] sendSignal error', event, error)
-    } else {
-      console.log('[my-live] sendSignal ok', event)
-    }
-  }
+  // ---------- SIGNALING КАНАЛ (стример) ----------
 
   async function ensureSignalChannel(streamerId: string) {
     if (channel.value) return
@@ -102,16 +76,15 @@ export function useMyLive() {
 
     const ch = client.channel(`live-${streamerId}`, {
       config: {
-        broadcast: { self: false, ack: true },
+        broadcast: { self: false },
       },
     })
 
-    // зритель зашёл – создаём peer и отправляем offer
+    // зритель подключился
     ch.on('broadcast', { event: 'viewer-join' }, async (payload: LiveSignalPayload) => {
       try {
         const viewerId = (payload as any).viewerId as string | undefined
         if (!viewerId) return
-
         console.log('[my-live] viewer-join', viewerId)
 
         const pc = createPeerConnection(viewerId)
@@ -120,7 +93,12 @@ export function useMyLive() {
         const offer = await pc.createOffer()
         await pc.setLocalDescription(offer)
 
-        await sendSignal('offer', { viewerId, offer })
+        console.log('[my-live] send offer to', viewerId)
+        ch.send({
+          type: 'broadcast',
+          event: 'offer',
+          payload: { viewerId, offer },
+        })
       } catch (e) {
         console.error('[my-live] error on viewer-join:', e)
       }
@@ -135,14 +113,14 @@ export function useMyLive() {
       if (!pc) return
 
       try {
-        await pc.setRemoteDescription(new RTCSessionDescription(answer))
-        console.log('[my-live] answer applied from', viewerId)
+        console.log('[my-live] got answer from', viewerId)
+        await pc.setRemoteDescription(new RTCSdpType(answer))
       } catch (e) {
         console.error('[my-live] error apply answer:', e)
       }
     })
 
-    // ICE-кандидаты от зрителя
+    // ICE от зрителя
     ch.on('broadcast', { event: 'ice-candidate' }, async (payload: LiveSignalPayload) => {
       const { viewerId, candidate } = payload as any
       if (!viewerId || !candidate) return
@@ -176,29 +154,33 @@ export function useMyLive() {
   }
 
   function createPeerConnection(viewerId: string): RTCPeerConnection {
-    console.log('[my-live] createPeerConnection for viewer', viewerId)
+    console.log('[my-live] createPeerConnection for', viewerId)
 
     const pc = new RTCPeerConnection({
       iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
     })
 
+    // отдаём локальные треки зрителю
     if (mediaStream.value) {
       mediaStream.value.getTracks().forEach((track) => {
-        mediaStream.value && pc.addTrack(track, mediaStream.value as MediaStream)
+        mediaStream.value && pc.addTrack(track, mediaStream.value!)
       })
-      console.log('[my-live] tracks added to pc for', viewerId)
+      console.log('[my-live] tracks added for', viewerId)
     } else {
       console.warn('[my-live] no mediaStream when creating pc for', viewerId)
     }
 
     pc.onicecandidate = (ev) => {
-      if (!ev.candidate) return
-      if (!channel.value) return
+      if (!ev.candidate || !channel.value) return
 
-      sendSignal('ice-candidate', {
-        viewerId,
-        candidate: ev.candidate.toJSON(),
-      }).catch((e) => console.error('[my-live] ice send error', e))
+      channel.value.send({
+        type: 'broadcast',
+        event: 'ice-candidate',
+        payload: {
+          viewerId,
+          candidate: ev.candidate.toJSON(),
+        },
+      })
     }
 
     pc.onconnectionstatechange = () => {
@@ -241,20 +223,22 @@ export function useMyLive() {
       return
     }
 
+    console.log('[my-live] startLive')
+
     try {
-      // 1. показываем блок «Вы в эфире», чтобы <video> появился и ref связался
+      // 1. включаем UI, чтобы появился <video>
       isLive.value = true
       if (process.client) {
         await nextTick()
       }
 
-      // 2. Камера
+      // 2. запускаем камеру
       await startCamera()
 
-      // 3. WebRTC signaling
+      // 3. включаем signaling канал
       await ensureSignalChannel(id)
 
-      // 4. помечаем профиль как «в эфире»
+      // 4. отмечаем профиль как «в эфире»
       const { error } = await client
         .from('profiles')
         .update({
@@ -284,6 +268,8 @@ export function useMyLive() {
   async function stopLive() {
     if (busy.value) return
     busy.value = true
+
+    console.log('[my-live] stopLive')
 
     const id = getUserId()
 

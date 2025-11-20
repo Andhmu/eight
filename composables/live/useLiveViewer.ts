@@ -37,33 +37,34 @@ export function useLiveViewer() {
 
     peer.ontrack = (ev) => {
       const [remoteStream] = ev.streams
-      console.log('[viewer] ontrack, streams:', ev.streams.length)
+      console.log('[viewer] ontrack, streams:', ev.streams)
+
       if (videoEl.value && remoteStream) {
         videoEl.value.srcObject = remoteStream
         // @ts-expect-error playsInline нет в типах
         videoEl.value.playsInline = true
         videoEl.value.autoplay = true
+
+        videoEl.value
+          .play()
+          .then(() => console.log('[viewer] remote video playing'))
+          .catch((e) => console.warn('[viewer] play() error:', e))
+      } else {
+        console.warn('[viewer] ontrack but no videoEl or stream')
       }
     }
 
     peer.onicecandidate = (ev) => {
       if (!ev.candidate || !channel.value || !viewerId.value) return
 
-      channel.value
-        .send({
-          type: 'broadcast',
-          event: 'ice-candidate',
-          payload: {
-            viewerId: viewerId.value,
-            candidate: ev.candidate.toJSON(),
-          },
-        })
-        .then((res: any) => {
-          if (res?.status === 'error') {
-            console.error('[viewer] send ICE error', res.error)
-          }
-        })
-        .catch((e) => console.error('[viewer] send ICE failed', e))
+      channel.value.send({
+        type: 'broadcast',
+        event: 'ice-candidate',
+        payload: {
+          viewerId: viewerId.value,
+          candidate: ev.candidate.toJSON(),
+        },
+      })
     }
 
     peer.onconnectionstatechange = () => {
@@ -75,6 +76,7 @@ export function useLiveViewer() {
 
   function stopPeer() {
     if (pc.value) {
+      console.log('[viewer] stopPeer')
       pc.value.close()
       pc.value = null
     }
@@ -96,7 +98,6 @@ export function useLiveViewer() {
 
     console.log('[viewer] openForStreamer', id)
 
-    // закрываем предыдущую
     stopPeer()
     stopSignalChannel()
 
@@ -104,10 +105,10 @@ export function useLiveViewer() {
     viewerId.value = getViewerId()
 
     const ch = client.channel(`live-${id}`, {
-      config: { broadcast: { self: false, ack: true } },
+      config: { broadcast: { self: false } },
     })
 
-    // получаем offer от стримера
+    // оффер от стримера
     ch.on('broadcast', { event: 'offer' }, async (payload: LiveSignalPayload) => {
       const p = payload as any
       if (p.viewerId !== viewerId.value || !p.offer) return
@@ -123,7 +124,8 @@ export function useLiveViewer() {
         const answer = await pc.value.createAnswer()
         await pc.value.setLocalDescription(answer)
 
-        const { status, error } = await ch.send({
+        console.log('[viewer] send answer')
+        ch.send({
           type: 'broadcast',
           event: 'answer',
           payload: {
@@ -131,12 +133,6 @@ export function useLiveViewer() {
             answer,
           },
         })
-
-        if (status === 'error') {
-          console.error('[viewer] send answer error', error)
-        } else {
-          console.log('[viewer] answer sent')
-        }
       } catch (e) {
         console.error('[viewer] error handle offer:', e)
       }
@@ -160,27 +156,20 @@ export function useLiveViewer() {
     })
 
     channel.value = ch
-
-    // создаём peer заранее
     pc.value = createPeerConnection()
 
-    // даём знать стримеру, что хотим смотреть
-    const { status, error } = await ch.send({
+    console.log('[viewer] viewer-join sent')
+    ch.send({
       type: 'broadcast',
       event: 'viewer-join',
       payload: { viewerId: viewerId.value },
     })
 
-    if (status === 'error') {
-      console.error('[viewer] viewer-join send error', error)
-    } else {
-      console.log('[viewer] viewer-join sent')
-    }
-
     isWatching.value = true
   }
 
   function closeViewer() {
+    console.log('[viewer] closeViewer')
     isWatching.value = false
     streamerId.value = null
 
