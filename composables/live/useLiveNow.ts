@@ -4,7 +4,8 @@ import { useSupabaseClient } from '#imports'
 
 export interface LiveCandidate {
   id: string
-  email: string | null
+  email: string
+  display_name: string | null
   live_started_at: string | null
 }
 
@@ -18,17 +19,24 @@ export function useLiveNow() {
 
   async function loadCandidates() {
     loading.value = true
+
     const { data, error } = await client
       .from('profiles')
-      .select('id, email, live_started_at')
+      .select('id, email, live_started_at, display_name, is_live')
       .eq('is_live', true)
       .order('live_started_at', { ascending: false })
 
     if (error) {
       console.error('[live-now] loadCandidates error', error)
       candidates.value = []
+      current.value = null
     } else {
-      candidates.value = (data || []) as LiveCandidate[]
+      candidates.value = (data ?? []) as LiveCandidate[]
+      if (!candidates.value.length) {
+        current.value = null
+      } else if (!current.value) {
+        pickRandom()
+      }
     }
 
     loading.value = false
@@ -40,13 +48,12 @@ export function useLiveNow() {
       current.value = null
       return
     }
-
     const idx = Math.floor(Math.random() * list.length)
     current.value = list[idx]
   }
 
   function stopRotation() {
-    if (rotationTimer.value !== null) {
+    if (rotationTimer.value != null) {
       clearInterval(rotationTimer.value)
       rotationTimer.value = null
     }
@@ -57,22 +64,24 @@ export function useLiveNow() {
 
     stopRotation()
     await loadCandidates()
-    pickRandom()
 
-    if (!candidates.value.length) return
-
-    rotationTimer.value = window.setInterval(async () => {
-      await loadCandidates()
-      pickRandom()
-    }, 60_000) // раз в минуту
+    // если только один стример — просто иногда обновляем список,
+    // если несколько — каждые 60 сек переключаем случайного
+    if (candidates.value.length <= 1) {
+      rotationTimer.value = window.setInterval(loadCandidates, 120_000)
+    } else {
+      rotationTimer.value = window.setInterval(() => {
+        pickRandom()
+      }, 60_000)
+    }
   }
 
   return {
     candidates,
     current,
     loading,
+    loadCandidates,
     startRotation,
     stopRotation,
-    reload: loadCandidates,
   }
 }
