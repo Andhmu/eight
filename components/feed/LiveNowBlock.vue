@@ -69,15 +69,17 @@
         <!-- Если никого нет -->
         <div v-else class="live-card__placeholder">
           <span class="live-card__badge live-card__badge--idle">Эфир</span>
-          <p>Сейчас нет активных эфиров или мы ещё ищем для вас что-то интересное…</p>
+          <p>
+            Сейчас нет активных эфиров или мы ещё ищем для вас что-то интересное…
+          </p>
         </div>
       </div>
     </div>
 
     <!-- Выезжающая панель со стримом -->
     <transition name="live-sheet">
-      <div v-if="viewerOpen" class="live-sheet">
-        <div class="live-sheet__backdrop" @click="closeViewer"></div>
+      <div v-if="viewerOpenLocal" class="live-sheet">
+        <div class="live-sheet__backdrop" @click="handleCloseViewer"></div>
 
         <div class="live-sheet__panel">
           <header class="live-sheet__header">
@@ -85,7 +87,11 @@
               Эфир
               <span v-if="current?.email"> {{ current.email }}</span>
             </div>
-            <button class="live-sheet__close" type="button" @click="closeViewer">
+            <button
+              class="live-sheet__close"
+              type="button"
+              @click="handleCloseViewer"
+            >
               ×
             </button>
           </header>
@@ -111,7 +117,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { useMyLive } from '~/composables/live/useMyLive'
 import { useLiveNow } from '~/composables/live/useLiveNow'
 import { useLiveViewer } from '~/composables/live/useLiveViewer'
@@ -125,10 +131,7 @@ const {
   stopLive,
 } = useMyLive()
 
-const {
-  current,
-  startRotation,
-} = useLiveNow()
+const { current, startRotation } = useLiveNow()
 
 const {
   isWatching,
@@ -137,7 +140,10 @@ const {
   closeViewer: closeViewerInternal,
 } = useLiveViewer()
 
-const viewerOpen = computed(() => isWatching.value)
+// Локальный флаг открытия шторки
+const viewerOpenLocal = ref(false)
+
+const isWatchingComputed = computed(() => isWatching.value)
 
 function formatTime(ts: string): string {
   const d = new Date(ts)
@@ -151,14 +157,29 @@ async function onStartClick() {
   await startLive()
 }
 
-function openViewer() {
+async function openViewer() {
   if (!current.value) return
+
+  // Сначала открываем панель, даём смонтироваться <video>,
+  // потом запускаем WebRTC-подключение
+  viewerOpenLocal.value = true
+  await nextTick()
+
   openForStreamer(current.value.id)
 }
 
-function closeViewer() {
+function handleCloseViewer() {
+  viewerOpenLocal.value = false
   closeViewerInternal()
 }
+
+// Если внутри composable просмотр завершается (например, по ошибке),
+// синхронизируем локальное состояние шторки.
+watch(isWatchingComputed, (val) => {
+  if (!val) {
+    viewerOpenLocal.value = false
+  }
+})
 
 onMounted(async () => {
   await loadInitial()

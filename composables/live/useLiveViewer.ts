@@ -1,5 +1,5 @@
 // composables/live/useLiveViewer.ts
-import { onBeforeUnmount, ref } from 'vue'
+import { onBeforeUnmount, ref, watch } from 'vue'
 import { useSupabaseClient, useSupabaseUser } from '#imports'
 
 type LiveSignalPayload =
@@ -21,12 +21,27 @@ export function useLiveViewer() {
   const channel = ref<ReturnType<typeof client.channel> | null>(null)
   const pc = ref<RTCPeerConnection | null>(null)
 
+  // буфер для удалённого стрима
+  const remoteStreamRef = ref<MediaStream | null>(null)
+
+  function attachRemoteStream() {
+    if (videoEl.value && remoteStreamRef.value) {
+      videoEl.value.srcObject = remoteStreamRef.value
+      // @ts-expect-error playsInline нет в типах
+      videoEl.value.playsInline = true
+      videoEl.value.autoplay = true
+      console.log('[viewer] remote stream attached to video element')
+    }
+  }
+
+  watch(videoEl, () => {
+    attachRemoteStream()
+  })
+
   function getViewerId(): string {
     const raw = authUser.value as any
     const id: string | undefined = raw?.id ?? raw?.sub ?? undefined
     if (id) return id
-
-    // гость – временный id
     return 'anon-' + Math.random().toString(36).slice(2)
   }
 
@@ -37,12 +52,11 @@ export function useLiveViewer() {
 
     peer.ontrack = (ev) => {
       const [remoteStream] = ev.streams
-      if (videoEl.value && remoteStream) {
-        videoEl.value.srcObject = remoteStream
-        // @ts-expect-error playsInline нет в типах
-        videoEl.value.playsInline = true
-        videoEl.value.autoplay = true
-      }
+      if (!remoteStream) return
+
+      console.log('[viewer] got remote track')
+      remoteStreamRef.value = remoteStream
+      attachRemoteStream()
     }
 
     peer.onicecandidate = (ev) => {
@@ -70,6 +84,7 @@ export function useLiveViewer() {
       pc.value.close()
       pc.value = null
     }
+    remoteStreamRef.value = null
     if (videoEl.value) {
       videoEl.value.srcObject = null
     }
@@ -86,7 +101,6 @@ export function useLiveViewer() {
   async function openForStreamer(id: string) {
     if (!process.client) return
 
-    // закрываем предыдущую
     stopPeer()
     stopSignalChannel()
 
@@ -97,7 +111,7 @@ export function useLiveViewer() {
       config: { broadcast: { self: false } },
     })
 
-    // получили offer от стримера
+    // offer от стримера
     ch.on('broadcast', { event: 'offer' }, async (payload: LiveSignalPayload) => {
       const p = payload as any
       if (p.viewerId !== viewerId.value || !p.offer) return
@@ -127,17 +141,21 @@ export function useLiveViewer() {
     })
 
     // ICE от стримера
-    ch.on('broadcast', { event: 'ice-candidate' }, async (payload: LiveSignalPayload) => {
-      const p = payload as any
-      if (p.viewerId !== viewerId.value || !p.candidate) return
-      if (!pc.value) return
+    ch.on(
+      'broadcast',
+      { event: 'ice-candidate' },
+      async (payload: LiveSignalPayload) => {
+        const p = payload as any
+        if (p.viewerId !== viewerId.value || !p.candidate) return
+        if (!pc.value) return
 
-      try {
-        await pc.value.addIceCandidate(new RTCIceCandidate(p.candidate))
-      } catch (e) {
-        console.warn('[viewer] error add ICE from streamer:', e)
-      }
-    })
+        try {
+          await pc.value.addIceCandidate(new RTCIceCandidate(p.candidate))
+        } catch (e) {
+          console.warn('[viewer] error add ICE from streamer:', e)
+        }
+      },
+    )
 
     await ch.subscribe((status) => {
       console.log('[viewer] channel status', status)
@@ -145,10 +163,8 @@ export function useLiveViewer() {
 
     channel.value = ch
 
-    // создаём peer заранее
     pc.value = createPeerConnection()
 
-    // даём знать стримеру, что хотим смотреть
     ch.send({
       type: 'broadcast',
       event: 'viewer-join',

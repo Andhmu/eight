@@ -82,7 +82,7 @@ export function useLiveNow() {
     rotationTimer.value = window.setInterval(async () => {
       await loadCandidates()
       pickRandom()
-    }, 60_000) // раз в минуту
+    }, 60_000)
   }
 
   onBeforeUnmount(() => {
