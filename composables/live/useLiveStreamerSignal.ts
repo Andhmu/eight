@@ -1,0 +1,287 @@
+// composables/live/useLiveStreamerSignal.ts
+
+import { ref, type Ref } from 'vue'
+
+import { useSupabaseClient } from '#imports'
+
+import type { LiveSignalPayload } from './liveTypes'
+
+
+
+export function useLiveStreamerSignal(mediaStream: Ref<MediaStream | null>) {
+
+  const client = useSupabaseClient()
+
+  const channel = ref<ReturnType<typeof client.channel> | null>(null)
+
+  const peers = new Map<string, RTCPeerConnection>()
+
+
+
+  function createPeerConnection(viewerId: string): RTCPeerConnection {
+
+    console.log('[my-live] createPeerConnection for', viewerId)
+
+
+
+    const pc = new RTCPeerConnection({
+
+      iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
+
+    })
+
+
+
+    // отдаём локальные треки зрителю
+
+    if (mediaStream.value) {
+
+      mediaStream.value.getTracks().forEach((track) => {
+
+        if (mediaStream.value) {
+
+          pc.addTrack(track, mediaStream.value)
+
+        }
+
+      })
+
+      console.log('[my-live] tracks added for', viewerId)
+
+    } else {
+
+      console.warn('[my-live] no mediaStream when creating pc for', viewerId)
+
+    }
+
+
+
+    pc.onicecandidate = (ev) => {
+
+      if (!ev.candidate || !channel.value) return
+
+
+
+      channel.value.send({
+
+        type: 'broadcast',
+
+        event: 'ice-candidate',
+
+        payload: {
+
+          viewerId,
+
+          candidate: ev.candidate.toJSON(),
+
+        },
+
+      })
+
+    }
+
+
+
+    pc.onconnectionstatechange = () => {
+
+      console.log('[my-live] pc state', viewerId, pc.connectionState)
+
+      if (['failed', 'disconnected', 'closed'].includes(pc.connectionState)) {
+
+        peers.delete(viewerId)
+
+      }
+
+    }
+
+
+
+    return pc
+
+  }
+
+
+
+  async function ensureSignalChannel(streamerId: string) {
+
+    if (channel.value) return
+
+
+
+    console.log('[my-live] ensureSignalChannel for', streamerId)
+
+
+
+    const ch = client.channel(`live-${streamerId}`, {
+
+      config: {
+
+        broadcast: { self: false },
+
+      },
+
+    })
+
+
+
+    // зритель подключился
+
+    ch.on('broadcast', { event: 'viewer-join' }, async (payload: LiveSignalPayload) => {
+
+      try {
+
+        const viewerId = (payload as any).viewerId as string | undefined
+
+        if (!viewerId) return
+
+        console.log('[my-live] viewer-join', viewerId)
+
+
+
+        const pc = createPeerConnection(viewerId)
+
+        peers.set(viewerId, pc)
+
+
+
+        const offer = await pc.createOffer()
+
+        await pc.setLocalDescription(offer)
+
+
+
+        console.log('[my-live] send offer to', viewerId)
+
+        ch.send({
+
+          type: 'broadcast',
+
+          event: 'offer',
+
+          payload: { viewerId, offer },
+
+        })
+
+      } catch (e) {
+
+        console.error('[my-live] error on viewer-join:', e)
+
+      }
+
+    })
+
+
+
+    // получили answer от зрителя
+
+    ch.on('broadcast', { event: 'answer' }, async (payload: LiveSignalPayload) => {
+
+      const { viewerId, answer } = payload as any
+
+      if (!viewerId || !answer) return
+
+
+
+      const pc = peers.get(viewerId)
+
+      if (!pc) return
+
+
+
+      try {
+
+        console.log('[my-live] got answer from', viewerId)
+
+        // ВАЖНО: здесь была ошибка с RTCSdpType
+
+        await pc.setRemoteDescription(new RTCSessionDescription(answer))
+
+      } catch (e) {
+
+        console.error('[my-live] error apply answer:', e)
+
+      }
+
+    })
+
+
+
+    // ICE от зрителя
+
+    ch.on('broadcast', { event: 'ice-candidate' }, async (payload: LiveSignalPayload) => {
+
+      const { viewerId, candidate } = payload as any
+
+      if (!viewerId || !candidate) return
+
+
+
+      const pc = peers.get(viewerId)
+
+      if (!pc) return
+
+
+
+      try {
+
+        await pc.addIceCandidate(new RTCIceCandidate(candidate))
+
+      } catch (e) {
+
+        console.warn('[my-live] error add ICE from viewer', viewerId, e)
+
+      }
+
+    })
+
+
+
+    await ch.subscribe((status) => {
+
+      console.log('[my-live] channel status', status)
+
+    })
+
+
+
+    channel.value = ch
+
+  }
+
+
+
+  function stopSignalChannel() {
+
+    if (channel.value) {
+
+      console.log('[my-live] stop signal channel')
+
+      channel.value.unsubscribe()
+
+      channel.value = null
+
+    }
+
+
+
+    peers.forEach((pc) => pc.close())
+
+    peers.clear()
+
+  }
+
+
+
+  return {
+
+    channel,
+
+    peers,
+
+    ensureSignalChannel,
+
+    stopSignalChannel,
+
+  }
+
+}
