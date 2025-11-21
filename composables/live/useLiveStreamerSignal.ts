@@ -61,11 +61,17 @@ export function useLiveStreamerSignal(mediaStream: Ref<MediaStream | null>) {
       },
     })
 
-    // зритель подключился
-    ch.on('broadcast', { event: 'viewer-join' }, async (payload: LiveSignalPayload) => {
+    // ЗРИТЕЛЬ ПОДКЛЮЧИЛСЯ
+    ch.on('broadcast', { event: 'viewer-join' }, async (message: any) => {
       try {
-        const viewerId = (payload as any).viewerId as string | undefined
-        if (!viewerId) return
+        console.log('[my-live] viewer-join raw message', message)
+        const payload = (message as { payload: LiveSignalPayload }).payload
+        const viewerId = (payload as any)?.viewerId as string | undefined
+        if (!viewerId) {
+          console.warn('[my-live] viewer-join without viewerId')
+          return
+        }
+
         console.log('[my-live] viewer-join from', viewerId)
 
         const pc = createPeerConnection(viewerId)
@@ -85,9 +91,12 @@ export function useLiveStreamerSignal(mediaStream: Ref<MediaStream | null>) {
       }
     })
 
-    // получили answer от зрителя
-    ch.on('broadcast', { event: 'answer' }, async (payload: LiveSignalPayload) => {
-      const { viewerId, answer } = payload as any
+    // ПОЛУЧИЛИ ANSWER ОТ ЗРИТЕЛЯ
+    ch.on('broadcast', { event: 'answer' }, async (message: any) => {
+      console.log('[my-live] raw answer message', message)
+      const payload = (message as { payload: LiveSignalPayload }).payload as any
+      const viewerId = payload?.viewerId
+      const answer = payload?.answer
       if (!viewerId || !answer) return
 
       const pc = peers.get(viewerId)
@@ -95,16 +104,17 @@ export function useLiveStreamerSignal(mediaStream: Ref<MediaStream | null>) {
 
       try {
         console.log('[my-live] got answer from', viewerId)
-        // ВАЖНО: здесь НЕ RTCSdpType
         await pc.setRemoteDescription(new RTCSessionDescription(answer))
       } catch (e) {
         console.error('[my-live] error apply answer:', e)
       }
     })
 
-    // ICE от зрителя
-    ch.on('broadcast', { event: 'ice-candidate' }, async (payload: LiveSignalPayload) => {
-      const { viewerId, candidate } = payload as any
+    // ICE ОТ ЗРИТЕЛЯ
+    ch.on('broadcast', { event: 'ice-candidate' }, async (message: any) => {
+      const payload = (message as { payload: LiveSignalPayload }).payload as any
+      const viewerId = payload?.viewerId
+      const candidate = payload?.candidate
       if (!viewerId || !candidate) return
 
       const pc = peers.get(viewerId)

@@ -110,12 +110,16 @@ export function useLiveViewerSignal(videoEl: Ref<HTMLVideoElement | null>) {
       config: { broadcast: { self: false } },
     })
 
-    ch.on('broadcast', { event: 'offer' }, async (payload: LiveSignalPayload) => {
-      const p = payload as any
-      console.log('[viewer] got offer payload', p)
+    // ПОЛУЧИЛИ OFFER ОТ СТРИМЕРА
+    ch.on('broadcast', { event: 'offer' }, async (message: any) => {
+      const wrapper = message as { payload: LiveSignalPayload }
+      const payload = wrapper.payload as any
+      console.log('[viewer] got offer raw', message)
 
-      if (p.viewerId !== viewerId.value || !p.offer) {
-        console.log('[viewer] offer ignored, viewerId mismatch or no offer')
+      const vId = payload?.viewerId
+      const offer = payload?.offer
+      if (vId !== viewerId.value || !offer) {
+        console.log('[viewer] offer ignored, viewerId mismatch или нет offer')
         return
       }
 
@@ -126,7 +130,7 @@ export function useLiveViewerSignal(videoEl: Ref<HTMLVideoElement | null>) {
       }
 
       try {
-        await pc.value.setRemoteDescription(new RTCSessionDescription(p.offer))
+        await pc.value.setRemoteDescription(new RTCSessionDescription(offer))
         const answer = await pc.value.createAnswer()
         await pc.value.setLocalDescription(answer)
 
@@ -144,9 +148,12 @@ export function useLiveViewerSignal(videoEl: Ref<HTMLVideoElement | null>) {
       }
     })
 
-    ch.on('broadcast', { event: 'ice-candidate' }, async (payload: LiveSignalPayload) => {
-      const p = payload as any
-      if (p.viewerId !== viewerId.value || !p.candidate) {
+    // ICE ОТ СТРИМЕРА
+    ch.on('broadcast', { event: 'ice-candidate' }, async (message: any) => {
+      const payload = (message as { payload: LiveSignalPayload }).payload as any
+      const vId = payload?.viewerId
+      const candidate = payload?.candidate
+      if (vId !== viewerId.value || !candidate) {
         return
       }
       if (!pc.value) {
@@ -156,7 +163,7 @@ export function useLiveViewerSignal(videoEl: Ref<HTMLVideoElement | null>) {
 
       console.log('[viewer] add ICE from streamer')
       try {
-        await pc.value.addIceCandidate(new RTCIceCandidate(p.candidate))
+        await pc.value.addIceCandidate(new RTCIceCandidate(candidate))
       } catch (e) {
         console.warn('[viewer] error add ICE from streamer:', e)
       }
