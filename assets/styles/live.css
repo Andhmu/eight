@@ -322,3 +322,7 @@
   border-radius: 18px;
   object-fit: contain; /* вместо cover */
 }
+
+.live-sheet__panel {
+z-index: 51;
+}
