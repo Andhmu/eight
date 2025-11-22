@@ -29,6 +29,7 @@ export function useLiveViewerSignal(videoEl: Ref<HTMLVideoElement | null>) {
   const reconnectAttempts = ref(0)
   const maxReconnectAttempts = 3
 
+  // при реконнекте стартуем с mute, чтобы не оглушить и чтобы autoplay не блочился
   const shouldMuteOnNextAttach = ref(false)
 
   let statsTimer: number | null = null
@@ -42,6 +43,8 @@ export function useLiveViewerSignal(videoEl: Ref<HTMLVideoElement | null>) {
     return 'anon-' + Math.random().toString(36).slice(2)
   }
 
+  // ---------- прикрепление медиапотока к <video> ----------
+
   async function attachRemoteStream(stream: MediaStream) {
     if (!videoEl.value) {
       console.warn('[viewer] no video element to attach stream')
@@ -53,11 +56,15 @@ export function useLiveViewerSignal(videoEl: Ref<HTMLVideoElement | null>) {
     ;(v as any).playsInline = true
     v.autoplay = true
 
-    if (shouldMuteOnNextAttach.value) {
-      v.muted = true
-      shouldMuteOnNextAttach.value = false
+    // ВАЖНО: по умолчанию mute = true -> браузеры обычно разрешают autoplay
+    v.muted = true
+    if (!shouldMuteOnNextAttach.value) {
+      // если реконнект не запрашивал авто-mute,
+      // всё равно стартуем в mute (для autoplay),
+      // а пользователь сам включит звук кнопкой.
+      // Можно оставить всегда muted = true.
     } else {
-      v.muted = false
+      shouldMuteOnNextAttach.value = false
     }
 
     try {
@@ -66,12 +73,16 @@ export function useLiveViewerSignal(videoEl: Ref<HTMLVideoElement | null>) {
       status.value = 'playing'
       statusMessage.value = 'Эфир воспроизводится'
     } catch (e) {
-      console.warn('[viewer] video play error:', e)
-      status.value = 'error'
+      // Если autoplay заблокирован – это НОРМАЛЬНО.
+      // Видео всё равно привязано к srcObject, пользователь просто нажмёт Play.
+      console.warn('[viewer] video play blocked by autoplay policy:', e)
+      status.value = 'playing'
       statusMessage.value =
         'Видео не удалось запустить автоматически. Нажмите Play в плеере.'
     }
   }
+
+  // ---------- WebRTC stats ----------
 
   function startStats() {
     if (!process.client) return
@@ -140,6 +151,8 @@ export function useLiveViewerSignal(videoEl: Ref<HTMLVideoElement | null>) {
     lastTimestamp = 0
   }
 
+  // ---------- авто-реконнект ----------
+
   function scheduleReconnect(reason: string) {
     if (!isWatching.value || !streamerId.value) return
     if (reconnectAttempts.value >= maxReconnectAttempts) {
@@ -168,6 +181,8 @@ export function useLiveViewerSignal(videoEl: Ref<HTMLVideoElement | null>) {
       void openForStreamer(streamerId.value)
     }, 1000)
   }
+
+  // ---------- RTCPeerConnection ----------
 
   function createPeerConnection(): RTCPeerConnection {
     console.log('[viewer] createPeerConnection')
@@ -230,6 +245,8 @@ export function useLiveViewerSignal(videoEl: Ref<HTMLVideoElement | null>) {
     }
   }
 
+  // ---------- открытие эфира стримера ----------
+
   async function openForStreamer(id: string) {
     if (!process.client) return
 
@@ -249,7 +266,7 @@ export function useLiveViewerSignal(videoEl: Ref<HTMLVideoElement | null>) {
       config: { broadcast: { self: false } },
     })
 
-    // ПОЛУЧИЛИ OFFER ОТ СТРИМЕРА
+    // OFFER от стримера
     ch.on('broadcast', { event: 'offer' }, async (message: any) => {
       const wrapper = message as { payload: LiveSignalPayload }
       const payload = wrapper.payload as any
@@ -290,7 +307,7 @@ export function useLiveViewerSignal(videoEl: Ref<HTMLVideoElement | null>) {
       }
     })
 
-    // ICE ОТ СТРИМЕРА
+    // ICE от стримера
     ch.on('broadcast', { event: 'ice-candidate' }, async (message: any) => {
       const payload = (message as { payload: LiveSignalPayload }).payload as any
       const vId = payload?.viewerId
@@ -311,10 +328,9 @@ export function useLiveViewerSignal(videoEl: Ref<HTMLVideoElement | null>) {
       }
     })
 
-    // СТРИМЕР ЯВНО ЗАВЕРШИЛ ЭФИР
+    // стример завершил эфир
     ch.on('broadcast', { event: 'stream-ended' }, (message: any) => {
       console.log('[viewer] stream-ended message', message)
-      // просто закрываем эфир у зрителя — панель спрячется
       closeViewer()
     })
 
@@ -335,6 +351,8 @@ export function useLiveViewerSignal(videoEl: Ref<HTMLVideoElement | null>) {
 
     isWatching.value = true
   }
+
+  // ---------- закрытие эфира у зрителя ----------
 
   function closeViewer() {
     console.log('[viewer] closeViewer')
