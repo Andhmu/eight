@@ -15,6 +15,7 @@ export function useLiveStreamerSignal(mediaStream: Ref<MediaStream | null>) {
       iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
     })
 
+    // отдаём зрителю наши треки
     if (mediaStream.value) {
       mediaStream.value.getTracks().forEach((track) => {
         if (mediaStream.value) {
@@ -50,25 +51,11 @@ export function useLiveStreamerSignal(mediaStream: Ref<MediaStream | null>) {
     return pc
   }
 
+  // создаём сигнальный канал ОДИН РАЗ на эфир
   async function ensureSignalChannel(streamerId: string) {
-    // если канал уже живой и в joined – используем его
-    if ((channel.value as any)?.state === 'joined') {
-      return
-    }
+    if (channel.value) return
 
-    // если канал есть, но не joined (отвалился / завис) – пересоздаём
-    if (channel.value) {
-      console.log(
-        '[my-live] existing channel state is not joined, recreating:',
-        (channel.value as any).state,
-      )
-      channel.value.unsubscribe()
-      channel.value = null
-      peers.forEach((pc) => pc.close())
-      peers.clear()
-    }
-
-    console.log('[my-live] ensureSignalChannel create for', streamerId)
+    console.log('[my-live] ensureSignalChannel for', streamerId)
 
     const ch = client.channel(`live-${streamerId}`, {
       config: {
@@ -150,6 +137,7 @@ export function useLiveStreamerSignal(mediaStream: Ref<MediaStream | null>) {
     channel.value = ch
   }
 
+  // уведомляем зрителей, что эфир закончился (для автозакрытия окна)
   function notifyStreamEnded() {
     if (!channel.value) return
     console.log('[my-live] broadcast stream-ended')
