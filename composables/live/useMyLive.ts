@@ -4,6 +4,10 @@ import { useSupabaseClient, useSupabaseUser } from '#imports'
 import { useLiveMedia } from './useLiveMedia'
 import { useLiveStreamerSignal } from './useLiveStreamerSignal'
 
+interface LoadInitialOptions {
+  autoResume?: boolean
+}
+
 export function useMyLive() {
   const client = useSupabaseClient()
   const authUser = useSupabaseUser()
@@ -19,7 +23,42 @@ export function useMyLive() {
     return raw?.id ?? raw?.sub ?? null
   }
 
-  async function loadInitial() {
+  // ---------- восстановление эфира после перезагрузки ----------
+
+  async function resumeLiveAfterReload() {
+    if (busy.value) return
+    const id = getUserId()
+    if (!id) {
+      isLive.value = false
+      return
+    }
+
+    console.log('[my-live] resumeLiveAfterReload')
+
+    busy.value = true
+    try {
+      isLive.value = true
+      if (process.client) {
+        await nextTick()
+      }
+
+      await startCamera()
+      await ensureSignalChannel(id)
+    } catch (e) {
+      console.error('[my-live] resumeLiveAfterReload error:', e)
+      stopCamera()
+      stopSignalChannel()
+      isLive.value = false
+    } finally {
+      busy.value = false
+    }
+  }
+
+  // ---------- начальная загрузка состояния из профиля ----------
+
+  async function loadInitial(options: LoadInitialOptions = {}) {
+    const { autoResume = false } = options
+
     const id = getUserId()
     if (!id) return
 
@@ -30,11 +69,20 @@ export function useMyLive() {
       .maybeSingle()
 
     if (!error && data?.is_live) {
+      console.log('[my-live] loadInitial: profile is_live = true')
       isLive.value = true
+
+      if (autoResume && process.client) {
+        // Восстанавливаем камеру и канал только на клиенте
+        await resumeLiveAfterReload()
+      }
     } else {
+      console.log('[my-live] loadInitial: profile is_live = false')
       isLive.value = false
     }
   }
+
+  // ---------- явный старт/стоп эфира по кнопкам ----------
 
   async function startLive() {
     if (busy.value) return
@@ -124,5 +172,6 @@ export function useMyLive() {
     loadInitial,
     startLive,
     stopLive,
+    resumeLiveAfterReload,
   }
 }

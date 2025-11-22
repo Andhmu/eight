@@ -64,7 +64,10 @@
 
         <div v-else class="live-card__placeholder">
           <span class="live-card__badge live-card__badge--idle">Эфир</span>
-          <p>Сейчас нет активных эфиров или мы ещё ищем для вас что-то интересное…</p>
+          <p>
+            Сейчас нет активных эфиров или мы ещё ищем для вас что-то
+            интересное…
+          </p>
         </div>
       </div>
     </div>
@@ -154,10 +157,12 @@ function closeViewer() {
 }
 
 onMounted(async () => {
-  await loadInitial()
+  // Восстанавливаем эфир, если профиль в БД помечен как is_live = true
+  await loadInitial({ autoResume: true })
   await startRotation()
 })
 </script>
+
 
 <!-- стили оставляю как у тебя, можешь не менять -->
 
