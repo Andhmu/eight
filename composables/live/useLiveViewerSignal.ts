@@ -26,7 +26,6 @@ export function useLiveViewerSignal(videoEl: Ref<HTMLVideoElement | null>) {
 
   const stats = ref<ViewerStats | null>(null)
 
-  // простая защита от бесконечных попыток
   const reconnectAttempts = ref(0)
   const maxReconnectAttempts = 3
 
@@ -166,7 +165,6 @@ export function useLiveViewerSignal(videoEl: Ref<HTMLVideoElement | null>) {
 
     setTimeout(() => {
       if (!isWatching.value || !streamerId.value) return
-      // новая попытка подключиться к тому же стримеру
       void openForStreamer(streamerId.value)
     }, 1000)
   }
@@ -205,7 +203,6 @@ export function useLiveViewerSignal(videoEl: Ref<HTMLVideoElement | null>) {
 
       const state = peer.connectionState
       if (['disconnected', 'failed'].includes(state)) {
-        // если стример перезагрузился, соединение рвётся – пробуем переподключиться
         scheduleReconnect(state)
       }
     }
@@ -238,7 +235,6 @@ export function useLiveViewerSignal(videoEl: Ref<HTMLVideoElement | null>) {
 
     console.log('[viewer] openForStreamer', id)
 
-    // новая явная попытка просмотра — сбрасываем счётчик
     reconnectAttempts.value = 0
     status.value = 'connecting'
     statusMessage.value = 'Подключаемся к эфиру…'
@@ -313,6 +309,13 @@ export function useLiveViewerSignal(videoEl: Ref<HTMLVideoElement | null>) {
       } catch (e) {
         console.warn('[viewer] error add ICE from streamer:', e)
       }
+    })
+
+    // СТРИМЕР ЯВНО ЗАВЕРШИЛ ЭФИР
+    ch.on('broadcast', { event: 'stream-ended' }, (message: any) => {
+      console.log('[viewer] stream-ended message', message)
+      // просто закрываем эфир у зрителя — панель спрячется
+      closeViewer()
     })
 
     await ch.subscribe((statusVal) => {

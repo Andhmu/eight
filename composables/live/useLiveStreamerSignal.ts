@@ -135,6 +135,17 @@ export function useLiveStreamerSignal(mediaStream: Ref<MediaStream | null>) {
     channel.value = ch
   }
 
+  function notifyStreamEnded() {
+    if (!channel.value) return
+    console.log('[my-live] broadcast stream-ended')
+
+    channel.value.send({
+      type: 'broadcast',
+      event: 'stream-ended',
+      payload: {},
+    })
+  }
+
   function stopSignalChannel() {
     if (channel.value) {
       console.log('[my-live] stop signal channel')
@@ -151,5 +162,6 @@ export function useLiveStreamerSignal(mediaStream: Ref<MediaStream | null>) {
     peers,
     ensureSignalChannel,
     stopSignalChannel,
+    notifyStreamEnded,
   }
 }

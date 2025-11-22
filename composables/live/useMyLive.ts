@@ -22,7 +22,12 @@ export function useMyLive() {
     stopCamera,
     toggleCameraMode,
   } = useLiveMedia()
-  const { ensureSignalChannel, stopSignalChannel } = useLiveStreamerSignal(mediaStream)
+
+  const {
+    ensureSignalChannel,
+    stopSignalChannel,
+    notifyStreamEnded,
+  } = useLiveStreamerSignal(mediaStream)
 
   function getUserId(): string | null {
     const raw = authUser.value as any
@@ -79,7 +84,6 @@ export function useMyLive() {
       isLive.value = true
 
       if (autoResume && process.client) {
-        // Восстанавливаем камеру и канал только на клиенте
         await resumeLiveAfterReload()
       }
     } else {
@@ -146,6 +150,9 @@ export function useMyLive() {
 
     const id = getUserId()
 
+    // сначала уведомляем зрителей, что эфир завершён
+    notifyStreamEnded()
+
     stopCamera()
     stopSignalChannel()
 
@@ -170,17 +177,13 @@ export function useMyLive() {
 
   async function switchCamera() {
     console.log('[my-live] switchCamera')
-    // просто меняем режим в media-композабле
     toggleCameraMode()
 
     const id = getUserId()
-    // если не в эфире – просто запомним режим,
-    // стрим стартанёт уже с нужной камерой
     if (!isLive.value || !id || busy.value) {
       return
     }
 
-    // Если уже в эфире – мягко перезапускаем камеру и сигналинг
     busy.value = true
     try {
       stopCamera()
@@ -194,7 +197,6 @@ export function useMyLive() {
       await ensureSignalChannel(id)
     } catch (e) {
       console.error('[my-live] switchCamera error:', e)
-      // если что-то пошло совсем плохо – просто остаёмся без эфира
       stopCamera()
       stopSignalChannel()
       isLive.value = false
