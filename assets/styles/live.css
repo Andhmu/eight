@@ -280,3 +280,45 @@
 .live-viewer-leave-to .live-viewer {
   transform: translateX(100%);
 }
+
+
+
+
+/* видео в выдвижной панели эфира (зритель) */
+.live-sheet__body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* сам тег <video> */
+.live-sheet__video {
+  display: block;
+  width: 100%;
+  max-height: min(70vh, 460px); /* не вылезает за экран */
+  background: #000;
+  border-radius: 18px;
+
+  /* главное: показываем всю картинку целиком, без обрезания */
+  object-fit: contain;
+}
+
+
+
+
+
+/* локальный превью-плеер стримера */
+.live-card__video-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.live-card__player {
+  display: block;
+  width: 100%;
+  max-height: min(60vh, 360px);
+  background: #000;
+  border-radius: 18px;
+  object-fit: contain; /* вместо cover */
+}
