@@ -9,6 +9,9 @@ export function useLiveViewer() {
     isWatching,
     openForStreamer,
     closeViewer,
+    status,
+    statusMessage,
+    stats,
   } = useLiveViewerSignal(videoEl)
 
   onBeforeUnmount(() => {
@@ -20,5 +23,8 @@ export function useLiveViewer() {
     videoEl,
     openForStreamer,
     closeViewer,
+    status,
+    statusMessage,
+    stats,
   }
 }

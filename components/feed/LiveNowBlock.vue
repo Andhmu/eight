@@ -4,24 +4,36 @@
     <div class="feed-card__header live-card__header">
       <h2 class="feed-card__title">Прямой эфир</h2>
 
-      <button
-        v-if="!isLive"
-        type="button"
-        class="live-card__action live-card__action--start"
-        :disabled="busy"
-        @click="onStartClick"
-      >
-        Транслировать меня
-      </button>
-      <button
-        v-else
-        type="button"
-        class="live-card__action live-card__action--stop"
-        :disabled="busy"
-        @click="stopLive"
-      >
-        Завершить эфир
-      </button>
+      <div class="live-card__header-actions">
+        <button
+          v-if="isLive"
+          type="button"
+          class="live-card__action live-card__action--switch"
+          :disabled="busy"
+          @click="onSwitchCameraClick"
+        >
+          Поменять камеру
+        </button>
+
+        <button
+          v-if="!isLive"
+          type="button"
+          class="live-card__action live-card__action--start"
+          :disabled="busy"
+          @click="onStartClick"
+        >
+          Транслировать меня
+        </button>
+        <button
+          v-else
+          type="button"
+          class="live-card__action live-card__action--stop"
+          :disabled="busy"
+          @click="stopLive"
+        >
+          Завершить эфир
+        </button>
+      </div>
     </div>
 
     <div class="feed-card__body live-card__body">
@@ -101,9 +113,34 @@
               controls
             ></video>
 
+            <div class="live-sheet__controls">
+              <button
+                type="button"
+                class="live-sheet__refresh"
+                @click="refreshViewer"
+              >
+                Обновить трансляцию
+              </button>
+            </div>
+
+            <p class="live-sheet__status" v-if="viewerStatusMessage">
+              {{ viewerStatusMessage }}
+            </p>
+
+            <p class="live-sheet__stats" v-if="viewerStats">
+              Скорость:
+              <span v-if="viewerStats.bitrateKbps !== null">
+                {{ viewerStats.bitrateKbps }} кбит/с
+              </span>
+              <span v-else>н/д</span>
+              <span v-if="viewerStats.rttMs !== null">
+                · Пинг: {{ viewerStats.rttMs }} мс
+              </span>
+            </p>
+
             <p class="live-sheet__hint">
               Если видео не появилось через несколько секунд, попробуйте
-              закрыть и открыть трансляцию ещё раз.
+              обновить трансляцию или закрыть и открыть эфир ещё раз.
             </p>
           </main>
         </div>
@@ -125,6 +162,7 @@ const {
   loadInitial,
   startLive,
   stopLive,
+  switchCamera,
 } = useMyLive()
 
 const { current, startRotation } = useLiveNow()
@@ -134,9 +172,14 @@ const {
   videoEl: viewerVideoEl,
   openForStreamer,
   closeViewer: closeViewerInternal,
+  status: viewerStatus,
+  statusMessage: viewerStatusMessageRef,
+  stats: viewerStatsRef,
 } = useLiveViewer()
 
 const viewerOpen = computed(() => isWatching.value)
+const viewerStatusMessage = computed(() => viewerStatusMessageRef.value)
+const viewerStats = computed(() => viewerStatsRef.value)
 
 function formatTime(ts: string): string {
   const d = new Date(ts)
@@ -147,7 +190,16 @@ async function onStartClick() {
   await startLive()
 }
 
+async function onSwitchCameraClick() {
+  await switchCamera()
+}
+
 function openViewer() {
+  if (!current.value) return
+  openForStreamer(current.value.id)
+}
+
+function refreshViewer() {
   if (!current.value) return
   openForStreamer(current.value.id)
 }

@@ -1,19 +1,31 @@
 // composables/live/useLiveMedia.ts
 import { ref } from 'vue'
 
+export type CameraMode = 'front' | 'back'
+
 export function useLiveMedia() {
   const videoEl = ref<HTMLVideoElement | null>(null)
   const mediaStream = ref<MediaStream | null>(null)
+  const cameraMode = ref<CameraMode>('front')
 
   async function startCamera() {
     if (!process.client) return
-    console.log('[live-media] startCamera called')
+    console.log('[live-media] startCamera called, mode =', cameraMode.value)
 
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video: true,
+    // Останавливаем предыдущий стрим, если был
+    stopCamera()
+
+    const constraints: MediaStreamConstraints = {
+      video: {
+        facingMode:
+          cameraMode.value === 'back'
+            ? { ideal: 'environment' }
+            : { ideal: 'user' },
+      },
       audio: true,
-    })
+    }
 
+    const stream = await navigator.mediaDevices.getUserMedia(constraints)
     mediaStream.value = stream
 
     if (videoEl.value) {
@@ -44,10 +56,21 @@ export function useLiveMedia() {
     }
   }
 
+  function setCameraMode(mode: CameraMode) {
+    cameraMode.value = mode
+  }
+
+  function toggleCameraMode() {
+    cameraMode.value = cameraMode.value === 'front' ? 'back' : 'front'
+  }
+
   return {
     videoEl,
     mediaStream,
+    cameraMode,
     startCamera,
     stopCamera,
+    setCameraMode,
+    toggleCameraMode,
   }
 }

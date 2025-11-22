@@ -3,6 +3,13 @@ import { ref, type Ref } from 'vue'
 import { useSupabaseClient, useSupabaseUser } from '#imports'
 import type { LiveSignalPayload } from './liveTypes'
 
+type ViewerStatus = 'idle' | 'connecting' | 'playing' | 'reconnecting' | 'error'
+
+interface ViewerStats {
+  bitrateKbps: number | null
+  rttMs: number | null
+}
+
 export function useLiveViewerSignal(videoEl: Ref<HTMLVideoElement | null>) {
   const client = useSupabaseClient()
   const authUser = useSupabaseUser()
@@ -14,9 +21,20 @@ export function useLiveViewerSignal(videoEl: Ref<HTMLVideoElement | null>) {
   const channel = ref<ReturnType<typeof client.channel> | null>(null)
   const pc = ref<RTCPeerConnection | null>(null)
 
+  const status = ref<ViewerStatus>('idle')
+  const statusMessage = ref<string>('')
+
+  const stats = ref<ViewerStats | null>(null)
+
   // простая защита от бесконечных попыток
   const reconnectAttempts = ref(0)
   const maxReconnectAttempts = 3
+
+  const shouldMuteOnNextAttach = ref(false)
+
+  let statsTimer: number | null = null
+  let lastBytesReceived = 0
+  let lastTimestamp = 0
 
   function getViewerId(): string {
     const raw = authUser.value as any
@@ -36,29 +54,121 @@ export function useLiveViewerSignal(videoEl: Ref<HTMLVideoElement | null>) {
     ;(v as any).playsInline = true
     v.autoplay = true
 
+    if (shouldMuteOnNextAttach.value) {
+      v.muted = true
+      shouldMuteOnNextAttach.value = false
+    } else {
+      v.muted = false
+    }
+
     try {
       await v.play()
       console.log('[viewer] video element playing')
+      status.value = 'playing'
+      statusMessage.value = 'Эфир воспроизводится'
     } catch (e) {
       console.warn('[viewer] video play error:', e)
+      status.value = 'error'
+      statusMessage.value =
+        'Видео не удалось запустить автоматически. Нажмите Play в плеере.'
     }
+  }
+
+  function startStats() {
+    if (!process.client) return
+
+    if (statsTimer !== null) {
+      clearInterval(statsTimer)
+      statsTimer = null
+    }
+
+    lastBytesReceived = 0
+    lastTimestamp = 0
+    stats.value = null
+
+    statsTimer = window.setInterval(async () => {
+      if (!pc.value) return
+
+      try {
+        const report = await pc.value.getStats()
+        let videoStats: any = null
+
+        report.forEach((s: any) => {
+          if (s.type === 'inbound-rtp' && s.kind === 'video') {
+            videoStats = s
+          }
+        })
+
+        if (!videoStats) return
+
+        const bytes = videoStats.bytesReceived ?? 0
+        const ts = videoStats.timestamp ?? 0
+
+        if (lastTimestamp && ts > lastTimestamp) {
+          const deltaBytes = bytes - lastBytesReceived
+          const deltaTimeSec = (ts - lastTimestamp) / 1000
+          const bitrateKbps =
+            deltaTimeSec > 0
+              ? Math.round(((deltaBytes * 8) / 1000) / deltaTimeSec)
+              : 0
+
+          const rttMs =
+            typeof videoStats.roundTripTime === 'number'
+              ? Math.round(videoStats.roundTripTime * 1000)
+              : null
+
+          stats.value = {
+            bitrateKbps,
+            rttMs,
+          }
+        }
+
+        lastBytesReceived = bytes
+        lastTimestamp = ts
+      } catch (e) {
+        console.warn('[viewer] getStats error:', e)
+      }
+    }, 2000)
+  }
+
+  function stopStats() {
+    if (statsTimer !== null) {
+      clearInterval(statsTimer)
+      statsTimer = null
+    }
+    stats.value = null
+    lastBytesReceived = 0
+    lastTimestamp = 0
   }
 
   function scheduleReconnect(reason: string) {
     if (!isWatching.value || !streamerId.value) return
     if (reconnectAttempts.value >= maxReconnectAttempts) {
       console.warn('[viewer] reconnect attempts limit reached')
+      status.value = 'error'
+      statusMessage.value =
+        'Не удалось переподключиться к эфиру. Попробуйте обновить трансляцию.'
       return
     }
 
     reconnectAttempts.value++
-    console.log('[viewer] schedule reconnect, reason =', reason, 'attempt', reconnectAttempts.value)
+    shouldMuteOnNextAttach.value = true
+
+    status.value = 'reconnecting'
+    statusMessage.value = 'Стример перезапускает эфир… Подключаемся снова'
+
+    console.log(
+      '[viewer] schedule reconnect, reason =',
+      reason,
+      'attempt',
+      reconnectAttempts.value,
+    )
 
     setTimeout(() => {
       if (!isWatching.value || !streamerId.value) return
       // новая попытка подключиться к тому же стримеру
       void openForStreamer(streamerId.value)
-    }, 1000) // 1 секунда, можно увеличить при желании
+    }, 1000)
   }
 
   function createPeerConnection(): RTCPeerConnection {
@@ -98,8 +208,6 @@ export function useLiveViewerSignal(videoEl: Ref<HTMLVideoElement | null>) {
         // если стример перезагрузился, соединение рвётся – пробуем переподключиться
         scheduleReconnect(state)
       }
-      // 'closed' мы тоже можем ловить, но обычно он из нашего же closeViewer,
-      // там isWatching уже будет false и reconnect не запустится.
     }
 
     return peer
@@ -114,6 +222,7 @@ export function useLiveViewerSignal(videoEl: Ref<HTMLVideoElement | null>) {
     if (videoEl.value) {
       videoEl.value.srcObject = null
     }
+    stopStats()
   }
 
   function stopSignalChannel() {
@@ -131,6 +240,8 @@ export function useLiveViewerSignal(videoEl: Ref<HTMLVideoElement | null>) {
 
     // новая явная попытка просмотра — сбрасываем счётчик
     reconnectAttempts.value = 0
+    status.value = 'connecting'
+    statusMessage.value = 'Подключаемся к эфиру…'
 
     stopPeer()
     stopSignalChannel()
@@ -177,6 +288,9 @@ export function useLiveViewerSignal(videoEl: Ref<HTMLVideoElement | null>) {
         })
       } catch (e) {
         console.error('[viewer] error handle offer:', e)
+        status.value = 'error'
+        statusMessage.value =
+          'Ошибка при обработке ответа от стримера. Попробуйте обновить трансляцию.'
       }
     })
 
@@ -201,12 +315,13 @@ export function useLiveViewerSignal(videoEl: Ref<HTMLVideoElement | null>) {
       }
     })
 
-    await ch.subscribe((status) => {
-      console.log('[viewer] channel status', status)
+    await ch.subscribe((statusVal) => {
+      console.log('[viewer] channel status', statusVal)
     })
 
     channel.value = ch
     pc.value = createPeerConnection()
+    startStats()
 
     console.log('[viewer] viewer-join sent')
     ch.send({
@@ -223,6 +338,8 @@ export function useLiveViewerSignal(videoEl: Ref<HTMLVideoElement | null>) {
     isWatching.value = false
     streamerId.value = null
     reconnectAttempts.value = 0
+    status.value = 'idle'
+    statusMessage.value = ''
 
     stopPeer()
     stopSignalChannel()
@@ -232,5 +349,8 @@ export function useLiveViewerSignal(videoEl: Ref<HTMLVideoElement | null>) {
     isWatching,
     openForStreamer,
     closeViewer,
+    status,
+    statusMessage,
+    stats,
   }
 }

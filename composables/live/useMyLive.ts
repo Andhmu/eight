@@ -15,7 +15,13 @@ export function useMyLive() {
   const isLive = ref(false)
   const busy = ref(false)
 
-  const { videoEl, mediaStream, startCamera, stopCamera } = useLiveMedia()
+  const {
+    videoEl,
+    mediaStream,
+    startCamera,
+    stopCamera,
+    toggleCameraMode,
+  } = useLiveMedia()
   const { ensureSignalChannel, stopSignalChannel } = useLiveStreamerSignal(mediaStream)
 
   function getUserId(): string | null {
@@ -160,6 +166,43 @@ export function useMyLive() {
     busy.value = false
   }
 
+  // ---------- переключение камеры (передняя/задняя) ----------
+
+  async function switchCamera() {
+    console.log('[my-live] switchCamera')
+    // просто меняем режим в media-композабле
+    toggleCameraMode()
+
+    const id = getUserId()
+    // если не в эфире – просто запомним режим,
+    // стрим стартанёт уже с нужной камерой
+    if (!isLive.value || !id || busy.value) {
+      return
+    }
+
+    // Если уже в эфире – мягко перезапускаем камеру и сигналинг
+    busy.value = true
+    try {
+      stopCamera()
+      stopSignalChannel()
+
+      if (process.client) {
+        await nextTick()
+      }
+
+      await startCamera()
+      await ensureSignalChannel(id)
+    } catch (e) {
+      console.error('[my-live] switchCamera error:', e)
+      // если что-то пошло совсем плохо – просто остаёмся без эфира
+      stopCamera()
+      stopSignalChannel()
+      isLive.value = false
+    } finally {
+      busy.value = false
+    }
+  }
+
   onBeforeUnmount(() => {
     stopCamera()
     stopSignalChannel()
@@ -173,5 +216,6 @@ export function useMyLive() {
     startLive,
     stopLive,
     resumeLiveAfterReload,
+    switchCamera,
   }
 }
