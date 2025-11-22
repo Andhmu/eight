@@ -26,16 +26,17 @@ export function useLiveViewerSignal(videoEl: Ref<HTMLVideoElement | null>) {
 
   const stats = ref<ViewerStats | null>(null)
 
-  // защита от бесконечных попыток
   const reconnectAttempts = ref(0)
   const maxReconnectAttempts = 3
 
-  // при реконнекте стартуем с mute, чтобы не оглушить
   const shouldMuteOnNextAttach = ref(false)
 
   let statsTimer: number | null = null
   let lastBytesReceived = 0
   let lastTimestamp = 0
+
+  // чтобы ontrack с двумя треками (audio+video) не вызывал attach дважды
+  const hasRemoteStream = ref(false)
 
   function getViewerId(): string {
     const raw = authUser.value as any
@@ -69,11 +70,19 @@ export function useLiveViewerSignal(videoEl: Ref<HTMLVideoElement | null>) {
       console.log('[viewer] video element playing')
       status.value = 'playing'
       statusMessage.value = 'Эфир воспроизводится'
-    } catch (e) {
-      console.warn('[viewer] video play error:', e)
-      status.value = 'error'
-      statusMessage.value =
-        'Видео не удалось запустить автоматически. Нажмите Play в плеере.'
+    } catch (err: any) {
+      // AbortError тут означает, что play() перебили новой загрузкой
+      // (например, второй ontrack). Это не критично.
+      if (err?.name === 'AbortError') {
+        console.warn('[viewer] video play aborted (second load), not fatal:', err)
+        status.value = 'playing'
+        statusMessage.value = 'Эфир воспроизводится'
+      } else {
+        console.warn('[viewer] video play error:', err)
+        status.value = 'error'
+        statusMessage.value =
+          'Видео не удалось запустить автоматически. Нажмите Play в плеере.'
+      }
     }
   }
 
@@ -189,8 +198,15 @@ export function useLiveViewerSignal(videoEl: Ref<HTMLVideoElement | null>) {
     peer.ontrack = (ev) => {
       const [remoteStream] = ev.streams
       console.log('[viewer] ontrack fired, streams:', ev.streams.length)
-      if (remoteStream) {
+
+      if (!remoteStream) return
+
+      // прикрепляем только первый раз
+      if (!hasRemoteStream.value) {
+        hasRemoteStream.value = true
         void attachRemoteStream(remoteStream)
+      } else {
+        console.log('[viewer] remote stream already attached, ignoring extra track')
       }
     }
 
@@ -229,6 +245,7 @@ export function useLiveViewerSignal(videoEl: Ref<HTMLVideoElement | null>) {
     if (videoEl.value) {
       videoEl.value.srcObject = null
     }
+    hasRemoteStream.value = false
     stopStats()
   }
 
