@@ -14,6 +14,10 @@ export function useLiveViewerSignal(videoEl: Ref<HTMLVideoElement | null>) {
   const channel = ref<ReturnType<typeof client.channel> | null>(null)
   const pc = ref<RTCPeerConnection | null>(null)
 
+  // простая защита от бесконечных попыток
+  const reconnectAttempts = ref(0)
+  const maxReconnectAttempts = 3
+
   function getViewerId(): string {
     const raw = authUser.value as any
     const id: string | undefined = raw?.id ?? raw?.sub ?? undefined
@@ -38,6 +42,23 @@ export function useLiveViewerSignal(videoEl: Ref<HTMLVideoElement | null>) {
     } catch (e) {
       console.warn('[viewer] video play error:', e)
     }
+  }
+
+  function scheduleReconnect(reason: string) {
+    if (!isWatching.value || !streamerId.value) return
+    if (reconnectAttempts.value >= maxReconnectAttempts) {
+      console.warn('[viewer] reconnect attempts limit reached')
+      return
+    }
+
+    reconnectAttempts.value++
+    console.log('[viewer] schedule reconnect, reason =', reason, 'attempt', reconnectAttempts.value)
+
+    setTimeout(() => {
+      if (!isWatching.value || !streamerId.value) return
+      // новая попытка подключиться к тому же стримеру
+      void openForStreamer(streamerId.value)
+    }, 1000) // 1 секунда, можно увеличить при желании
   }
 
   function createPeerConnection(): RTCPeerConnection {
@@ -71,6 +92,14 @@ export function useLiveViewerSignal(videoEl: Ref<HTMLVideoElement | null>) {
 
     peer.onconnectionstatechange = () => {
       console.log('[viewer] pc state:', peer.connectionState)
+
+      const state = peer.connectionState
+      if (['disconnected', 'failed'].includes(state)) {
+        // если стример перезагрузился, соединение рвётся – пробуем переподключиться
+        scheduleReconnect(state)
+      }
+      // 'closed' мы тоже можем ловить, но обычно он из нашего же closeViewer,
+      // там isWatching уже будет false и reconnect не запустится.
     }
 
     return peer
@@ -99,6 +128,9 @@ export function useLiveViewerSignal(videoEl: Ref<HTMLVideoElement | null>) {
     if (!process.client) return
 
     console.log('[viewer] openForStreamer', id)
+
+    // новая явная попытка просмотра — сбрасываем счётчик
+    reconnectAttempts.value = 0
 
     stopPeer()
     stopSignalChannel()
@@ -190,6 +222,7 @@ export function useLiveViewerSignal(videoEl: Ref<HTMLVideoElement | null>) {
     console.log('[viewer] closeViewer')
     isWatching.value = false
     streamerId.value = null
+    reconnectAttempts.value = 0
 
     stopPeer()
     stopSignalChannel()
