@@ -26,10 +26,11 @@ export function useLiveViewerSignal(videoEl: Ref<HTMLVideoElement | null>) {
 
   const stats = ref<ViewerStats | null>(null)
 
+  // защита от бесконечных попыток
   const reconnectAttempts = ref(0)
   const maxReconnectAttempts = 3
 
-  // при реконнекте стартуем с mute, чтобы не оглушить и чтобы autoplay не блочился
+  // при реконнекте стартуем с mute, чтобы не оглушить
   const shouldMuteOnNextAttach = ref(false)
 
   let statsTimer: number | null = null
@@ -56,15 +57,11 @@ export function useLiveViewerSignal(videoEl: Ref<HTMLVideoElement | null>) {
     ;(v as any).playsInline = true
     v.autoplay = true
 
-    // ВАЖНО: по умолчанию mute = true -> браузеры обычно разрешают autoplay
-    v.muted = true
-    if (!shouldMuteOnNextAttach.value) {
-      // если реконнект не запрашивал авто-mute,
-      // всё равно стартуем в mute (для autoplay),
-      // а пользователь сам включит звук кнопкой.
-      // Можно оставить всегда muted = true.
-    } else {
+    if (shouldMuteOnNextAttach.value) {
+      v.muted = true
       shouldMuteOnNextAttach.value = false
+    } else {
+      v.muted = false
     }
 
     try {
@@ -73,10 +70,8 @@ export function useLiveViewerSignal(videoEl: Ref<HTMLVideoElement | null>) {
       status.value = 'playing'
       statusMessage.value = 'Эфир воспроизводится'
     } catch (e) {
-      // Если autoplay заблокирован – это НОРМАЛЬНО.
-      // Видео всё равно привязано к srcObject, пользователь просто нажмёт Play.
-      console.warn('[viewer] video play blocked by autoplay policy:', e)
-      status.value = 'playing'
+      console.warn('[viewer] video play error:', e)
+      status.value = 'error'
       statusMessage.value =
         'Видео не удалось запустить автоматически. Нажмите Play в плеере.'
     }
@@ -328,7 +323,7 @@ export function useLiveViewerSignal(videoEl: Ref<HTMLVideoElement | null>) {
       }
     })
 
-    // стример завершил эфир
+    // стример завершил эфир – закрываем окно
     ch.on('broadcast', { event: 'stream-ended' }, (message: any) => {
       console.log('[viewer] stream-ended message', message)
       closeViewer()
