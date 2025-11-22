@@ -37,6 +37,9 @@ export function useLiveViewerSignal(videoEl: Ref<HTMLVideoElement | null>) {
   // ICE-кандидаты, пришедшие ДО setRemoteDescription(offer)
   const pendingIceCandidates = ref<RTCIceCandidateInit[]>([])
 
+  // таймер, если долго нет offer — делаем авто-рефреш
+  let offerTimeout: number | null = null
+
   let statsTimer: number | null = null
   let lastBytesReceived = 0
   let lastTimestamp = 0
@@ -255,6 +258,13 @@ export function useLiveViewerSignal(videoEl: Ref<HTMLVideoElement | null>) {
     pendingIceCandidates.value = []
   }
 
+  function clearOfferTimeout() {
+    if (offerTimeout !== null) {
+      clearTimeout(offerTimeout)
+      offerTimeout = null
+    }
+  }
+
   function stopPeer() {
     if (pc.value) {
       console.log('[viewer] close peer connection')
@@ -266,6 +276,7 @@ export function useLiveViewerSignal(videoEl: Ref<HTMLVideoElement | null>) {
     }
     hasRemoteStream.value = false
     pendingIceCandidates.value = []
+    clearOfferTimeout()
     stopStats()
   }
 
@@ -396,6 +407,16 @@ export function useLiveViewerSignal(videoEl: Ref<HTMLVideoElement | null>) {
     })
 
     isWatching.value = true
+
+    // ---------- авто-рефреш, если долго нет offer ----------
+    clearOfferTimeout()
+    offerTimeout = window.setTimeout(() => {
+      if (!isWatching.value || !streamerId.value) return
+      if (pc.value && pc.value.remoteDescription) return // offer уже пришёл
+
+      console.log('[viewer] no offer within timeout, scheduling reconnect')
+      scheduleReconnect('offer-timeout')
+    }, 5000)
   }
 
   // ---------- закрытие эфира у зрителя ----------
