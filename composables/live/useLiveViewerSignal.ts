@@ -31,12 +31,15 @@ export function useLiveViewerSignal(videoEl: Ref<HTMLVideoElement | null>) {
 
   const shouldMuteOnNextAttach = ref(false)
 
+  // ontrack может сработать несколько раз (audio+video) — вешаем поток один раз
+  const hasRemoteStream = ref(false)
+
+  // ICE-кандидаты, пришедшие ДО setRemoteDescription(offer)
+  const pendingIceCandidates = ref<RTCIceCandidateInit[]>([])
+
   let statsTimer: number | null = null
   let lastBytesReceived = 0
   let lastTimestamp = 0
-
-  // чтобы ontrack с двумя треками (audio+video) не вызывал attach дважды
-  const hasRemoteStream = ref(false)
 
   function getViewerId(): string {
     const raw = authUser.value as any
@@ -71,8 +74,6 @@ export function useLiveViewerSignal(videoEl: Ref<HTMLVideoElement | null>) {
       status.value = 'playing'
       statusMessage.value = 'Эфир воспроизводится'
     } catch (err: any) {
-      // AbortError тут означает, что play() перебили новой загрузкой
-      // (например, второй ontrack). Это не критично.
       if (err?.name === 'AbortError') {
         console.warn('[viewer] video play aborted (second load), not fatal:', err)
         status.value = 'playing'
@@ -201,7 +202,6 @@ export function useLiveViewerSignal(videoEl: Ref<HTMLVideoElement | null>) {
 
       if (!remoteStream) return
 
-      // прикрепляем только первый раз
       if (!hasRemoteStream.value) {
         hasRemoteStream.value = true
         void attachRemoteStream(remoteStream)
@@ -236,6 +236,25 @@ export function useLiveViewerSignal(videoEl: Ref<HTMLVideoElement | null>) {
     return peer
   }
 
+  async function flushPendingIce() {
+    if (!pc.value) return
+    if (!pc.value.remoteDescription) return
+
+    const list = pendingIceCandidates.value
+    if (!list.length) return
+
+    console.log('[viewer] flushing pending ICE, count =', list.length)
+
+    for (const c of list) {
+      try {
+        await pc.value.addIceCandidate(new RTCIceCandidate(c))
+      } catch (e) {
+        console.warn('[viewer] error add pending ICE from streamer:', e)
+      }
+    }
+    pendingIceCandidates.value = []
+  }
+
   function stopPeer() {
     if (pc.value) {
       console.log('[viewer] close peer connection')
@@ -246,6 +265,7 @@ export function useLiveViewerSignal(videoEl: Ref<HTMLVideoElement | null>) {
       videoEl.value.srcObject = null
     }
     hasRemoteStream.value = false
+    pendingIceCandidates.value = []
     stopStats()
   }
 
@@ -299,6 +319,10 @@ export function useLiveViewerSignal(videoEl: Ref<HTMLVideoElement | null>) {
 
       try {
         await pc.value.setRemoteDescription(new RTCSessionDescription(offer))
+
+        // теперь у нас есть remoteDescription — можно применить отложенные ICE
+        await flushPendingIce()
+
         const answer = await pc.value.createAnswer()
         await pc.value.setLocalDescription(answer)
 
@@ -327,14 +351,24 @@ export function useLiveViewerSignal(videoEl: Ref<HTMLVideoElement | null>) {
       if (vId !== viewerId.value || !candidate) {
         return
       }
+
+      const candidateInit = candidate as RTCIceCandidateInit
+
       if (!pc.value) {
-        console.warn('[viewer] got ICE but no pc')
+        console.warn('[viewer] got ICE but no pc yet, buffering')
+        pendingIceCandidates.value.push(candidateInit)
+        return
+      }
+
+      if (!pc.value.remoteDescription) {
+        console.log('[viewer] ICE before remoteDescription, buffering')
+        pendingIceCandidates.value.push(candidateInit)
         return
       }
 
       console.log('[viewer] add ICE from streamer')
       try {
-        await pc.value.addIceCandidate(new RTCIceCandidate(candidate))
+        await pc.value.addIceCandidate(new RTCIceCandidate(candidateInit))
       } catch (e) {
         console.warn('[viewer] error add ICE from streamer:', e)
       }
