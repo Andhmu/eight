@@ -51,9 +51,24 @@ export function useLiveStreamerSignal(mediaStream: Ref<MediaStream | null>) {
   }
 
   async function ensureSignalChannel(streamerId: string) {
-    if (channel.value) return
+    // если канал уже живой и в joined – используем его
+    if ((channel.value as any)?.state === 'joined') {
+      return
+    }
 
-    console.log('[my-live] ensureSignalChannel for', streamerId)
+    // если канал есть, но не joined (отвалился / завис) – пересоздаём
+    if (channel.value) {
+      console.log(
+        '[my-live] existing channel state is not joined, recreating:',
+        (channel.value as any).state,
+      )
+      channel.value.unsubscribe()
+      channel.value = null
+      peers.forEach((pc) => pc.close())
+      peers.clear()
+    }
+
+    console.log('[my-live] ensureSignalChannel create for', streamerId)
 
     const ch = client.channel(`live-${streamerId}`, {
       config: {
