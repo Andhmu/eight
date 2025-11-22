@@ -1,7 +1,12 @@
 // composables/live/useLiveNow.ts
 import { computed, onBeforeUnmount, ref } from 'vue'
 import { useSupabaseClient, useSupabaseUser } from '#imports'
-import type { LiveCandidate } from './liveTypes'
+
+export interface LiveCandidate {
+  id: string
+  email: string | null
+  live_started_at: string | null
+}
 
 export function useLiveNow() {
   const client = useSupabaseClient()
@@ -12,10 +17,15 @@ export function useLiveNow() {
   const current = ref<LiveCandidate | null>(null)
   const rotationTimer = ref<number | null>(null)
 
+  // канал для realtime-изменений профилей
+  const changesChannel = ref<ReturnType<typeof client.channel> | null>(null)
+
   function getUserId(): string | null {
     const raw = authUser.value as any
     return raw?.id ?? raw?.sub ?? null
   }
+
+  // ---------- загрузка списка из БД ----------
 
   async function loadCandidates() {
     loading.value = true
@@ -60,6 +70,79 @@ export function useLiveNow() {
     current.value = list[idx]
   }
 
+  // ---------- realtime-обновление списка ----------
+
+  function applyProfileLiveChange(rowNew: any | null, rowOld: any | null) {
+    const me = getUserId()
+    const id = rowNew?.id ?? rowOld?.id
+    if (!id || id === me) return
+
+    const wasLive = rowOld?.is_live ?? false
+    const isLive = rowNew?.is_live ?? false
+
+    // состояние "в эфире" не изменилось — ничего не делаем
+    if (wasLive === isLive) return
+
+    if (isLive) {
+      // кто-то вышел в эфир — добавляем/обновляем в списке
+      const idx = candidates.value.findIndex((c) => c.id === id)
+      const candidate: LiveCandidate = {
+        id,
+        email: rowNew.email ?? null,
+        live_started_at: rowNew.live_started_at ?? null,
+      }
+      if (idx === -1) {
+        candidates.value.push(candidate)
+      } else {
+        candidates.value[idx] = candidate
+      }
+      // можно обновить current — пусть иногда подхватывает новый эфир
+      if (!current.value) {
+        pickRandom()
+      }
+    } else {
+      // кто-то завершил эфир — убираем из списка
+      const idx = candidates.value.findIndex((c) => c.id === id)
+      if (idx !== -1) {
+        candidates.value.splice(idx, 1)
+      }
+      if (current.value?.id === id) {
+        pickRandom() // выберем другого или очистим current
+      }
+    }
+  }
+
+  async function startRealtime() {
+    if (changesChannel.value) return
+
+    const ch = client.channel('live-now-profiles')
+
+    ch.on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'profiles' },
+      (payload: any) => {
+        // нас интересует только смена is_live
+        applyProfileLiveChange(payload.new, payload.old)
+      },
+    )
+
+    await ch.subscribe((status) => {
+      console.log('[live-now] realtime status', status)
+    })
+
+    changesChannel.value = ch
+  }
+
+  function stopRealtime() {
+    if (changesChannel.value) {
+      console.log('[live-now] stop realtime')
+      changesChannel.value.unsubscribe()
+      changesChannel.value = null
+    }
+  }
+
+  // ---------- ротация карточки ----------
+
   function stopRotation() {
     if (rotationTimer.value !== null) {
       clearInterval(rotationTimer.value)
@@ -73,6 +156,7 @@ export function useLiveNow() {
     stopRotation()
     await loadCandidates()
     pickRandom()
+    await startRealtime()
 
     rotationTimer.value = window.setInterval(async () => {
       await loadCandidates()
@@ -82,6 +166,7 @@ export function useLiveNow() {
 
   onBeforeUnmount(() => {
     stopRotation()
+    stopRealtime()
   })
 
   const hasCandidates = computed(() => !!current.value)
