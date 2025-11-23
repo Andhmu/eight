@@ -1,5 +1,5 @@
-// composables/live/useLiveViewer.ts
-import { onBeforeUnmount, ref, type Ref } from 'vue'
+// composables/live/useLiveViewerSignal.ts
+import { ref, type Ref } from 'vue'
 import { useSupabaseClient, useSupabaseUser } from '#imports'
 
 type LiveSignalPayload =
@@ -15,12 +15,15 @@ interface ViewerStats {
   rttMs: number | null
 }
 
-export function useLiveViewer() {
+/**
+ * ВЕСЬ сигналинг зрителя.
+ * Принимает videoEl (ref из обёртки useLiveViewer).
+ */
+export function useLiveViewerSignal(videoEl: Ref<HTMLVideoElement | null>) {
   const client = useSupabaseClient()
   const authUser = useSupabaseUser()
 
   const isWatching = ref(false)
-  const videoEl = ref<HTMLVideoElement | null>(null)
 
   const streamerId = ref<string | null>(null)
   const viewerId = ref<string | null>(null)
@@ -186,7 +189,7 @@ export function useLiveViewer() {
       reconnectAttempts.value,
     )
 
-    // было 1000ms, делаем гораздо быстрее
+    // Ускоренный реконнект: 250 мс
     setTimeout(() => {
       if (!isWatching.value || !streamerId.value) return
       void openForStreamer(streamerId.value)
@@ -425,7 +428,7 @@ export function useLiveViewer() {
   // ---------- закрытие эфира у зрителя ----------
 
   function closeViewer() {
-    console.log('[viewer] closeViewer')
+    console.log('[viewer] closeViewer (signal)')
     isWatching.value = false
     streamerId.value = null
     reconnectAttempts.value = 0
@@ -436,13 +439,8 @@ export function useLiveViewer() {
     stopSignalChannel()
   }
 
-  onBeforeUnmount(() => {
-    closeViewer()
-  })
-
   return {
     isWatching,
-    videoEl,
     openForStreamer,
     closeViewer,
     status,
