@@ -205,7 +205,9 @@
   border-radius: inherit;
 
 background: linear-gradient(#fff, #fff) padding-box, linear-gradient(90deg, #38bdf8, #a855f7 45%, #f97316) border-box;
-  box-shadow:
+    border: 1px solid transparent;
+    border-radius: 9999px;
+box-shadow:
 
     0 0 24px rgba(56, 189, 248, 0.9),
 
