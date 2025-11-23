@@ -1,3 +1,4 @@
+<!-- FILE: components/feed/live/LivePreviewBlock.vue -->
 <template>
   <div class="live-card__viewer-wrapper">
     <!-- Превью-карточка -->
@@ -14,28 +15,28 @@
             muted
             playsinline
           ></video>
+
+          <!-- Плашка поверх видео снизу -->
+          <div class="live-card__preview-overlay">
+            <div class="live-card__preview-meta">
+              <p class="live-card__now">Сейчас в эфире</p>
+              <p class="live-card__user-email">
+                {{ current.email || 'Пользователь' }}
+              </p>
+              <p class="live-card__since" v-if="current.live_started_at">
+                в эфире с {{ formatTime(current.live_started_at) }}
+              </p>
+            </div>
+
+            <button
+              type="button"
+              class="live-card__watch-btn"
+              @click="$emit('openViewer')"
+            >
+              <span class="live-card__watch-label">Перейти к трансляции</span>
+            </button>
+          </div>
         </div>
-      </div>
-
-      <div class="live-card__current-info">
-        <p class="live-card__now">Сейчас в эфире</p>
-        <p class="live-card__user-email">
-          {{ current.email || 'Пользователь' }}
-        </p>
-        <p class="live-card__since" v-if="current.live_started_at">
-          в эфире с {{ formatTime(current.live_started_at) }}
-        </p>
-        <p class="live-card__subtitle-text">
-          Превью прямого эфира. Нажмите, чтобы подключиться.
-        </p>
-
-        <button
-          type="button"
-          class="live-card__watch-btn"
-          @click="$emit('openViewer')"
-        >
-          <span class="live-card__watch-label">Перейти к трансляции</span>
-        </button>
       </div>
     </div>
 
@@ -48,6 +49,7 @@
 </template>
 
 <script setup lang="ts">
+// FILE: components/feed/live/LivePreviewBlock.vue
 interface LiveCandidate {
   id: string
   email?: string | null

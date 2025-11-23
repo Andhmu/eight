@@ -1,286 +1,183 @@
+/* FILE: assets/css/live.preview.css */
 /* Превью чужих эфиров и плейсхолдер */
 
-
-
 .live-card__viewer-wrapper {
-
   margin-top: 4px;
-
 }
-
-
 
 /* Превью целиком горизонтальное на ширину блока */
 
-
-
 .live-card__current {
-
   display: flex;
-
   flex-direction: column;
-
   align-items: stretch;
-
   gap: 10px;
-
 }
-
-
 
 /* Обёртка под превью, держим 16:9 */
 
-
-
 .live-card__preview-frame {
-
   flex: 1 1 auto;
-
   max-width: 100%;
-
   border-radius: 20px;
-
   padding: 6px;
-
   border: 1px solid rgba(191, 219, 254, 0.95);
-
   background:
-
     radial-gradient(circle at 0% 0%, rgba(239, 246, 255, 0.9), transparent 60%),
-
     rgba(248, 250, 252, 0.98);
-
   box-shadow: 0 16px 36px rgba(148, 163, 184, 0.4);
-
 }
-
-
 
 /* Внутренний экран превью: фиксированное 16:9, всегда горизонтально */
 
-
-
 .live-card__preview-screen {
-
+  position: relative; /* нужно для плашки поверх видео */
   border-radius: 14px;
-
   padding: 4px;
-
   border: 1px solid rgba(148, 163, 184, 0.85);
-
   background:
-
     radial-gradient(circle at 0% 0%, rgba(15, 23, 42, 0.75), transparent 60%),
-
     #020617;
-
   aspect-ratio: 16 / 9;
-
   overflow: hidden;
-
 }
-
-
 
 /* Видео превью полностью заполняет экран */
 
-
-
 .live-card__preview-player {
-
   display: block;
-
   width: 100%;
-
   height: 100%;
-
   border-radius: 10px;
-
   background: #000;
-
   object-fit: cover; /* vertical кадр увеличиваем и обрезаем по краям */
-
 }
 
+/* ----- Плашка поверх видео (снизу) с инфой + кнопкой ----- */
 
-
-.live-card__current-info {
-
-  flex: 1;
-
-  display: grid;
-
-  gap: 4px;
-
+.live-card__preview-overlay {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  background:
+    linear-gradient(
+      to top,
+      rgba(15, 23, 42, 0.9),
+      rgba(15, 23, 42, 0.7),
+      transparent
+    );
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-top: 1px solid rgba(148, 163, 184, 0.6);
+  box-shadow: 0 -10px 24px rgba(15, 23, 42, 0.6);
+  z-index: 2;
 }
 
-
+.live-card__preview-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
 
 .live-card__now {
-
-  font-size: 0.74rem;
-
+  font-size: 0.7rem;
   text-transform: uppercase;
-
   letter-spacing: 0.13em;
-
-  color: #6b7280;
-
+  color: #e5e7eb;
+  opacity: 0.8;
 }
-
-
 
 .live-card__user-email {
-
   font-weight: 600;
-
-  font-size: 0.95rem;
-
-  color: #0f172a;
-
+  font-size: 0.9rem;
+  color: #f9fafb;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
 }
-
-
 
 .live-card__since {
-
-  font-size: 0.78rem;
-
-  color: #6b7280;
-
+  font-size: 0.75rem;
+  color: #e5e7eb;
+  opacity: 0.8;
 }
-
-
 
 .live-card__subtitle-text {
-
-  font-size: 0.8rem;
-
-  color: #9ca3af;
-
+  display: none; /* чтобы не перегружать плашку мелким текстом */
 }
-
-
 
 /* Кнопка перехода к трансляции */
 
-
-
 .live-card__watch-btn {
-
-  margin-top: 8px;
-
-  align-self: flex-start;
-
-  padding: 7px 16px;
-
+  flex-shrink: 0;
+  align-self: flex-end;
+  padding: 6px 14px;
   border-radius: 999px;
-
   border: none;
-
   cursor: pointer;
-
   background:
-
-    radial-gradient(circle at 0% 0%, rgba(56, 189, 248, 0.45), transparent 65%),
-
+    radial-gradient(circle at 0% 0%, rgba(56, 189, 248, 0.6), transparent 65%),
     linear-gradient(135deg, #e0f2fe, #bae6fd);
-
   color: #0b1120;
-
-  font-size: 0.8rem;
-
+  font-size: 0.78rem;
   font-weight: 500;
-
   box-shadow:
-
-    0 12px 28px rgba(8, 47, 73, 0.4),
-
+    0 12px 28px rgba(8, 47, 73, 0.6),
     0 0 0 1px rgba(219, 234, 254, 1);
-
   display: inline-flex;
-
   align-items: center;
-
   gap: 6px;
-
   transition:
-
     transform 0.12s ease-out,
-
     box-shadow 0.15s ease-out;
-
 }
-
-
 
 .live-card__watch-btn::after {
-
   content: '▶';
-
   font-size: 0.8rem;
-
 }
-
-
 
 .live-card__watch-btn:hover {
-
   transform: translateY(-1px);
-
   box-shadow:
-
-    0 16px 36px rgba(8, 47, 73, 0.55),
-
+    0 16px 36px rgba(8, 47, 73, 0.8),
     0 0 0 1px rgba(248, 250, 252, 1);
-
 }
 
+/* старый блок с текстом под видео больше не используется,
+   но оставляем на всякий случай (display: none) */
 
+.live-card__current-info {
+  display: none;
+}
 
 /* Плейсхолдер / пауза */
 
-
-
 .live-card__placeholder {
-
   margin-top: 4px;
-
   padding: 14px 12px;
-
   border-radius: 18px;
-
   background: rgba(255, 255, 255, 0.96);
-
   border: 1px dashed rgba(191, 219, 254, 0.95);
-
   font-size: 0.88rem;
-
   color: #4b5563;
-
 }
-
-
 
 .live-card__badge {
-
   display: inline-flex;
-
   align-items: center;
-
   padding: 4px 10px;
-
   border-radius: 999px;
-
   font-size: 0.74rem;
-
   font-weight: 600;
-
   margin-bottom: 6px;
-
   background: rgba(239, 246, 255, 0.96);
-
   color: #0369a1;
-
 }
-
