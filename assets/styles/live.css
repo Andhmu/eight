@@ -27,13 +27,15 @@
   gap: 12px;
 }
 
-.live-card__header-left {
+.live-card__header-actions {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
+  align-items: center;
+  gap: 8px;
 }
 
-.live-card__title {
+/* Заголовок "Прямой эфир" */
+
+.feed-card__title {
   font-weight: 600;
   font-size: 0.98rem;
   letter-spacing: 0.14em;
@@ -41,37 +43,7 @@
   color: #0f172a;
 }
 
-.live-card__subtitle {
-  font-size: 0.72rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: #9ca3af;
-}
-
-/* Индикатор «в эфире» справа */
-
-.live-card__status-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 10px;
-  border-radius: 999px;
-  border: 1px solid rgba(59, 130, 246, 0.7);
-  background: radial-gradient(circle, rgba(56, 189, 248, 0.4), transparent 65%);
-  color: #0f172a;
-  font-size: 0.76rem;
-  font-weight: 500;
-}
-
-.live-card__status-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 999px;
-  background: #22c55e;
-  box-shadow: 0 0 10px rgba(34, 197, 94, 0.8);
-}
-
-/* Кнопка «Транслировать меня» */
+/* Кнопки в шапке */
 
 .live-card__action {
   padding: 7px 18px;
@@ -90,6 +62,8 @@
     opacity 0.12s ease-out;
 }
 
+/* "Транслировать меня" */
+
 .live-card__action--start {
   background: radial-gradient(circle at 0% 0%, rgba(59, 130, 246, 0.3), transparent 60%),
     linear-gradient(135deg, #22d3ee, #6366f1);
@@ -99,11 +73,33 @@
     0 0 0 1px rgba(219, 234, 254, 0.9);
 }
 
-.live-card__action--start:hover:not(:disabled) {
+/* "Завершить эфир" */
+
+.live-card__action--stop {
+  background: radial-gradient(circle at 0% 0%, rgba(248, 113, 113, 0.3), transparent 60%),
+    linear-gradient(135deg, #fecaca, #fb7185);
+  color: #450a0a;
+  box-shadow:
+    0 14px 32px rgba(248, 113, 113, 0.6),
+    0 0 0 1px rgba(254, 226, 226, 0.9);
+}
+
+/* "Поменять камеру" */
+
+.live-card__action--switch {
+  background: radial-gradient(circle at 0% 0%, rgba(248, 250, 252, 0.7), transparent 60%),
+    rgba(15, 23, 42, 0.96);
+  color: #e5e7eb;
+  box-shadow:
+    0 10px 26px rgba(15, 23, 42, 0.7),
+    0 0 0 1px rgba(15, 23, 42, 0.9);
+}
+
+.live-card__action:hover:not(:disabled) {
   transform: translateY(-1px);
   box-shadow:
-    0 18px 40px rgba(37, 99, 235, 0.7),
-    0 0 0 1px rgba(239, 246, 255, 1);
+    0 18px 40px rgba(15, 23, 42, 0.7),
+    0 0 0 1px rgba(248, 250, 252, 0.95);
 }
 
 .live-card__action:disabled {
@@ -118,203 +114,127 @@
   margin-top: 14px;
 }
 
-/* Холо-рамка собственного эфира */
+/* ============================
+   Собственный эфир стримера
+   ============================ */
 
-.live-card__holo {
-  display: flex;
-  justify-content: center;
-}
-
-.live-card__holo-frame {
-  width: 100%;
-  border-radius: 24px;
-  padding: 10px 12px 14px;
+.live-card__video-wrapper {
+  background:
+    radial-gradient(circle at 0% 0%, rgba(59, 130, 246, 0.18), transparent 60%),
+    rgba(15, 23, 42, 0.98);
+  border-radius: 22px;
+  padding: 10px 12px 12px;
   border: 1.4px solid rgba(190, 230, 255, 0.9);
-  background:
-    radial-gradient(circle at 0% 0%, rgba(59, 130, 246, 0.16), transparent 55%),
-    radial-gradient(circle at 100% 100%, rgba(59, 130, 246, 0.16), transparent 55%),
-    rgba(15, 23, 42, 0.96);
   box-shadow:
-    0 20px 48px rgba(15, 23, 42, 0.9),
-    0 0 40px rgba(56, 189, 248, 0.55);
-  position: relative;
+    0 20px 50px rgba(15, 23, 42, 0.9),
+    0 0 32px rgba(56, 189, 248, 0.4);
+  color: #e5e7eb;
+  display: grid;
+  gap: 8px;
 }
 
-/* Экран */
-
-.live-card__screen {
-  border-radius: 18px;
-  padding: 6px;
-  border: 1px solid rgba(15, 23, 42, 0.9);
-  background:
-    radial-gradient(circle at 0% 0%, rgba(15, 23, 42, 0.8), transparent 60%),
-    #020617;
+.live-card__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: radial-gradient(circle, #f97316 0, #ea580c 55%, #7c2d12 100%);
+  color: #fff;
+  box-shadow: 0 0 16px rgba(249, 115, 22, 0.9);
 }
+
+.live-card__badge::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: #fee2e2;
+}
+
+.live-card__badge--idle {
+  background: radial-gradient(circle, #0f172a 0, #020617 100%);
+  color: #e5e7eb;
+  box-shadow: 0 0 10px rgba(15, 23, 42, 0.9);
+}
+
+/* локальный превью-плеер стримера */
 
 .live-card__player {
   display: block;
   width: 100%;
   max-height: min(60vh, 360px);
-  border-radius: 14px;
+  border-radius: 16px;
   background: #020617;
-  object-fit: contain;
-}
-
-/* Нижняя панель с кнопками как в примере */
-
-.live-card__holo-bottom {
-  margin-top: 10px;
-  display: grid;
-  grid-template-columns: 1fr auto;
-  grid-template-rows: auto auto;
-  column-gap: 12px;
-  row-gap: 10px;
-  align-items: center;
-}
-
-/* маленькая пилюля «Сменить камеру» */
-
-.live-card__chip {
-  grid-column: 1 / 2;
-  padding: 6px 14px;
-  border-radius: 999px;
-  border: 1px solid rgba(148, 163, 184, 0.75);
-  background: radial-gradient(circle at 0% 0%, rgba(248, 250, 252, 0.7), transparent 65%),
-    rgba(15, 23, 42, 0.95);
-  color: #e5e7eb;
-  font-size: 0.78rem;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
+  object-fit: contain; /* ВАЖНО: вертикальное видео не обрезается */
   box-shadow:
-    0 10px 24px rgba(15, 23, 42, 0.7),
+    0 12px 30px rgba(15, 23, 42, 0.9),
     0 0 0 1px rgba(15, 23, 42, 0.9);
-  transition:
-    transform 0.12s ease-out,
-    box-shadow 0.15s ease-out,
-    background 0.15s ease-out;
 }
 
-.live-card__chip::before {
-  content: '⇄';
+.live-card__hint {
   font-size: 0.8rem;
-}
-
-.live-card__chip:hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow:
-    0 16px 32px rgba(15, 23, 42, 0.9),
-    0 0 0 1px rgba(248, 250, 252, 0.9);
-}
-
-/* центральная круглая кнопка */
-
-.live-card__circle-btn {
-  grid-column: 2 / 3;
-  grid-row: 1 / 3;
-  justify-self: center;
-  width: 82px;
-  height: 82px;
-  border-radius: 999px;
-  border: none;
-  padding: 0;
-  cursor: pointer;
-  position: relative;
-  background: none;
-}
-
-.live-card__circle-btn::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background:
-    radial-gradient(circle, rgba(56, 189, 248, 0.65), transparent 70%),
-    radial-gradient(circle at 30% 0%, rgba(129, 140, 248, 0.7), transparent 60%);
+  color: #cbd5f5;
   opacity: 0.9;
-  box-shadow:
-    0 0 28px rgba(56, 189, 248, 0.9),
-    0 0 0 1px rgba(240, 249, 255, 0.95);
 }
 
-.live-card__circle-btn::after {
-  content: '';
-  position: absolute;
-  inset: 6px;
-  border-radius: inherit;
-  background: rgba(15, 23, 42, 0.96);
-  box-shadow: inset 0 0 14px rgba(15, 23, 42, 0.9);
-}
+/* ============================
+   Превью чужих эфиров
+   ============================ */
 
-.live-card__circle-inner {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  font-size: 0.7rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  color: #e5e7eb;
-}
-
-.live-card__circle-sub {
-  font-size: 0.6rem;
-  opacity: 0.75;
-}
-
-.live-card__circle-btn:hover:not(:disabled) {
-  transform: translateY(-2px) scale(1.02);
-}
-
-.live-card__circle-btn:disabled {
-  opacity: 0.6;
-  cursor: default;
-}
-
-/* подпись слева снизу */
-
-.live-card__meta {
-  grid-column: 1 / 2;
-  grid-row: 2 / 3;
-  display: inline-flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 4px;
-  font-size: 0.78rem;
-  color: #e5e7eb;
-  opacity: 0.85;
-}
-
-.live-card__meta-label {
-  text-transform: uppercase;
-  letter-spacing: 0.16em;
-  font-size: 0.69rem;
-  color: #bfdbfe;
-}
-
-.live-card__meta-separator {
-  opacity: 0.6;
-}
-
-/* когда сам не в эфире */
-
-.live-card__viewer-wrapper {
-  margin-top: 2px;
-}
+/* общий контейнер */
 
 .live-card__current {
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
+  align-items: stretch;
   gap: 14px;
 }
 
-.live-card__current-main {
+/* режим с превьюшкой */
+
+.live-card__current--with-preview {
+  padding: 10px 12px;
+  border-radius: 20px;
+  background:
+    radial-gradient(circle at 0% 0%, rgba(59, 130, 246, 0.08), transparent 60%),
+    rgba(248, 250, 252, 0.96);
+  border: 1px solid rgba(191, 219, 254, 0.8);
+  box-shadow:
+    0 12px 26px rgba(15, 23, 42, 0.12),
+    0 0 0 1px rgba(255, 255, 255, 0.8);
+}
+
+/* блок превью-видео слева */
+
+.live-card__preview-wrapper {
+  flex: 0 0 160px;
+  max-width: 180px;
+  border-radius: 16px;
+  padding: 4px;
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  background:
+    radial-gradient(circle at 0% 0%, rgba(15, 23, 42, 0.7), transparent 60%),
+    #020617;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.live-card__preview-player {
+  display: block;
+  width: 100%;
+  max-height: 110px;
+  border-radius: 12px;
+  background: #020617;
+  object-fit: contain; /* превью вертикального видео тоже не обрезаем */
+}
+
+/* текст справа от превью */
+
+.live-card__current-info {
+  flex: 1;
   display: grid;
   gap: 4px;
 }
@@ -333,18 +253,14 @@
 }
 
 .live-card__since {
-  font-size: 0.78rem;
+  font-size: 0.8rem;
   color: #6b7280;
 }
 
-.live-card__subtitle-text {
-  font-size: 0.8rem;
-  color: #9ca3af;
-}
-
 .live-card__watch-btn {
-  align-self: center;
-  padding: 8px 18px;
+  margin-top: 8px;
+  align-self: flex-start;
+  padding: 7px 16px;
   border-radius: 999px;
   border: none;
   font-size: 0.82rem;
@@ -372,7 +288,7 @@
     0 0 0 1px rgba(240, 249, 255, 1);
 }
 
-/* плейсхолдер без эфиров */
+/* плейсхолдер (когда showSlot=false или нет эфиров) */
 
 .live-card__placeholder {
   margin-top: 4px;
@@ -382,18 +298,6 @@
   border: 1px dashed rgba(148, 163, 184, 0.6);
   font-size: 0.88rem;
   color: #4b5563;
-}
-
-.live-card__badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 4px 10px;
-  border-radius: 999px;
-  font-size: 0.74rem;
-  font-weight: 600;
-  margin-bottom: 6px;
-  background: radial-gradient(circle, #0f172a 0, #020617 100%);
-  color: #e5e7eb;
 }
 
 /* =============================
@@ -432,7 +336,7 @@
   -webkit-backdrop-filter: blur(14px);
 }
 
-/* сама панель */
+/* стеклянная панель */
 
 .live-sheet__panel {
   position: relative;
@@ -505,18 +409,26 @@
   gap: 10px;
 }
 
-/* видео */
+/* рамка вокруг видео — как экран */
+
+.live-sheet__video-frame {
+  border-radius: 20px;
+  padding: 6px;
+  border: 1px solid rgba(191, 219, 254, 0.9);
+  background:
+    radial-gradient(circle at 0% 0%, rgba(15, 23, 42, 0.8), transparent 60%),
+    #020617;
+}
+
+/* само видео */
 
 .live-sheet__video {
   display: block;
   width: 100%;
   max-height: min(70vh, 460px);
-  border-radius: 18px;
+  border-radius: 16px;
   background: #020617;
-  object-fit: contain;
-  box-shadow:
-    0 12px 28px rgba(15, 23, 42, 0.9),
-    0 0 0 1px rgba(15, 23, 42, 0.9);
+  object-fit: contain; /* вертикальное видео не вылезает за панель */
 }
 
 /* нижняя зона панели */
@@ -528,6 +440,8 @@
   gap: 10px;
   flex-wrap: wrap;
 }
+
+/* кнопка "Обновить трансляцию" в стиле футуризма */
 
 .live-sheet__refresh {
   padding: 6px 16px;
