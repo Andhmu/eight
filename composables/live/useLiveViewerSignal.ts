@@ -1,7 +1,12 @@
-// composables/live/useLiveViewerSignal.ts
-import { ref, type Ref } from 'vue'
+// composables/live/useLiveViewer.ts
+import { onBeforeUnmount, ref, type Ref } from 'vue'
 import { useSupabaseClient, useSupabaseUser } from '#imports'
-import type { LiveSignalPayload } from './liveTypes'
+
+type LiveSignalPayload =
+  | { viewerId: string }
+  | { viewerId: string; offer: RTCSessionDescriptionInit }
+  | { viewerId: string; answer: RTCSessionDescriptionInit }
+  | { viewerId: string; candidate: RTCIceCandidateInit }
 
 type ViewerStatus = 'idle' | 'connecting' | 'playing' | 'reconnecting' | 'error'
 
@@ -10,11 +15,13 @@ interface ViewerStats {
   rttMs: number | null
 }
 
-export function useLiveViewerSignal(videoEl: Ref<HTMLVideoElement | null>) {
+export function useLiveViewer() {
   const client = useSupabaseClient()
   const authUser = useSupabaseUser()
 
   const isWatching = ref(false)
+  const videoEl = ref<HTMLVideoElement | null>(null)
+
   const streamerId = ref<string | null>(null)
   const viewerId = ref<string | null>(null)
 
@@ -30,14 +37,9 @@ export function useLiveViewerSignal(videoEl: Ref<HTMLVideoElement | null>) {
   const maxReconnectAttempts = 3
 
   const shouldMuteOnNextAttach = ref(false)
-
-  // ontrack может сработать несколько раз (audio+video) — вешаем поток один раз
   const hasRemoteStream = ref(false)
 
-  // ICE-кандидаты, пришедшие ДО setRemoteDescription(offer)
   const pendingIceCandidates = ref<RTCIceCandidateInit[]>([])
-
-  // таймер, если долго нет offer — делаем авто-рефреш
   let offerTimeout: number | null = null
 
   let statsTimer: number | null = null
@@ -184,10 +186,11 @@ export function useLiveViewerSignal(videoEl: Ref<HTMLVideoElement | null>) {
       reconnectAttempts.value,
     )
 
+    // было 1000ms, делаем гораздо быстрее
     setTimeout(() => {
       if (!isWatching.value || !streamerId.value) return
       void openForStreamer(streamerId.value)
-    }, 1000)
+    }, 250)
   }
 
   // ---------- RTCPeerConnection ----------
@@ -408,7 +411,7 @@ export function useLiveViewerSignal(videoEl: Ref<HTMLVideoElement | null>) {
 
     isWatching.value = true
 
-    // ---------- авто-рефреш, если долго нет offer ----------
+    // авто-рефреш, если долго нет offer
     clearOfferTimeout()
     offerTimeout = window.setTimeout(() => {
       if (!isWatching.value || !streamerId.value) return
@@ -433,8 +436,13 @@ export function useLiveViewerSignal(videoEl: Ref<HTMLVideoElement | null>) {
     stopSignalChannel()
   }
 
+  onBeforeUnmount(() => {
+    closeViewer()
+  })
+
   return {
     isWatching,
+    videoEl,
     openForStreamer,
     closeViewer,
     status,

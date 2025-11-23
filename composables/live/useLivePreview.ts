@@ -61,11 +61,12 @@ export function useLivePreview(videoEl: Ref<HTMLVideoElement | null>) {
     console.log('[preview] schedule reconnect, reason =', reason)
     isReconnecting.value = true
 
+    // раньше было ~800ms, делаем быстрее
     setTimeout(() => {
       isReconnecting.value = false
       if (!streamerId.value || !isPreviewing.value) return
       void startPreview(streamerId.value)
-    }, 800)
+    }, 200)
   }
 
   function createPeerConnection(): RTCPeerConnection {
@@ -194,7 +195,7 @@ export function useLivePreview(videoEl: Ref<HTMLVideoElement | null>) {
       }
     })
 
-    // (опционально) если когда-нибудь начнёшь слать событие stream-ended
+    // если стример явно завершил эфир
     ch.on('broadcast', { event: 'stream-ended' }, () => {
       console.log('[preview] stream-ended')
       stopPreview()
