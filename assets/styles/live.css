@@ -1,402 +1,447 @@
-/* assets/styles/live.css */
-
-/* ===========================
-   Карточка прямого эфира
-   =========================== */
-
-.feed-card.live-card {
-  margin-top: 1.25rem;
-}
+/* ============================
+   Блок прямого эфира (карточка)
+   ============================ */
 
 .live-card {
   position: relative;
+  border-radius: 22px;
+  padding: 16px 18px;
+  background:
+    radial-gradient(circle at 0% 0%, rgba(79, 209, 255, 0.14), transparent 55%),
+    radial-gradient(circle at 100% 100%, rgba(129, 140, 248, 0.18), transparent 50%),
+    rgba(248, 250, 252, 0.96);
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  box-shadow:
+    0 18px 40px rgba(15, 23, 42, 0.22),
+    0 0 0 1px rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
 }
 
-/* Заголовок + кнопки справа */
+/* Заголовок */
+
 .live-card__header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.75rem;
+  gap: 12px;
 }
+
+.live-card__title {
+  font-weight: 600;
+  font-size: 1rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #0f172a;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.live-card__title::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: radial-gradient(circle, #22d3ee 0, #0ea5e9 55%, transparent 70%);
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.9);
+}
+
+/* Кнопки в шапке */
 
 .live-card__header-actions {
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 8px;
 }
 
-/* Кнопки в заголовке */
 .live-card__action {
-  padding: 6px 14px;
+  padding: 6px 16px;
   border-radius: 999px;
-  border: none;
-  font-size: 0.85rem;
+  border: 1px solid rgba(148, 163, 184, 0.45);
+  font-size: 0.8rem;
   font-weight: 500;
   cursor: pointer;
-  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.12);
-  transition:
-    transform 0.12s ease-out,
-    box-shadow 0.12s ease-out,
-    background 0.12s ease-out,
-    opacity 0.12s ease-out;
-  white-space: nowrap;
-}
-
-.live-card__action--start {
-  background: linear-gradient(135deg, #4f46e5, #3b82f6);
-  color: #fff;
-}
-
-.live-card__action--stop {
-  background: linear-gradient(135deg, #fecaca, #f97373);
-  color: #7f1d1d;
-}
-
-.live-card__action--switch {
-  background: rgba(15, 23, 42, 0.06);
-  color: #0f172a;
-}
-
-.live-card__action:hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.18);
-}
-
-.live-card__action:disabled {
-  opacity: 0.6;
-  cursor: default;
-  box-shadow: none;
-}
-
-.live-card__body {
-  margin-top: 0.75rem;
-}
-
-/* Собственный эфир (стример) */
-.live-card__video-wrapper {
-  background: #020617;
-  border-radius: 1.25rem;
-  padding: 0.85rem;
+  background: radial-gradient(circle at 0% 0%, rgba(248, 250, 252, 0.6), transparent 55%),
+    rgba(15, 23, 42, 0.92);
   color: #e5e7eb;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.live-card__player {
-  display: block;
-  width: 100%;
-  max-height: min(60vh, 420px);
-  border-radius: 1rem;
-  background: #020617;
-  object-fit: contain;
-}
-
-.live-card__badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 4px 10px;
-  border-radius: 999px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  background: #f97316;
-  color: #fff;
-}
-
-.live-card__badge--idle {
-  background: #0f172a;
-  color: #e5e7eb;
-}
-
-.live-card__hint {
-  font-size: 0.8rem;
-  opacity: 0.8;
-}
-
-/* ===========================
-   Превью чужих эфиров
-   =========================== */
-
-.live-card__current {
-  margin-top: 0.4rem;
-  padding: 0.9rem;
-  border-radius: 1.25rem;
-  background: rgba(255, 255, 255, 0.95);
-  display: grid;
-  gap: 0.7rem;
-}
-
-.live-card__current--with-preview {
-  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
-  align-items: center;
-}
-
-@media (max-width: 640px) {
-  .live-card__current--with-preview {
-    grid-template-columns: minmax(0, 1fr);
-  }
-}
-
-.live-card__preview-wrapper {
-  background: #020617;
-  border-radius: 1rem;
-  padding: 0.45rem;
-  overflow: hidden;
-}
-
-.live-card__preview-player {
-  display: block;
-  width: 100%;
-  max-height: 240px;
-  border-radius: 0.9rem;
-  background: #000;
-  object-fit: contain;
-}
-
-.live-card__current-info {
-  display: grid;
-  gap: 0.25rem;
-}
-
-.live-card__now {
-  font-size: 0.8rem;
-  color: #64748b;
-  font-weight: 600;
-}
-
-.live-card__user-email {
-  margin-top: 0.15rem;
-  font-weight: 500;
-  font-size: 0.95rem;
-  color: #111827;
-}
-
-.live-card__since {
-  margin-top: 0.15rem;
-  font-size: 0.8rem;
-  color: #6b7280;
-}
-
-.live-card__watch-btn {
-  margin-top: 0.35rem;
-  justify-self: flex-start;
-  padding: 8px 16px;
-  border-radius: 999px;
-  border: none;
-  cursor: pointer;
-  font-size: 0.85rem;
-  font-weight: 500;
-  background: linear-gradient(135deg, #0ea5e9, #22c55e);
-  color: #f9fafb;
-  box-shadow: 0 8px 20px rgba(34, 197, 94, 0.32);
-  transition:
-    transform 0.12s ease-out,
-    box-shadow 0.12s ease-out,
-    filter 0.12s ease-out;
-}
-
-.live-card__watch-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 12px 26px rgba(34, 197, 94, 0.45);
-  filter: brightness(1.03);
-}
-
-/* Плейсхолдер, когда превью нет / слот скрыт */
-.live-card__placeholder {
-  margin-top: 0.4rem;
-  padding: 0.9rem;
-  border-radius: 1.25rem;
-  background: rgba(255, 255, 255, 0.9);
-  font-size: 0.9rem;
-  color: #475569;
-  display: grid;
-  gap: 0.4rem;
-}
-
-/* =============================
-   Выезжающая панель просмотра
-   ============================= */
-
-.live-sheet-enter-active,
-.live-sheet-leave-active {
-  transition:
-    opacity 0.2s ease,
-    transform 0.25s ease;
-}
-
-.live-sheet-enter-from,
-.live-sheet-leave-to {
-  opacity: 0;
-  transform: translateY(16px);
-}
-
-.live-sheet {
-  position: fixed;
-  inset: 0;
-  z-index: 60;
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  padding: 72px 12px 16px;
-}
-
-.live-sheet__backdrop {
-  position: absolute;
-  inset: 0;
-  background: rgba(15, 23, 42, 0.35);
-  backdrop-filter: blur(8px);
-}
-
-.live-sheet__panel {
-  position: relative;
-  width: 100%;
-  max-width: 520px;
-  max-height: calc(100vh - 72px - 16px);
-  margin: 0 auto;
-  background: #f9fafb;
-  border-radius: 1.5rem;
-  padding: 0.85rem 1rem 1rem;
-  box-shadow: 0 20px 60px rgba(15, 23, 42, 0.3);
-  display: flex;
-  flex-direction: column;
-}
-
-.live-sheet__header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 0.6rem;
-}
-
-.live-sheet__title {
-  font-weight: 600;
-  font-size: 0.95rem;
-}
-
-.live-sheet__close {
-  border: none;
-  background: rgba(148, 163, 184, 0.2);
-  width: 28px;
-  height: 28px;
-  border-radius: 999px;
-  font-size: 1.25rem;
-  line-height: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition:
-    background 0.12s ease-out,
-    transform 0.12s ease-out;
-}
-
-.live-sheet__close:hover {
-  background: rgba(148, 163, 184, 0.35);
-  transform: translateY(-1px);
-}
-
-.live-sheet__body {
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
-  overflow: hidden;
-}
-
-/* рамка вокруг видео */
-.live-sheet__video-frame {
-  background: #000;
-  border-radius: 1.1rem;
-  padding: 0;
-  overflow: hidden;
-}
-
-/* сам <video> */
-.live-sheet__video {
-  display: block;
-  width: 100%;
-  max-height: min(70vh, 460px);
-  border-radius: 1.1rem;
-  background: #000;
-  object-fit: contain;
-}
-
-/* блок с кнопкой обновления */
-.live-sheet__controls {
-  display: flex;
-  justify-content: flex-start;
-}
-
-.live-sheet__refresh {
-  padding: 7px 16px;
-  border-radius: 999px;
-  border: none;
-  font-size: 0.85rem;
-  font-weight: 500;
-  cursor: pointer;
-  background: linear-gradient(135deg, #0ea5e9, #6366f1);
-  color: #f9fafb;
-  box-shadow: 0 8px 24px rgba(59, 130, 246, 0.35);
+  box-shadow:
+    0 10px 24px rgba(15, 23, 42, 0.4),
+    0 0 0 1px rgba(15, 23, 42, 0.6);
   display: inline-flex;
   align-items: center;
   gap: 6px;
   transition:
     transform 0.12s ease-out,
-    box-shadow 0.12s ease-out,
-    filter 0.12s ease-out;
+    box-shadow 0.15s ease-out,
+    background 0.15s ease-out,
+    border-color 0.15s ease-out;
+}
+
+.live-card__action--start {
+  background: radial-gradient(circle at 0% 0%, rgba(59, 130, 246, 0.32), transparent 60%),
+    linear-gradient(135deg, #22d3ee, #6366f1);
+  color: #0b1120;
+  border-color: rgba(129, 140, 248, 0.8);
+  box-shadow:
+    0 14px 32px rgba(37, 99, 235, 0.45),
+    0 0 0 1px rgba(191, 219, 254, 0.65);
+}
+
+.live-card__action--stop {
+  background: radial-gradient(circle at 0% 0%, rgba(248, 113, 113, 0.32), transparent 60%),
+    linear-gradient(135deg, #fecaca, #fb7185);
+  color: #450a0a;
+  border-color: rgba(248, 113, 113, 0.75);
+  box-shadow:
+    0 14px 32px rgba(248, 113, 113, 0.6),
+    0 0 0 1px rgba(254, 226, 226, 0.9);
+}
+
+.live-card__action--switch {
+  padding-inline: 14px;
+  background: radial-gradient(circle at 0% 0%, rgba(15, 23, 42, 0.9), transparent 55%),
+    rgba(15, 23, 42, 0.96);
+  color: #e5e7eb;
+}
+
+.live-card__action:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow:
+    0 18px 36px rgba(15, 23, 42, 0.55),
+    0 0 0 1px rgba(248, 250, 252, 0.9);
+}
+
+.live-card__action:disabled {
+  opacity: 0.55;
+  cursor: default;
+  box-shadow: none;
+}
+
+/* Тело карточки */
+
+.live-card__body {
+  margin-top: 12px;
+}
+
+/* Собственный эфир стримера */
+
+.live-card__video-wrapper {
+  margin-top: 2px;
+  padding: 10px;
+  border-radius: 18px;
+  background:
+    linear-gradient(135deg, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.96)),
+    radial-gradient(circle at 100% 0%, rgba(56, 189, 248, 0.3), transparent 55%);
+  border: 1px solid rgba(30, 64, 175, 0.8);
+  box-shadow:
+    0 14px 30px rgba(15, 23, 42, 0.9),
+    0 0 0 1px rgba(15, 23, 42, 0.9);
+  color: #e5e7eb;
+  display: grid;
+  gap: 8px;
+}
+
+.live-card__player {
+  display: block;
+  width: 100%;
+  max-height: min(60vh, 360px);
+  border-radius: 14px;
+  background: #020617;
+  object-fit: contain;
+  box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.85);
+}
+
+.live-card__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: radial-gradient(circle, #f97316 0, #ea580c 55%, #7c2d12 100%);
+  color: #fff;
+  box-shadow: 0 0 16px rgba(249, 115, 22, 0.9);
+}
+
+.live-card__badge::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: #fee2e2;
+}
+
+.live-card__badge--idle {
+  background: radial-gradient(circle, #0f172a 0, #020617 100%);
+  box-shadow: 0 0 12px rgba(15, 23, 42, 0.9);
+  color: #e5e7eb;
+}
+
+.live-card__hint {
+  font-size: 0.8rem;
+  color: #cbd5f5;
+  opacity: 0.9;
+}
+
+/* Блок, когда сам не в эфире */
+
+.live-card__viewer-wrapper {
+  margin-top: 10px;
+}
+
+/* Информация о текущем стримере */
+
+.live-card__now {
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #64748b;
+}
+
+.live-card__user-email {
+  margin-top: 4px;
+  font-weight: 600;
+  color: #020617;
+}
+
+.live-card__since {
+  margin-top: 3px;
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+.live-card__watch-btn,
+.live-card__watch-button {
+  margin-top: 10px;
+  padding: 7px 18px;
+  border-radius: 999px;
+  border: none;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  background: linear-gradient(135deg, #22d3ee, #38bdf8);
+  color: #0b1120;
+  box-shadow:
+    0 12px 26px rgba(8, 47, 73, 0.6),
+    0 0 0 1px rgba(224, 242, 254, 0.9);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition:
+    transform 0.13s ease-out,
+    box-shadow 0.15s ease-out,
+    background 0.15s ease-out;
+}
+
+.live-card__watch-btn::after,
+.live-card__watch-button::after {
+  content: '▶';
+  font-size: 0.78rem;
+}
+
+.live-card__watch-btn:hover,
+.live-card__watch-button:hover {
+  transform: translateY(-1px);
+  box-shadow:
+    0 16px 32px rgba(8, 47, 73, 0.85),
+    0 0 0 1px rgba(240, 249, 255, 1);
+}
+
+/* Плейсхолдер, когда эфиров нет */
+
+.live-card__placeholder {
+  margin-top: 8px;
+  padding: 14px 12px;
+  border-radius: 16px;
+  background: rgba(248, 250, 252, 0.96);
+  border: 1px dashed rgba(148, 163, 184, 0.6);
+  font-size: 0.9rem;
+  color: #4b5563;
+}
+
+/* =============================
+   Выезжающая панель просмотра
+   ============================== */
+
+.live-sheet-enter-active,
+.live-sheet-leave-active {
+  transition: opacity 0.22s ease, transform 0.24s ease;
+}
+
+.live-sheet-enter-from,
+.live-sheet-leave-to {
+  opacity: 0;
+  transform: translateY(12px);
+}
+
+.live-sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+}
+
+/* затемнение фона */
+
+.live-sheet__backdrop {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 20% 0%, rgba(56, 189, 248, 0.25), transparent 55%),
+    rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+/* сама панель */
+
+.live-sheet__panel {
+  position: relative;
+  width: 100%;
+  max-width: 520px;
+  margin: 0 auto 16px;
+  padding: 14px 16px 16px;
+  border-radius: 22px;
+  background:
+    radial-gradient(circle at 0% 0%, rgba(56, 189, 248, 0.22), transparent 60%),
+    radial-gradient(circle at 100% 100%, rgba(129, 140, 248, 0.25), transparent 60%),
+    rgba(248, 250, 252, 0.98);
+  border: 1px solid rgba(148, 163, 184, 0.5);
+  box-shadow:
+    0 24px 60px rgba(15, 23, 42, 0.85),
+    0 0 0 1px rgba(255, 255, 255, 0.7);
+}
+
+/* шапка панели */
+
+.live-sheet__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.live-sheet__title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #0f172a;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.live-sheet__title span {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #4b5563;
+}
+
+.live-sheet__close {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  border: none;
+  background: rgba(148, 163, 184, 0.16);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  color: #111827;
+  transition: background 0.12s ease-out, transform 0.12s ease-out;
+}
+
+.live-sheet__close:hover {
+  background: rgba(148, 163, 184, 0.28);
+  transform: translateY(-1px);
+}
+
+/* основное тело панели */
+
+.live-sheet__body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* видео */
+
+.live-sheet__video {
+  display: block;
+  width: 100%;
+  max-height: min(70vh, 460px);
+  border-radius: 18px;
+  background: #020617;
+  object-fit: contain;
+  box-shadow:
+    0 12px 28px rgba(15, 23, 42, 0.9),
+    0 0 0 1px rgba(15, 23, 42, 0.9);
+}
+
+/* нижняя зона: кнопка обновления, статус, статистика */
+
+.live-sheet__controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.live-sheet__refresh {
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.7);
+  background: radial-gradient(circle at 0% 0%, rgba(248, 250, 252, 0.8), transparent 60%),
+    rgba(15, 23, 42, 0.96);
+  color: #e5e7eb;
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow:
+    0 10px 24px rgba(15, 23, 42, 0.6),
+    0 0 0 1px rgba(15, 23, 42, 0.9);
+  transition:
+    transform 0.13s ease-out,
+    box-shadow 0.15s ease-out,
+    background 0.15s ease-out;
 }
 
 .live-sheet__refresh::before {
-  content: '↻';
-  font-size: 0.9rem;
+  content: '⟳';
+  font-size: 0.8rem;
 }
 
 .live-sheet__refresh:hover {
   transform: translateY(-1px);
-  box-shadow: 0 12px 32px rgba(59, 130, 246, 0.45);
-  filter: brightness(1.04);
+  box-shadow:
+    0 16px 32px rgba(15, 23, 42, 0.85),
+    0 0 0 1px rgba(248, 250, 252, 0.9);
 }
 
 .live-sheet__status {
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   color: #4b5563;
 }
 
 .live-sheet__stats {
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   color: #6b7280;
 }
 
 .live-sheet__hint {
   font-size: 0.78rem;
   color: #9ca3af;
-  margin-top: 0.25rem;
 }
 
-/* =============================
-   Адаптив
-   ============================= */
-
-@media (max-width: 640px) {
-  .live-card__header {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 0.4rem;
-  }
-
-  .live-card__header-actions {
-    align-self: stretch;
-    justify-content: flex-start;
-    flex-wrap: wrap;
-  }
-
-  .live-sheet {
-    padding: 64px 8px 12px;
-  }
-
-  .live-sheet__panel {
-    max-width: 100%;
-    padding: 0.75rem 0.9rem 0.9rem;
-    border-radius: 1.1rem;
-  }
+/* чтобы панель была поверх всего внутри секции */
+.live-sheet__panel {
+  z-index: 51;
 }
