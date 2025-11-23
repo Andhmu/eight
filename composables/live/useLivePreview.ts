@@ -1,7 +1,12 @@
 // composables/live/useLivePreview.ts
 import { ref, type Ref } from 'vue'
 import { useSupabaseClient } from '#imports'
-import type { LiveSignalPayload } from './liveTypes'
+
+type LiveSignalPayload =
+  | { viewerId: string }
+  | { viewerId: string; offer: RTCSessionDescriptionInit }
+  | { viewerId: string; answer: RTCSessionDescriptionInit }
+  | { viewerId: string; candidate: RTCIceCandidateInit }
 
 export function useLivePreview(videoEl: Ref<HTMLVideoElement | null>) {
   const client = useSupabaseClient()
@@ -12,8 +17,56 @@ export function useLivePreview(videoEl: Ref<HTMLVideoElement | null>) {
   const viewerId = ref<string | null>(null)
   const streamerId = ref<string | null>(null)
 
-  // ICE, которые приходят до remoteDescription
   const pendingIce = ref<RTCIceCandidateInit[]>([])
+  const isReconnecting = ref(false)
+
+  function stopPeer() {
+    if (pc.value) {
+      pc.value.close()
+      pc.value = null
+    }
+    if (videoEl.value) {
+      videoEl.value.srcObject = null
+    }
+    pendingIce.value = []
+  }
+
+  function stopChannel() {
+    if (channel.value) {
+      channel.value.unsubscribe()
+      channel.value = null
+    }
+  }
+
+  async function flushPendingIce() {
+    if (!pc.value || !pc.value.remoteDescription) return
+    const list = pendingIce.value
+    if (!list.length) return
+
+    console.log('[preview] flushing ICE, count', list.length)
+    for (const c of list) {
+      try {
+        await pc.value.addIceCandidate(new RTCIceCandidate(c))
+      } catch (e) {
+        console.warn('[preview] error add pending ICE', e)
+      }
+    }
+    pendingIce.value = []
+  }
+
+  function scheduleReconnect(reason: string) {
+    if (!streamerId.value || !isPreviewing.value) return
+    if (isReconnecting.value) return
+
+    console.log('[preview] schedule reconnect, reason =', reason)
+    isReconnecting.value = true
+
+    setTimeout(() => {
+      isReconnecting.value = false
+      if (!streamerId.value || !isPreviewing.value) return
+      void startPreview(streamerId.value)
+    }, 800)
+  }
 
   function createPeerConnection(): RTCPeerConnection {
     const peer = new RTCPeerConnection({
@@ -59,47 +112,17 @@ export function useLivePreview(videoEl: Ref<HTMLVideoElement | null>) {
     }
 
     peer.onconnectionstatechange = () => {
-      console.log('[preview] pc state:', peer.connectionState)
-      if (['failed', 'disconnected', 'closed'].includes(peer.connectionState)) {
-        stopPreview()
+      const state = peer.connectionState
+      console.log('[preview] pc state:', state)
+
+      if (!isPreviewing.value) return
+      if (state === 'failed' || state === 'disconnected') {
+        // например, стример переключил камеру
+        scheduleReconnect(state)
       }
     }
 
     return peer
-  }
-
-  function stopPeer() {
-    if (pc.value) {
-      pc.value.close()
-      pc.value = null
-    }
-    if (videoEl.value) {
-      videoEl.value.srcObject = null
-    }
-    pendingIce.value = []
-  }
-
-  function stopChannel() {
-    if (channel.value) {
-      channel.value.unsubscribe()
-      channel.value = null
-    }
-  }
-
-  async function flushPendingIce() {
-    if (!pc.value || !pc.value.remoteDescription) return
-    const list = pendingIce.value
-    if (!list.length) return
-
-    console.log('[preview] flushing ICE, count', list.length)
-    for (const c of list) {
-      try {
-        await pc.value.addIceCandidate(new RTCIceCandidate(c))
-      } catch (e) {
-        console.warn('[preview] error add pending ICE', e)
-      }
-    }
-    pendingIce.value = []
   }
 
   async function startPreview(id: string) {
@@ -108,7 +131,8 @@ export function useLivePreview(videoEl: Ref<HTMLVideoElement | null>) {
     console.log('[preview] startPreview', id)
 
     // закрываем предыдущий превью, если был
-    stopPreview()
+    stopPeer()
+    stopChannel()
 
     streamerId.value = id
     viewerId.value = 'preview-' + Math.random().toString(36).slice(2)
@@ -147,7 +171,7 @@ export function useLivePreview(videoEl: Ref<HTMLVideoElement | null>) {
         })
       } catch (e) {
         console.error('[preview] error handle offer', e)
-        stopPreview()
+        scheduleReconnect('offer-error')
       }
     })
 
@@ -168,6 +192,12 @@ export function useLivePreview(videoEl: Ref<HTMLVideoElement | null>) {
       } catch (e) {
         console.warn('[preview] error add ICE', e)
       }
+    })
+
+    // (опционально) если когда-нибудь начнёшь слать событие stream-ended
+    ch.on('broadcast', { event: 'stream-ended' }, () => {
+      console.log('[preview] stream-ended')
+      stopPreview()
     })
 
     await ch.subscribe((status) => {
@@ -192,6 +222,7 @@ export function useLivePreview(videoEl: Ref<HTMLVideoElement | null>) {
     isPreviewing.value = false
     streamerId.value = null
     viewerId.value = null
+    isReconnecting.value = false
     stopPeer()
     stopChannel()
   }

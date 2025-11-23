@@ -54,10 +54,13 @@
         </p>
       </div>
 
-      <!-- Я не в эфире – рандомная карусель превью чужих эфиров -->
+      <!-- Я не в эфире – превью чужих эфиров -->
       <div v-else>
         <!-- Превью-карточка -->
-        <div v-if="current && showSlot" class="live-card__current live-card__current--with-preview">
+        <div
+          v-if="current && showSlot"
+          class="live-card__current live-card__current--with-preview"
+        >
           <div class="live-card__preview-wrapper">
             <video
               ref="previewVideoEl"
@@ -90,10 +93,7 @@
         <!-- Плейсхолдер, когда слот скрыт или эфиров нет -->
         <div v-else class="live-card__placeholder">
           <span class="live-card__badge live-card__badge--idle">Эфир</span>
-          <p>
-            Сейчас нет активных превью. Мы периодически ищем для вас что-то
-            интересное…
-          </p>
+          <p>{{ placeholderText }}</p>
         </div>
       </div>
     </div>
@@ -189,6 +189,7 @@ const {
   hasMultipleCandidates,
   refreshCandidates,
   pickRandom,
+  pickNext,
 } = useLiveNow()
 
 const {
@@ -208,8 +209,18 @@ const viewerOpen = computed(() => isWatching.value)
 const viewerStatusMessage = computed(() => viewerStatusMessageRef.value)
 const viewerStats = computed(() => viewerStatsRef.value)
 
-// показывать ли слот прямо сейчас (для режима "1 стример: минута показали / минута скрыли")
+// показывать ли слот (для кейса одного стрима: минута показ / минута пауза)
 const showSlot = ref(true)
+
+const placeholderText = computed(() => {
+  if (!hasCandidates.value) {
+    return 'Сейчас нет активных эфиров. Как только кто-то выйдет в эфир, превью появится здесь.'
+  }
+  if (!hasMultipleCandidates.value && !showSlot.value) {
+    return 'Сейчас в сети один прямой эфир. Его превью появится здесь через минуту.'
+  }
+  return 'Сейчас нет активных превью. Мы периодически ищем для вас что-то интересное…'
+})
 
 function formatTime(ts: string): string {
   const d = new Date(ts)
@@ -226,19 +237,14 @@ async function onSwitchCameraClick() {
 
 async function openViewer() {
   if (!current.value) return
-
   // чтобы не было двух соединений одновременно
   stopPreview()
-
   openForStreamer(current.value.id)
 }
 
 async function refreshViewer() {
   if (!current.value) return
-
-  // предварительно закрываем превью (на всякий случай)
   stopPreview()
-
   openForStreamer(current.value.id)
 }
 
@@ -278,53 +284,56 @@ async function initialSetup() {
 
   if (!process.client) return
 
-  // каждые 5 секунд — обновляем список эфиров (чтобы карточка исчезала, когда стример завершил эфир)
+  // каждые 5 секунд — обновляем список эфиров,
+  // чтобы превью и карточка исчезали, когда стример завершил эфир
   candidatesTimer = window.setInterval(async () => {
     const prevId = current.value?.id
     await refreshCandidates()
 
-    // если текущего стримера больше нет, останавливаем превью
-    if (!candidates.value.length || (prevId && !candidates.value.find((c) => c.id === prevId))) {
+    if (!candidates.value.length) {
+      // эфиров вообще нет
+      stopPreview()
+      showSlot.value = false
+      return
+    }
+
+    // текущий стример исчез
+    if (prevId && !candidates.value.find((c) => c.id === prevId)) {
       stopPreview()
       if (hasCandidates.value) {
         pickRandom()
-        if (showSlot.value) {
-          await startPreviewForCurrent()
-        }
-      } else {
-        showSlot.value = false
       }
     }
   }, 5_000)
 
-  // каждые 60 секунд — переключаем превью / скрываем по логике
+  // каждые 60 секунд — логика карусели
   previewTimer = window.setInterval(async () => {
     await refreshCandidates()
 
     if (!hasCandidates.value) {
-      // эфиров нет — просто скрываем слот
       showSlot.value = false
       stopPreview()
       return
     }
 
     if (!hasMultipleCandidates.value) {
-      // один стример: минута показали, минута — пауза
+      // один стрим: минута показываем, минута пауза
       if (showSlot.value) {
         showSlot.value = false
         stopPreview()
       } else {
         showSlot.value = true
-        pickRandom() // всё равно тот же
+        pickRandom()
         await startPreviewForCurrent()
       }
       return
     }
 
-    // несколько стримеров: всегда показываем, но каждые 60 секунд — новый
+    // два и более стримов: всегда показываем,
+    // каждые 60 секунд переключаемся на следующего по кругу
     showSlot.value = true
     stopPreview()
-    pickRandom()
+    pickNext()
     await startPreviewForCurrent()
   }, 60_000)
 }

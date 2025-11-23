@@ -15,10 +15,20 @@ export function useLiveNow() {
   const loading = ref(false)
   const candidates = ref<LiveCandidate[]>([])
   const current = ref<LiveCandidate | null>(null)
+  const currentIndex = ref<number | null>(null)
 
   function getUserId(): string | null {
     const raw = authUser.value as any
     return raw?.id ?? raw?.sub ?? null
+  }
+
+  function syncCurrentIndex() {
+    if (!current.value) {
+      currentIndex.value = null
+      return
+    }
+    const idx = candidates.value.findIndex((c) => c.id === current.value?.id)
+    currentIndex.value = idx === -1 ? null : idx
   }
 
   async function refreshCandidates() {
@@ -48,12 +58,9 @@ export function useLiveNow() {
 
       if (!candidates.value.length) {
         current.value = null
-      } else if (
-        current.value &&
-        !candidates.value.find((c) => c.id === current.value?.id)
-      ) {
-        // текущего больше нет в списке — выбираем нового
-        pickRandom()
+        currentIndex.value = null
+      } else {
+        syncCurrentIndex()
       }
     } finally {
       loading.value = false
@@ -64,10 +71,31 @@ export function useLiveNow() {
     const list = candidates.value
     if (!list.length) {
       current.value = null
+      currentIndex.value = null
       return
     }
     const idx = Math.floor(Math.random() * list.length)
+    currentIndex.value = idx
     current.value = list[idx]
+  }
+
+  function pickNext() {
+    const list = candidates.value
+    if (!list.length) {
+      current.value = null
+      currentIndex.value = null
+      return
+    }
+    if (
+      currentIndex.value === null ||
+      currentIndex.value < 0 ||
+      currentIndex.value >= list.length
+    ) {
+      currentIndex.value = 0
+    } else {
+      currentIndex.value = (currentIndex.value + 1) % list.length
+    }
+    current.value = list[currentIndex.value]
   }
 
   const hasCandidates = computed(() => candidates.value.length > 0)
@@ -81,5 +109,6 @@ export function useLiveNow() {
     hasMultipleCandidates,
     refreshCandidates,
     pickRandom,
+    pickNext,
   }
 }
