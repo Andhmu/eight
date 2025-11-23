@@ -1,4 +1,4 @@
-// composables/live/useLiveViewerSignal.ts
+// FILE: composables/live/useLiveViewerSignal.ts
 import { ref, type Ref } from 'vue'
 import { useSupabaseClient, useSupabaseUser } from '#imports'
 
@@ -64,12 +64,20 @@ export function useLiveViewerSignal(videoEl: Ref<HTMLVideoElement | null>) {
   // ---------- прикрепление медиапотока к <video> ----------
 
   async function attachRemoteStream(stream: MediaStream) {
-    if (!videoEl.value) {
+    const v = videoEl.value
+    if (!v) {
       console.warn('[viewer] no video element to attach stream')
       return
     }
 
-    const v = videoEl.value
+    // если уже этот стрим и он играет — не переинициализируем
+    if (v.srcObject === stream && !v.paused && !v.ended) {
+      console.info('[viewer] stream already playing, skip reattach')
+      status.value = 'playing'
+      statusMessage.value = 'Эфир воспроизводится'
+      return
+    }
+
     v.srcObject = stream
     ;(v as any).playsInline = true
     v.autoplay = true
@@ -91,7 +99,10 @@ export function useLiveViewerSignal(videoEl: Ref<HTMLVideoElement | null>) {
       statusMessage.value = 'Эфир воспроизводится'
     } catch (err: any) {
       if (err?.name === 'AbortError') {
-        console.warn('[viewer] video play aborted (second load), not fatal:', err)
+        console.warn(
+          '[viewer] video play aborted (second load), not fatal:',
+          err,
+        )
         status.value = 'playing'
         statusMessage.value = 'Эфир воспроизводится'
       } else {
@@ -99,6 +110,20 @@ export function useLiveViewerSignal(videoEl: Ref<HTMLVideoElement | null>) {
         status.value = 'error'
         statusMessage.value =
           'Видео не удалось запустить автоматически. Нажмите Play в плеере.'
+
+        // плюс фоллбек: по первому клику/тапу пробуем ещё раз
+        const handler = async () => {
+          try {
+            await v.play()
+            status.value = 'playing'
+            statusMessage.value = 'Эфир воспроизводится'
+          } catch (e) {
+            console.error('[viewer] play() after user gesture failed', e)
+          } finally {
+            v.removeEventListener('click', handler)
+          }
+        }
+        v.addEventListener('click', handler as any, { once: true } as any)
       }
     }
   }
@@ -223,7 +248,9 @@ export function useLiveViewerSignal(videoEl: Ref<HTMLVideoElement | null>) {
       if (!hasRemoteStream.value) {
         void attachRemoteStream(remoteStream)
       } else {
-        console.log('[viewer] remote stream already attached, ignoring extra track')
+        console.log(
+          '[viewer] remote stream already attached, ignoring extra track',
+        )
       }
     }
 
@@ -286,7 +313,14 @@ export function useLiveViewerSignal(videoEl: Ref<HTMLVideoElement | null>) {
       pc.value = null
     }
     if (videoEl.value) {
-      videoEl.value.srcObject = null
+      const v = videoEl.value
+      v.pause()
+      v.srcObject = null
+      try {
+        v.load()
+      } catch {
+        // игнорируем
+      }
     }
     hasRemoteStream.value = false
     pendingIceCandidates.value = []
@@ -334,7 +368,9 @@ export function useLiveViewerSignal(videoEl: Ref<HTMLVideoElement | null>) {
       const vId = payload?.viewerId
       const offer = payload?.offer
       if (vId !== viewerId.value || !offer) {
-        console.log('[viewer] offer ignored, viewerId mismatch или нет offer')
+        console.log(
+          '[viewer] offer ignored, viewerId mismatch или нет offer',
+        )
         return
       }
 

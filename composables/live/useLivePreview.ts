@@ -1,4 +1,4 @@
-// composables/live/useLivePreview.ts
+// FILE: composables/live/useLivePreview.ts
 import { ref, type Ref } from 'vue'
 import { useSupabaseClient } from '#imports'
 
@@ -20,6 +20,7 @@ export function useLivePreview(videoEl: Ref<HTMLVideoElement | null>) {
   const pendingIce = ref<RTCIceCandidateInit[]>([])
   const isReconnecting = ref(false)
   const hasRemoteStream = ref(false)
+
   let trackTimeout: number | null = null
 
   function stopTrackTimeout() {
@@ -35,7 +36,15 @@ export function useLivePreview(videoEl: Ref<HTMLVideoElement | null>) {
       pc.value = null
     }
     if (videoEl.value) {
-      videoEl.value.srcObject = null
+      const v = videoEl.value
+      v.pause()
+      v.srcObject = null
+      // сбрасываем плеер, чтобы не было "second load" эффектов
+      try {
+        v.load()
+      } catch {
+        // load() может не существовать в некоторых окружениях – игнорируем
+      }
     }
     pendingIce.value = []
     hasRemoteStream.value = false
@@ -81,6 +90,46 @@ export function useLivePreview(videoEl: Ref<HTMLVideoElement | null>) {
     }, 200)
   }
 
+  // безопасное прикрепление потока к <video> (боремся с "second load" и autoplay)
+  async function attachStreamToVideo(stream: MediaStream) {
+    const el = videoEl.value
+    if (!el) return
+
+    // если уже этот стрим и он играет — не трогаем
+    if (el.srcObject === stream && !el.paused && !el.ended) {
+      console.info('[preview] stream already playing, skip reattach')
+      return
+    }
+
+    el.srcObject = stream
+    ;(el as any).playsInline = true
+    el.autoplay = true
+    el.muted = true
+    el.controls = false
+
+    try {
+      await el.play()
+      console.log('[preview] video playing')
+    } catch (err: any) {
+      if (err?.name === 'AbortError') {
+        console.warn('[preview] play aborted (second load), ignore')
+      } else {
+        console.warn('[preview] play error:', err)
+        // на случай, если браузер блокирует autoplay — дажимаем по тапу
+        const handler = async () => {
+          try {
+            await el.play()
+          } catch (e) {
+            console.error('[preview] play() after user gesture failed', e)
+          } finally {
+            el.removeEventListener('click', handler)
+          }
+        }
+        el.addEventListener('click', handler as any, { once: true } as any)
+      }
+    }
+  }
+
   function createPeerConnection(): RTCPeerConnection {
     const peer = new RTCPeerConnection({
       iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
@@ -90,30 +139,12 @@ export function useLivePreview(videoEl: Ref<HTMLVideoElement | null>) {
       const [remoteStream] = ev.streams
       console.log('[preview] ontrack fired, streams:', ev.streams.length)
 
-      if (!remoteStream || !videoEl.value) return
+      if (!remoteStream) return
 
       hasRemoteStream.value = true
       stopTrackTimeout()
 
-      const v = videoEl.value
-      v.srcObject = remoteStream
-      ;(v as any).playsInline = true
-      v.autoplay = true
-      v.muted = true
-      v.controls = false
-
-      v
-        .play()
-        .then(() => {
-          console.log('[preview] video playing')
-        })
-        .catch((err: any) => {
-          if (err?.name === 'AbortError') {
-            console.warn('[preview] play aborted (second load), ignore')
-          } else {
-            console.warn('[preview] play error:', err)
-          }
-        })
+      void attachStreamToVideo(remoteStream)
     }
 
     peer.onicecandidate = (ev) => {
@@ -135,7 +166,7 @@ export function useLivePreview(videoEl: Ref<HTMLVideoElement | null>) {
 
       if (!isPreviewing.value) return
       if (state === 'failed' || state === 'disconnected') {
-        // стример переключил камеру / пересоздал peer
+        // стример переключил камеру / пересоздал peer / сеть просела
         scheduleReconnect(state)
       }
     }

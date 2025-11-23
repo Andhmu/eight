@@ -1,4 +1,4 @@
-// composables/live/useLiveViewer.ts
+// FILE: composables/live/useLiveViewer.ts
 import { onBeforeUnmount, ref } from 'vue'
 import { useLiveViewerSignal } from './useLiveViewerSignal'
 
