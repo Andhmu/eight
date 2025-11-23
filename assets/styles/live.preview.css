@@ -10,6 +10,8 @@
   gap: 14px;
 }
 
+/* Обёртка под превью, держим 16:9 */
+
 .live-card__preview-frame {
   flex: 0 0 180px;
   max-width: 50%;
@@ -22,6 +24,9 @@
   box-shadow: 0 16px 36px rgba(148, 163, 184, 0.4);
 }
 
+/* Внутренний экран превью: фиксированное 16:9, чтобы
+   вне зависимости от ориентации камеры блок всегда был горизонтальным */
+
 .live-card__preview-screen {
   border-radius: 14px;
   padding: 4px;
@@ -29,15 +34,19 @@
   background:
     radial-gradient(circle at 0% 0%, rgba(15, 23, 42, 0.75), transparent 60%),
     #020617;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
 }
+
+/* Видео превью полностью заполняет экран */
 
 .live-card__preview-player {
   display: block;
   width: 100%;
-  max-height: 120px;
+  height: 100%;
   border-radius: 10px;
   background: #000;
-  object-fit: contain;
+  object-fit: cover; /* vertical кадр увеличиваем и обрезаем по краям */
 }
 
 .live-card__current-info {
