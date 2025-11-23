@@ -15,10 +15,6 @@ interface ViewerStats {
   rttMs: number | null
 }
 
-/**
- * ВЕСЬ сигналинг зрителя.
- * Принимает videoEl (ref из обёртки useLiveViewer).
- */
 export function useLiveViewerSignal(videoEl: Ref<HTMLVideoElement | null>) {
   const client = useSupabaseClient()
   const authUser = useSupabaseUser()
@@ -49,6 +45,15 @@ export function useLiveViewerSignal(videoEl: Ref<HTMLVideoElement | null>) {
   let lastBytesReceived = 0
   let lastTimestamp = 0
 
+  let trackTimeout: number | null = null
+
+  function stopTrackTimeout() {
+    if (trackTimeout !== null) {
+      clearTimeout(trackTimeout)
+      trackTimeout = null
+    }
+  }
+
   function getViewerId(): string {
     const raw = authUser.value as any
     const id: string | undefined = raw?.id ?? raw?.sub ?? undefined
@@ -68,6 +73,9 @@ export function useLiveViewerSignal(videoEl: Ref<HTMLVideoElement | null>) {
     v.srcObject = stream
     ;(v as any).playsInline = true
     v.autoplay = true
+
+    stopTrackTimeout()
+    hasRemoteStream.value = true
 
     if (shouldMuteOnNextAttach.value) {
       v.muted = true
@@ -189,7 +197,8 @@ export function useLiveViewerSignal(videoEl: Ref<HTMLVideoElement | null>) {
       reconnectAttempts.value,
     )
 
-    // Ускоренный реконнект: 250 мс
+    stopTrackTimeout()
+
     setTimeout(() => {
       if (!isWatching.value || !streamerId.value) return
       void openForStreamer(streamerId.value)
@@ -212,7 +221,6 @@ export function useLiveViewerSignal(videoEl: Ref<HTMLVideoElement | null>) {
       if (!remoteStream) return
 
       if (!hasRemoteStream.value) {
-        hasRemoteStream.value = true
         void attachRemoteStream(remoteStream)
       } else {
         console.log('[viewer] remote stream already attached, ignoring extra track')
@@ -284,6 +292,7 @@ export function useLiveViewerSignal(videoEl: Ref<HTMLVideoElement | null>) {
     pendingIceCandidates.value = []
     clearOfferTimeout()
     stopStats()
+    stopTrackTimeout()
   }
 
   function stopSignalChannel() {
@@ -310,6 +319,7 @@ export function useLiveViewerSignal(videoEl: Ref<HTMLVideoElement | null>) {
 
     streamerId.value = id
     viewerId.value = getViewerId()
+    hasRemoteStream.value = false
 
     const ch = client.channel(`live-${id}`, {
       config: { broadcast: { self: false } },
@@ -337,7 +347,6 @@ export function useLiveViewerSignal(videoEl: Ref<HTMLVideoElement | null>) {
       try {
         await pc.value.setRemoteDescription(new RTCSessionDescription(offer))
 
-        // теперь у нас есть remoteDescription — можно применить отложенные ICE
         await flushPendingIce()
 
         const answer = await pc.value.createAnswer()
@@ -414,15 +423,26 @@ export function useLiveViewerSignal(videoEl: Ref<HTMLVideoElement | null>) {
 
     isWatching.value = true
 
-    // авто-рефреш, если долго нет offer
+    // если долго нет offer — пробуем переподключиться
     clearOfferTimeout()
     offerTimeout = window.setTimeout(() => {
       if (!isWatching.value || !streamerId.value) return
-      if (pc.value && pc.value.remoteDescription) return // offer уже пришёл
+      if (pc.value && pc.value.remoteDescription) return
 
       console.log('[viewer] no offer within timeout, scheduling reconnect')
       scheduleReconnect('offer-timeout')
     }, 5000)
+
+    // и отдельный таймер: если в течение 3 сек не пришёл ни один трек,
+    // форсим реконнект, чтобы не ждать длинных ICE-таймаутов
+    stopTrackTimeout()
+    trackTimeout = window.setTimeout(() => {
+      if (!isWatching.value || !streamerId.value) return
+      if (hasRemoteStream.value) return
+
+      console.log('[viewer] no track within timeout, force reconnect')
+      scheduleReconnect('no-track-timeout')
+    }, 3000)
   }
 
   // ---------- закрытие эфира у зрителя ----------

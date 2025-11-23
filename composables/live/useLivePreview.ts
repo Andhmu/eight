@@ -19,6 +19,15 @@ export function useLivePreview(videoEl: Ref<HTMLVideoElement | null>) {
 
   const pendingIce = ref<RTCIceCandidateInit[]>([])
   const isReconnecting = ref(false)
+  const hasRemoteStream = ref(false)
+  let trackTimeout: number | null = null
+
+  function stopTrackTimeout() {
+    if (trackTimeout !== null) {
+      clearTimeout(trackTimeout)
+      trackTimeout = null
+    }
+  }
 
   function stopPeer() {
     if (pc.value) {
@@ -29,6 +38,8 @@ export function useLivePreview(videoEl: Ref<HTMLVideoElement | null>) {
       videoEl.value.srcObject = null
     }
     pendingIce.value = []
+    hasRemoteStream.value = false
+    stopTrackTimeout()
   }
 
   function stopChannel() {
@@ -60,8 +71,9 @@ export function useLivePreview(videoEl: Ref<HTMLVideoElement | null>) {
 
     console.log('[preview] schedule reconnect, reason =', reason)
     isReconnecting.value = true
+    stopTrackTimeout()
 
-    // раньше было ~800ms, делаем быстрее
+    // быстрый реконнект
     setTimeout(() => {
       isReconnecting.value = false
       if (!streamerId.value || !isPreviewing.value) return
@@ -76,7 +88,12 @@ export function useLivePreview(videoEl: Ref<HTMLVideoElement | null>) {
 
     peer.ontrack = (ev) => {
       const [remoteStream] = ev.streams
+      console.log('[preview] ontrack fired, streams:', ev.streams.length)
+
       if (!remoteStream || !videoEl.value) return
+
+      hasRemoteStream.value = true
+      stopTrackTimeout()
 
       const v = videoEl.value
       v.srcObject = remoteStream
@@ -118,7 +135,7 @@ export function useLivePreview(videoEl: Ref<HTMLVideoElement | null>) {
 
       if (!isPreviewing.value) return
       if (state === 'failed' || state === 'disconnected') {
-        // например, стример переключил камеру
+        // стример переключил камеру / пересоздал peer
         scheduleReconnect(state)
       }
     }
@@ -137,6 +154,7 @@ export function useLivePreview(videoEl: Ref<HTMLVideoElement | null>) {
 
     streamerId.value = id
     viewerId.value = 'preview-' + Math.random().toString(36).slice(2)
+    hasRemoteStream.value = false
 
     const ch = client.channel(`live-${id}`, {
       config: { broadcast: { self: false } },
@@ -214,6 +232,17 @@ export function useLivePreview(videoEl: Ref<HTMLVideoElement | null>) {
       event: 'viewer-join',
       payload: { viewerId: viewerId.value },
     })
+
+    // если после старта превью в течение 3 секунд не пришёл ни один трек —
+    // пробуем переподключиться ещё раз, не дожидаясь длинных таймаутов
+    stopTrackTimeout()
+    trackTimeout = window.setTimeout(() => {
+      if (!isPreviewing.value || !streamerId.value) return
+      if (hasRemoteStream.value) return
+
+      console.log('[preview] no track within timeout, force reconnect')
+      scheduleReconnect('no-track-timeout')
+    }, 3000)
 
     isPreviewing.value = true
   }
