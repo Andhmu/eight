@@ -1,3 +1,4 @@
+<!-- FILE: components/feed/live/LiveViewerDrawer.vue -->
 <template>
   <transition name="live-sheet">
     <div v-if="isOpen" class="live-sheet">
@@ -65,6 +66,7 @@
 </template>
 
 <script setup lang="ts">
+// интерфейсы и пропсы вынесены как были
 interface ViewerStats {
   bitrateKbps: number | null
   rttMs: number | null

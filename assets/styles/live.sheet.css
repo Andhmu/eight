@@ -1,3 +1,4 @@
+/* FILE: assets/css/live.sheet.css */
 /* Выезжающая holo-панель просмотра эфира */
 
 .live-sheet-enter-active,
@@ -104,6 +105,8 @@
   gap: 10px;
 }
 
+/* Рамка просмотра: фиксированный горизонтальный 16:9 блок */
+
 .live-sheet__video-frame {
   border-radius: 18px;
   padding: 4px;
@@ -111,15 +114,19 @@
   background:
     radial-gradient(circle at 0% 0%, rgba(15, 23, 42, 0.8), transparent 60%),
     #020617;
+  aspect-ratio: 16 / 9;        /* ВСЕГДА горизонтальное соотношение сторон */
+  overflow: hidden;
 }
+
+/* Видео заполняет весь 16:9 блок, vertical обрезается по бокам */
 
 .live-sheet__video {
   display: block;
   width: 100%;
-  max-height: min(70vh, 460px);
+  height: 100%;
   border-radius: 14px;
   background: #000;
-  object-fit: contain;
+  object-fit: cover;           /* как в превью и эфире стримера */
 }
 
 /* нижняя зона */
