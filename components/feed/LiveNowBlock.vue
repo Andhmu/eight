@@ -50,10 +50,10 @@ import { useLiveNow } from '~/composables/live/useLiveNow'
 import { useLiveViewer } from '~/composables/live/useLiveViewer'
 import { useLivePreview } from '~/composables/live/useLivePreview'
 
-import LiveHeader from '~/components/feed/live/LiveHeader.vue'
-import LiveMyStreamPanel from '~/components/feed/live/LiveMyStreamPanel.vue'
-import LivePreviewBlock from '~/components/feed/live/LivePreviewBlock.vue'
-import LiveViewerDrawer from '~/components/feed/live/LiveViewerDrawer.vue'
+import LiveHeader from '~~/components/feed/live/LiveHeader.vue'
+import LiveMyStreamPanel from '~~/components/feed/live/LiveMyStreamPanel.vue'
+import LivePreviewBlock from '~~/components/feed/live/LivePreviewBlock.vue'
+import LiveViewerDrawer from '~~/components/feed/live/LiveViewerDrawer.vue'
 
 const {
   isLive,
