@@ -1,5 +1,5 @@
 // composables/live/useLiveNow.ts
-import { computed, onBeforeUnmount, ref } from 'vue'
+import { computed, ref } from 'vue'
 import { useSupabaseClient, useSupabaseUser } from '#imports'
 
 export interface LiveCandidate {
@@ -15,16 +15,13 @@ export function useLiveNow() {
   const loading = ref(false)
   const candidates = ref<LiveCandidate[]>([])
   const current = ref<LiveCandidate | null>(null)
-  const rotationTimer = ref<number | null>(null)
 
   function getUserId(): string | null {
     const raw = authUser.value as any
     return raw?.id ?? raw?.sub ?? null
   }
 
-  // ---------- загрузка списка из БД ----------
-
-  async function loadCandidates() {
+  async function refreshCandidates() {
     loading.value = true
     try {
       const { data, error } = await client
@@ -34,7 +31,7 @@ export function useLiveNow() {
         .order('live_started_at', { ascending: false })
 
       if (error) {
-        console.error('[live-now] loadCandidates error', error)
+        console.error('[live-now] refreshCandidates error', error)
         candidates.value = []
       } else {
         const me = getUserId()
@@ -51,8 +48,11 @@ export function useLiveNow() {
 
       if (!candidates.value.length) {
         current.value = null
-      } else if (!current.value || !candidates.value.find(c => c.id === current.value?.id)) {
-        // если текущего больше нет в списке — выбираем другого
+      } else if (
+        current.value &&
+        !candidates.value.find((c) => c.id === current.value?.id)
+      ) {
+        // текущего больше нет в списке — выбираем нового
         pickRandom()
       }
     } finally {
@@ -70,45 +70,16 @@ export function useLiveNow() {
     current.value = list[idx]
   }
 
-  // ---------- ротация карточки ----------
-
-  function stopRotation() {
-    if (rotationTimer.value !== null) {
-      clearInterval(rotationTimer.value)
-      rotationTimer.value = null
-    }
-  }
-
-  async function startRotation() {
-    if (!process.client) return
-
-    stopRotation()
-    await loadCandidates()
-    if (!current.value) {
-      pickRandom()
-    }
-
-    // обновляем список каждые 5 секунд,
-    // чтобы карточка эфира почти сразу исчезала после завершения стрима
-    rotationTimer.value = window.setInterval(async () => {
-      await loadCandidates()
-      // pickRandom() вызывается внутри loadCandidates при необходимости
-    }, 5_000)
-  }
-
-  onBeforeUnmount(() => {
-    stopRotation()
-  })
-
-  const hasCandidates = computed(() => !!current.value)
+  const hasCandidates = computed(() => candidates.value.length > 0)
+  const hasMultipleCandidates = computed(() => candidates.value.length > 1)
 
   return {
     loading,
     candidates,
     current,
     hasCandidates,
-    loadCandidates,
-    startRotation,
-    stopRotation,
+    hasMultipleCandidates,
+    refreshCandidates,
+    pickRandom,
   }
 }

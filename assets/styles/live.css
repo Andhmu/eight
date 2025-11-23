@@ -5,8 +5,6 @@
    =========================== */
 
 .feed-card.live-card {
-  /* чуть отступаем от верхней фиксированной панели,
-     чтобы карточка не "залезала" под блюр */
   margin-top: 1.25rem;
 }
 
@@ -92,9 +90,6 @@
   max-height: min(60vh, 420px);
   border-radius: 1rem;
   background: #020617;
-
-  /* вертикальное видео — показываем целиком,
-     без обрезания, с черными полями по бокам */
   object-fit: contain;
 }
 
@@ -119,21 +114,49 @@
   opacity: 0.8;
 }
 
-/* Блок когда сам не в эфире, но есть чужой эфир */
+/* ===========================
+   Превью чужих эфиров
+   =========================== */
+
 .live-card__current {
   margin-top: 0.4rem;
-  padding: 0.85rem;
+  padding: 0.9rem;
   border-radius: 1.25rem;
-  background: rgba(255, 255, 255, 0.9);
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 0.75rem;
+  background: rgba(255, 255, 255, 0.95);
+  display: grid;
+  gap: 0.7rem;
 }
 
-.live-card__current-main {
+.live-card__current--with-preview {
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  align-items: center;
+}
+
+@media (max-width: 640px) {
+  .live-card__current--with-preview {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.live-card__preview-wrapper {
+  background: #020617;
+  border-radius: 1rem;
+  padding: 0.45rem;
+  overflow: hidden;
+}
+
+.live-card__preview-player {
+  display: block;
+  width: 100%;
+  max-height: 240px;
+  border-radius: 0.9rem;
+  background: #000;
+  object-fit: contain;
+}
+
+.live-card__current-info {
   display: grid;
-  gap: 2px;
+  gap: 0.25rem;
 }
 
 .live-card__now {
@@ -156,7 +179,8 @@
 }
 
 .live-card__watch-btn {
-  align-self: center;
+  margin-top: 0.35rem;
+  justify-self: flex-start;
   padding: 8px 16px;
   border-radius: 999px;
   border: none;
@@ -178,10 +202,10 @@
   filter: brightness(1.03);
 }
 
-/* Плейсхолдер, когда эфиров нет */
+/* Плейсхолдер, когда превью нет / слот скрыт */
 .live-card__placeholder {
   margin-top: 0.4rem;
-  padding: 0.85rem;
+  padding: 0.9rem;
   border-radius: 1.25rem;
   background: rgba(255, 255, 255, 0.9);
   font-size: 0.9rem;
@@ -210,11 +234,11 @@
 .live-sheet {
   position: fixed;
   inset: 0;
-  z-index: 60; /* выше шапки с блюром */
+  z-index: 60;
   display: flex;
   justify-content: center;
   align-items: flex-start;
-  padding: 72px 12px 16px; /* оставляем место под верхнюю панель */
+  padding: 72px 12px 16px;
 }
 
 .live-sheet__backdrop {
@@ -279,7 +303,7 @@
   overflow: hidden;
 }
 
-/* рамка вокруг видео, чтобы убрать лишние белые поля */
+/* рамка вокруг видео */
 .live-sheet__video-frame {
   background: #000;
   border-radius: 1.1rem;
@@ -287,14 +311,14 @@
   overflow: hidden;
 }
 
-/* сам <video> — аккуратное вертикальное отображение */
+/* сам <video> */
 .live-sheet__video {
   display: block;
   width: 100%;
   max-height: min(70vh, 460px);
   border-radius: 1.1rem;
   background: #000;
-  object-fit: contain; /* вертикальное видео полностью видно */
+  object-fit: contain;
 }
 
 /* блок с кнопкой обновления */
@@ -350,7 +374,7 @@
 }
 
 /* =============================
-   Небольшие адаптивные правки
+   Адаптив
    ============================= */
 
 @media (max-width: 640px) {
