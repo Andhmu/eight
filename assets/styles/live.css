@@ -5,17 +5,14 @@
 .live-card {
   position: relative;
   border-radius: 26px;
-  padding: 18px 20px;
-  background:
-    radial-gradient(circle at 0% 0%, rgba(96, 165, 250, 0.12), transparent 55%),
-    radial-gradient(circle at 100% 100%, rgba(56, 189, 248, 0.12), transparent 55%),
-    rgba(248, 250, 252, 0.98);
-  border: 1.25px solid rgba(148, 163, 184, 0.4);
+  padding: 16px 18px;
+  background: rgba(248, 250, 252, 0.02);
+  border: 1.2px solid rgba(125, 211, 252, 0.9);
   box-shadow:
-    0 18px 40px rgba(15, 23, 42, 0.25),
-    0 0 0 1px rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
+    0 0 28px rgba(56, 189, 248, 0.7),
+    0 0 0 1px rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
 }
 
 /* Шапка */
@@ -35,20 +32,32 @@
 
 .live-card__title {
   font-weight: 600;
-  font-size: 0.98rem;
-  letter-spacing: 0.14em;
+  font-size: 0.95rem;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
   color: #0f172a;
 }
 
 .live-card__subtitle {
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: #9ca3af;
 }
 
-/* Индикатор «в эфире» справа */
+.live-card__header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.live-card__header-live {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Индикатор «в эфире» */
 
 .live-card__status-pill {
   display: inline-flex;
@@ -56,9 +65,9 @@
   gap: 6px;
   padding: 4px 10px;
   border-radius: 999px;
-  border: 1px solid rgba(59, 130, 246, 0.7);
-  background: radial-gradient(circle, rgba(56, 189, 248, 0.4), transparent 65%);
-  color: #0f172a;
+  border: 1px solid rgba(56, 189, 248, 0.7);
+  background: rgba(240, 249, 255, 0.9);
+  color: #0369a1;
   font-size: 0.76rem;
   font-weight: 500;
 }
@@ -68,12 +77,13 @@
   height: 7px;
   border-radius: 999px;
   background: #22c55e;
-  box-shadow: 0 0 10px rgba(34, 197, 94, 0.8);
+  box-shadow: 0 0 10px rgba(34, 197, 94, 0.9);
 }
 
-/* Кнопка «Транслировать меня» */
+/* Главная holo-кнопка "Транслировать меня" */
 
 .live-card__action {
+  position: relative;
   padding: 7px 18px;
   border-radius: 999px;
   border: none;
@@ -82,43 +92,99 @@
   cursor: pointer;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
+  background: transparent;
+  color: #0b1120;
+  overflow: hidden;
   transition:
     transform 0.12s ease-out,
     box-shadow 0.15s ease-out,
-    background 0.15s ease-out,
     opacity 0.12s ease-out;
 }
 
-.live-card__action--start {
-  background: radial-gradient(circle at 0% 0%, rgba(59, 130, 246, 0.3), transparent 60%),
-    linear-gradient(135deg, #22d3ee, #6366f1);
-  color: #0b1120;
+.live-card__action-glow {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background:
+    radial-gradient(circle at 0% 0%, rgba(56, 189, 248, 0.45), transparent 65%),
+    radial-gradient(circle at 100% 100%, rgba(129, 140, 248, 0.5), transparent 65%);
   box-shadow:
-    0 14px 32px rgba(37, 99, 235, 0.55),
-    0 0 0 1px rgba(219, 234, 254, 0.9);
+    0 0 24px rgba(56, 189, 248, 0.9),
+    0 0 0 1px rgba(224, 242, 254, 1);
 }
 
-.live-card__action--start:hover:not(:disabled) {
-  transform: translateY(-1px);
+.live-card__action-glow--danger {
+  background:
+    radial-gradient(circle at 0% 0%, rgba(251, 113, 133, 0.65), transparent 65%),
+    radial-gradient(circle at 100% 100%, rgba(248, 113, 113, 0.6), transparent 65%);
   box-shadow:
-    0 18px 40px rgba(37, 99, 235, 0.7),
-    0 0 0 1px rgba(239, 246, 255, 1);
+    0 0 24px rgba(248, 113, 113, 0.95),
+    0 0 0 1px rgba(254, 242, 242, 1);
+}
+
+.live-card__action-label {
+  position: relative;
+  z-index: 1;
+}
+
+.live-card__action--start {
+  color: #0b1120;
+}
+
+.live-card__action--stop {
+  color: #7f1d1d;
+}
+
+.live-card__action:hover:not(:disabled) {
+  transform: translateY(-1px);
 }
 
 .live-card__action:disabled {
   opacity: 0.6;
   cursor: default;
-  box-shadow: none;
 }
 
-/* Тело карточки */
+/* Маленький чип "Сменить камеру" */
+
+.live-card__chip {
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.7);
+  background: rgba(255, 255, 255, 0.95);
+  color: #0f172a;
+  font-size: 0.78rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.18);
+  transition:
+    transform 0.12s ease-out,
+    box-shadow 0.15s ease-out,
+    background 0.15s ease-out;
+}
+
+.live-card__chip--header {
+  font-size: 0.76rem;
+  padding-inline: 10px;
+}
+
+.live-card__chip:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.22);
+}
+
+/* Тело */
 
 .live-card__body {
   margin-top: 14px;
 }
 
-/* Холо-рамка собственного эфира */
+/* =========================
+   Свой эфир (holo-рамка)
+   ========================= */
 
 .live-card__holo {
   display: flex;
@@ -129,88 +195,51 @@
   width: 100%;
   border-radius: 24px;
   padding: 10px 12px 14px;
-  border: 1.4px solid rgba(190, 230, 255, 0.9);
+  border: 1.4px solid rgba(191, 219, 254, 0.95);
   background:
-    radial-gradient(circle at 0% 0%, rgba(59, 130, 246, 0.16), transparent 55%),
-    radial-gradient(circle at 100% 100%, rgba(59, 130, 246, 0.16), transparent 55%),
-    rgba(15, 23, 42, 0.96);
+    radial-gradient(circle at 0% 0%, rgba(239, 246, 255, 0.9), transparent 60%),
+    rgba(255, 255, 255, 0.96);
   box-shadow:
-    0 20px 48px rgba(15, 23, 42, 0.9),
-    0 0 40px rgba(56, 189, 248, 0.55);
+    0 20px 48px rgba(148, 163, 184, 0.5),
+    0 0 38px rgba(56, 189, 248, 0.7);
   position: relative;
+  display: grid;
+  gap: 10px;
 }
 
-/* Экран */
+/* экран */
 
 .live-card__screen {
   border-radius: 18px;
   padding: 6px;
-  border: 1px solid rgba(15, 23, 42, 0.9);
+  border: 1px solid rgba(186, 230, 253, 0.9);
   background:
-    radial-gradient(circle at 0% 0%, rgba(15, 23, 42, 0.8), transparent 60%),
+    radial-gradient(circle at 0% 0%, rgba(15, 23, 42, 0.85), transparent 60%),
     #020617;
 }
-
-/* локальный превью-плеер стримера */
 
 .live-card__player {
   display: block;
   width: 100%;
   max-height: min(60vh, 360px);
   border-radius: 14px;
-  background: #020617;
-  object-fit: contain; /* вертикальное видео не обрезаем */
+  background: #000;
+  object-fit: contain;
 }
 
-/* Нижняя панель с кнопками */
+/* нижняя панель с круглой кнопкой */
 
 .live-card__holo-bottom {
-  margin-top: 10px;
+  margin-top: 4px;
   display: grid;
   grid-template-columns: 1fr auto;
   grid-template-rows: auto auto;
   column-gap: 12px;
-  row-gap: 10px;
+  row-gap: 8px;
   align-items: center;
 }
 
-/* маленькая пилюля «Сменить камеру» */
-
-.live-card__chip {
-  grid-column: 1 / 2;
-  padding: 6px 14px;
-  border-radius: 999px;
-  border: 1px solid rgba(148, 163, 184, 0.75);
-  background: radial-gradient(circle at 0% 0%, rgba(248, 250, 252, 0.7), transparent 65%),
-    rgba(15, 23, 42, 0.95);
-  color: #e5e7eb;
-  font-size: 0.78rem;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  box-shadow:
-    0 10px 24px rgba(15, 23, 42, 0.7),
-    0 0 0 1px rgba(15, 23, 42, 0.9);
-  transition:
-    transform 0.12s ease-out,
-    box-shadow 0.15s ease-out,
-    background 0.15s ease-out;
-}
-
-.live-card__chip::before {
-  content: '⇄';
-  font-size: 0.8rem;
-}
-
-.live-card__chip:hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow:
-    0 16px 32px rgba(15, 23, 42, 0.9),
-    0 0 0 1px rgba(248, 250, 252, 0.9);
-}
-
-/* центральная круглая кнопка */
+/* круглая кнопка «Завершить трансляцию» */
 
 .live-card__circle-btn {
   grid-column: 2 / 3;
@@ -224,29 +253,31 @@
   cursor: pointer;
   position: relative;
   background: none;
+  transition:
+    transform 0.12s ease-out;
 }
 
 .live-card__circle-btn::before {
-  content: '';
+  content: "";
   position: absolute;
   inset: 0;
   border-radius: inherit;
   background:
-    radial-gradient(circle, rgba(56, 189, 248, 0.65), transparent 70%),
-    radial-gradient(circle at 30% 0%, rgba(129, 140, 248, 0.7), transparent 60%);
-  opacity: 0.9;
+    radial-gradient(circle, rgba(56, 189, 248, 0.7), transparent 70%),
+    radial-gradient(circle at 30% 0%, rgba(129, 140, 248, 0.75), transparent 60%);
+  opacity: 0.95;
   box-shadow:
-    0 0 28px rgba(56, 189, 248, 0.9),
-    0 0 0 1px rgba(240, 249, 255, 0.95);
+    0 0 30px rgba(56, 189, 248, 0.95),
+    0 0 0 1px rgba(241, 245, 249, 0.98);
 }
 
 .live-card__circle-btn::after {
-  content: '';
+  content: "";
   position: absolute;
   inset: 6px;
   border-radius: inherit;
-  background: rgba(15, 23, 42, 0.96);
-  box-shadow: inset 0 0 14px rgba(15, 23, 42, 0.9);
+  background: rgba(15, 23, 42, 0.98);
+  box-shadow: inset 0 0 16px rgba(15, 23, 42, 0.95);
 }
 
 .live-card__circle-inner {
@@ -266,11 +297,11 @@
 
 .live-card__circle-sub {
   font-size: 0.6rem;
-  opacity: 0.75;
+  opacity: 0.8;
 }
 
 .live-card__circle-btn:hover:not(:disabled) {
-  transform: translateY(-2px) scale(1.02);
+  transform: translateY(-2px) scale(1.03);
 }
 
 .live-card__circle-btn:disabled {
@@ -278,7 +309,7 @@
   cursor: default;
 }
 
-/* подпись слева снизу */
+/* подпись под эфиром */
 
 .live-card__meta {
   grid-column: 1 / 2;
@@ -288,45 +319,74 @@
   flex-wrap: wrap;
   gap: 4px;
   font-size: 0.78rem;
-  color: #e5e7eb;
-  opacity: 0.85;
+  color: #4b5563;
 }
 
 .live-card__meta-label {
   text-transform: uppercase;
   letter-spacing: 0.16em;
   font-size: 0.69rem;
-  color: #bfdbfe;
+  color: #0ea5e9;
 }
 
 .live-card__meta-separator {
   opacity: 0.6;
 }
 
-/* когда сам не в эфире */
+/* =========================
+   Превью чужих эфиров
+   ========================= */
 
 .live-card__viewer-wrapper {
-  margin-top: 2px;
+  margin-top: 4px;
 }
-
-/* базовый вид карточки «сейчас в эфире» (без превью) */
 
 .live-card__current {
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
+  align-items: stretch;
   gap: 14px;
 }
 
-.live-card__current-main {
+.live-card__preview-frame {
+  flex: 0 0 180px;
+  max-width: 50%;
+  border-radius: 20px;
+  padding: 6px;
+  border: 1px solid rgba(191, 219, 254, 0.95);
+  background:
+    radial-gradient(circle at 0% 0%, rgba(239, 246, 255, 0.9), transparent 60%),
+    rgba(248, 250, 252, 0.98);
+  box-shadow: 0 16px 36px rgba(148, 163, 184, 0.4);
+}
+
+.live-card__preview-screen {
+  border-radius: 14px;
+  padding: 4px;
+  border: 1px solid rgba(148, 163, 184, 0.85);
+  background:
+    radial-gradient(circle at 0% 0%, rgba(15, 23, 42, 0.75), transparent 60%),
+    #020617;
+}
+
+.live-card__preview-player {
+  display: block;
+  width: 100%;
+  max-height: 120px;
+  border-radius: 10px;
+  background: #000;
+  object-fit: contain;
+}
+
+.live-card__current-info {
+  flex: 1;
   display: grid;
   gap: 4px;
 }
 
 .live-card__now {
-  font-size: 0.78rem;
+  font-size: 0.74rem;
   text-transform: uppercase;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.13em;
   color: #6b7280;
 }
 
@@ -349,43 +409,49 @@
 /* кнопка «Перейти к трансляции» */
 
 .live-card__watch-btn {
+  margin-top: 8px;
   align-self: flex-start;
-  padding: 8px 18px;
+  padding: 7px 16px;
   border-radius: 999px;
   border: none;
-  font-size: 0.82rem;
-  font-weight: 500;
   cursor: pointer;
-  background: linear-gradient(135deg, #22d3ee, #38bdf8);
+  background:
+    radial-gradient(circle at 0% 0%, rgba(56, 189, 248, 0.45), transparent 65%),
+    linear-gradient(135deg, #e0f2fe, #bae6fd);
   color: #0b1120;
+  font-size: 0.8rem;
+  font-weight: 500;
   box-shadow:
-    0 12px 28px rgba(8, 47, 73, 0.7),
-    0 0 0 1px rgba(224, 242, 254, 1);
+    0 12px 28px rgba(8, 47, 73, 0.4),
+    0 0 0 1px rgba(219, 234, 254, 1);
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  transition:
+    transform 0.12s ease-out,
+    box-shadow 0.15s ease-out;
 }
 
 .live-card__watch-btn::after {
-  content: '▶';
+  content: "▶";
   font-size: 0.8rem;
 }
 
 .live-card__watch-btn:hover {
   transform: translateY(-1px);
   box-shadow:
-    0 16px 36px rgba(8, 47, 73, 0.9),
-    0 0 0 1px rgba(240, 249, 255, 1);
+    0 16px 36px rgba(8, 47, 73, 0.55),
+    0 0 0 1px rgba(248, 250, 252, 1);
 }
 
-/* плейсхолдер без эфиров */
+/* плейсхолдер */
 
 .live-card__placeholder {
   margin-top: 4px;
   padding: 14px 12px;
   border-radius: 18px;
-  background: rgba(248, 250, 252, 0.96);
-  border: 1px dashed rgba(148, 163, 184, 0.6);
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px dashed rgba(191, 219, 254, 0.95);
   font-size: 0.88rem;
   color: #4b5563;
 }
@@ -398,60 +464,8 @@
   font-size: 0.74rem;
   font-weight: 600;
   margin-bottom: 6px;
-  background: radial-gradient(circle, #0f172a 0, #020617 100%);
-  color: #e5e7eb;
-}
-
-.live-card__badge--idle {
-  opacity: 0.9;
-}
-
-/* =============================
-   ПРЕВЬЮ ЧУЖИХ ЭФИРОВ (КАРУСЕЛЬ)
-   ============================== */
-
-.live-card__current--with-preview {
-  padding: 10px 12px;
-  border-radius: 20px;
-  background:
-    radial-gradient(circle at 0% 0%, rgba(59, 130, 246, 0.08), transparent 60%),
-    rgba(248, 250, 252, 0.96);
-  border: 1px solid rgba(191, 219, 254, 0.8);
-  box-shadow:
-    0 12px 26px rgba(15, 23, 42, 0.12),
-    0 0 0 1px rgba(255, 255, 255, 0.8);
-  display: flex;
-  align-items: stretch;
-  gap: 14px;
-}
-
-.live-card__preview-wrapper {
-  flex: 0 0 160px;
-  max-width: 180px;
-  border-radius: 16px;
-  padding: 4px;
-  border: 1px solid rgba(148, 163, 184, 0.4);
-  background:
-    radial-gradient(circle at 0% 0%, rgba(15, 23, 42, 0.7), transparent 60%),
-    #020617;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.live-card__preview-player {
-  display: block;
-  width: 100%;
-  max-height: 110px;
-  border-radius: 12px;
-  background: #020617;
-  object-fit: contain; /* превью вертикального видео тоже не режем */
-}
-
-.live-card__current-info {
-  flex: 1;
-  display: grid;
-  gap: 4px;
+  background: rgba(239, 246, 255, 0.96);
+  color: #0369a1;
 }
 
 /* =============================
@@ -478,19 +492,19 @@
   align-items: flex-end;
 }
 
-/* затемнение и размытие фона */
+/* фон */
 
 .live-sheet__backdrop {
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(circle at 20% 0%, rgba(56, 189, 248, 0.25), transparent 55%),
-    rgba(15, 23, 42, 0.8);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+    radial-gradient(circle at 20% 0%, rgba(59, 130, 246, 0.25), transparent 60%),
+    rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
 }
 
-/* сама панель */
+/* holo-панель */
 
 .live-sheet__panel {
   position: relative;
@@ -500,13 +514,12 @@
   padding: 14px 16px 16px;
   border-radius: 24px;
   background:
-    radial-gradient(circle at 0% 0%, rgba(56, 189, 248, 0.22), transparent 60%),
-    radial-gradient(circle at 100% 100%, rgba(129, 140, 248, 0.25), transparent 60%),
+    radial-gradient(circle at 0% 0%, rgba(239, 246, 255, 0.9), transparent 60%),
     rgba(248, 250, 252, 0.98);
-  border: 1.3px solid rgba(148, 163, 184, 0.55);
+  border: 1.3px solid rgba(191, 219, 254, 0.95);
   box-shadow:
     0 24px 64px rgba(15, 23, 42, 0.9),
-    0 0 0 1px rgba(255, 255, 255, 0.85);
+    0 0 40px rgba(56, 189, 248, 0.8);
   z-index: 51;
 }
 
@@ -540,7 +553,7 @@
   height: 28px;
   border-radius: 999px;
   border: none;
-  background: rgba(148, 163, 184, 0.16);
+  background: rgba(148, 163, 184, 0.2);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -551,11 +564,11 @@
 }
 
 .live-sheet__close:hover {
-  background: rgba(148, 163, 184, 0.28);
+  background: rgba(148, 163, 184, 0.34);
   transform: translateY(-1px);
 }
 
-/* тело панели */
+/* тело панели + видео */
 
 .live-sheet__body {
   display: flex;
@@ -563,18 +576,22 @@
   gap: 10px;
 }
 
-/* видео */
+.live-sheet__video-frame {
+  border-radius: 18px;
+  padding: 4px;
+  border: 1px solid rgba(191, 219, 254, 0.9);
+  background:
+    radial-gradient(circle at 0% 0%, rgba(15, 23, 42, 0.8), transparent 60%),
+    #020617;
+}
 
 .live-sheet__video {
   display: block;
   width: 100%;
   max-height: min(70vh, 460px);
-  border-radius: 18px;
-  background: #020617;
+  border-radius: 14px;
+  background: #000;
   object-fit: contain;
-  box-shadow:
-    0 12px 28px rgba(15, 23, 42, 0.9),
-    0 0 0 1px rgba(15, 23, 42, 0.9);
 }
 
 /* нижняя зона панели */
@@ -591,8 +608,7 @@
   padding: 6px 16px;
   border-radius: 999px;
   border: 1px solid rgba(148, 163, 184, 0.7);
-  background: radial-gradient(circle at 0% 0%, rgba(248, 250, 252, 0.9), transparent 65%),
-    rgba(15, 23, 42, 0.96);
+  background: rgba(15, 23, 42, 0.96);
   color: #e5e7eb;
   font-size: 0.8rem;
   font-weight: 500;
@@ -601,23 +617,18 @@
   align-items: center;
   gap: 6px;
   box-shadow:
-    0 10px 24px rgba(15, 23, 42, 0.7),
-    0 0 0 1px rgba(15, 23, 42, 0.9);
+    0 10px 24px rgba(15, 23, 42, 0.85),
+    0 0 0 1px rgba(15, 23, 42, 1);
   transition:
     transform 0.13s ease-out,
     box-shadow 0.15s ease-out,
     background 0.15s ease-out;
 }
 
-.live-sheet__refresh::before {
-  content: '⟳';
-  font-size: 0.8rem;
-}
-
 .live-sheet__refresh:hover {
   transform: translateY(-1px);
   box-shadow:
-    0 16px 32px rgba(15, 23, 42, 0.9),
+    0 16px 32px rgba(15, 23, 42, 1),
     0 0 0 1px rgba(248, 250, 252, 0.95);
 }
 
