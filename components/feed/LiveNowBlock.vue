@@ -2,204 +2,44 @@
 <template>
   <section class="feed-card live-card">
     <!-- Холо-шапка -->
-    <div class="live-card__header">
-      <div class="live-card__header-left">
-        <h2 class="live-card__title">Прямой эфир</h2>
-        <span class="live-card__subtitle">режим beta</span>
-      </div>
-
-      <div class="live-card__header-actions">
-        <!-- Я не в эфире — большая holo-кнопка запуска -->
-        <button
-          v-if="!isLive"
-          type="button"
-          class="live-card__action live-card__action--start"
-          :disabled="busy"
-          @click="onStartClick"
-        >
-          <span class="live-card__action-glow"></span>
-          <span class="live-card__action-label">Транслировать меня</span>
-        </button>
-
-        <!-- Я в эфире — индикатор + маленькие кнопки -->
-        <div v-else class="live-card__header-live">
-          <span class="live-card__status-pill">
-            <span class="live-card__status-dot" />
-            В эфире
-          </span>
-
-          <button
-            type="button"
-            class="live-card__chip live-card__chip--header"
-            :disabled="busy"
-            @click="onSwitchCameraClick"
-          >
-            ⇄ Сменить камеру
-          </button>
-        </div>
-      </div>
-    </div>
+    <LiveHeader
+      :is-live="isLive"
+      :busy="busy"
+      @start="onStartClick"
+      @switchCamera="onSwitchCameraClick"
+    />
 
     <div class="feed-card__body live-card__body">
-      <!-- Я сам в эфире: holo-рамка с круглой кнопкой снизу, как на референсе -->
-      <div v-if="isLive" class="live-card__holo">
-        <div class="live-card__holo-frame">
-          <div class="live-card__screen">
-            <video
-              ref="myVideoEl"
-              class="live-card__player"
-              autoplay
-              muted
-              playsinline
-            ></video>
-          </div>
+      <!-- Свой эфир -->
+      <LiveMyStreamPanel
+        v-if="isLive"
+        :busy="busy"
+        :set-video-el="setMyVideoEl"
+        @switchCamera="onSwitchCameraClick"
+        @stopLive="stopLive"
+      />
 
-          <div class="live-card__holo-bottom">
-            <button
-              type="button"
-              class="live-card__chip"
-              :disabled="busy"
-              @click="onSwitchCameraClick"
-            >
-              ⇄ Сменить камеру
-            </button>
-
-            <button
-              type="button"
-              class="live-card__circle-btn"
-              :disabled="busy"
-              @click="stopLive"
-            >
-              <span class="live-card__circle-inner">
-                Завершить
-                <span class="live-card__circle-sub">трансляцию</span>
-              </span>
-            </button>
-
-            <div class="live-card__meta">
-              <span class="live-card__meta-label">Вы в эфире</span>
-              <span class="live-card__meta-separator">•</span>
-              <span class="live-card__meta-text">
-                Ваш эфир виден другим пользователям
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Я не в эфире – превью чужих эфиров с каруселью -->
-      <div v-else class="live-card__viewer-wrapper">
-        <!-- Превью-карточка (до минуты, с видео) -->
-        <div
-          v-if="current && showSlot"
-          class="live-card__current live-card__current--with-preview"
-        >
-          <div class="live-card__preview-frame">
-            <div class="live-card__preview-screen">
-              <video
-                ref="previewVideoEl"
-                class="live-card__preview-player"
-                autoplay
-                muted
-                playsinline
-              ></video>
-            </div>
-          </div>
-
-          <div class="live-card__current-info">
-            <p class="live-card__now">Сейчас в эфире</p>
-            <p class="live-card__user-email">
-              {{ current.email || 'Пользователь' }}
-            </p>
-            <p class="live-card__since" v-if="current.live_started_at">
-              в эфире с {{ formatTime(current.live_started_at) }}
-            </p>
-            <p class="live-card__subtitle-text">
-              Превью прямого эфира. Нажмите, чтобы подключиться.
-            </p>
-
-            <button
-              type="button"
-              class="live-card__watch-btn"
-              @click="openViewer"
-            >
-              <span class="live-card__watch-label">Перейти к трансляции</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- Пауза/нет эфиров -->
-        <div v-else class="live-card__placeholder">
-          <span class="live-card__badge live-card__badge--idle">Эфир</span>
-          <p>{{ placeholderText }}</p>
-        </div>
-      </div>
+      <!-- Превью чужих эфиров / плейсхолдер -->
+      <LivePreviewBlock
+        v-else
+        :current="current"
+        :show-slot="showSlot"
+        :placeholder-text="placeholderText"
+        :set-preview-video-el="setPreviewVideoEl"
+        @openViewer="openViewer"
+      />
     </div>
 
-    <!-- Выезжающая панель просмотра -->
-    <transition name="live-sheet">
-      <div v-if="viewerOpen" class="live-sheet">
-        <div class="live-sheet__backdrop" @click="closeViewer"></div>
-
-        <div class="live-sheet__panel">
-          <header class="live-sheet__header">
-            <div class="live-sheet__title">
-              Эфир
-              <span v-if="current?.email"> {{ current.email }}</span>
-            </div>
-            <button
-              class="live-sheet__close"
-              type="button"
-              @click="closeViewer"
-            >
-              ×
-            </button>
-          </header>
-
-          <main class="live-sheet__body">
-            <div class="live-sheet__video-frame">
-              <video
-                ref="viewerVideoEl"
-                class="live-sheet__video"
-                autoplay
-                playsinline
-                controls
-              ></video>
-            </div>
-
-            <div class="live-sheet__controls">
-              <button
-                type="button"
-                class="live-sheet__refresh"
-                @click="refreshViewer"
-              >
-                ⟳ Обновить трансляцию
-              </button>
-
-              <p class="live-sheet__status" v-if="viewerStatusMessage">
-                {{ viewerStatusMessage }}
-              </p>
-            </div>
-
-            <p class="live-sheet__stats" v-if="viewerStats">
-              Скорость:
-              <span v-if="viewerStats.bitrateKbps !== null">
-                {{ viewerStats.bitrateKbps }} кбит/с
-              </span>
-              <span v-else>н/д</span>
-              <span v-if="viewerStats.rttMs !== null">
-                · Пинг: {{ viewerStats.rttMs }} мс
-              </span>
-            </p>
-
-            <p class="live-sheet__hint">
-              Если видео не появилось через несколько секунд, попробуйте
-              обновить трансляцию или закрыть и открыть эфир ещё раз.
-            </p>
-          </main>
-        </div>
-      </div>
-    </transition>
+    <!-- Выезжающая панель для просмотра эфира -->
+    <LiveViewerDrawer
+      :is-open="viewerOpen"
+      :current-email="current?.email || null"
+      :status-message="viewerStatusMessage"
+      :stats="viewerStats"
+      :set-video-el="setViewerVideoEl"
+      @close="closeViewer"
+      @refresh="refreshViewer"
+    />
   </section>
 </template>
 
@@ -209,6 +49,11 @@ import { useMyLive } from '~/composables/live/useMyLive'
 import { useLiveNow } from '~/composables/live/useLiveNow'
 import { useLiveViewer } from '~/composables/live/useLiveViewer'
 import { useLivePreview } from '~/composables/live/useLivePreview'
+
+import LiveHeader from '~/components/feed/live/LiveHeader.vue'
+import LiveMyStreamPanel from '~/components/feed/live/LiveMyStreamPanel.vue'
+import LivePreviewBlock from '~/components/feed/live/LivePreviewBlock.vue'
+import LiveViewerDrawer from '~/components/feed/live/LiveViewerDrawer.vue'
 
 const {
   isLive,
@@ -241,13 +86,15 @@ const {
 } = useLiveViewer()
 
 const previewVideoEl = ref<HTMLVideoElement | null>(null)
-const { isPreviewing, startPreview, stopPreview } = useLivePreview(previewVideoEl)
+const { startPreview, stopPreview } = useLivePreview(previewVideoEl)
+
+// ------ вычислимые значения ------
 
 const viewerOpen = computed(() => isWatching.value)
 const viewerStatusMessage = computed(() => viewerStatusMessageRef.value)
 const viewerStats = computed(() => viewerStatsRef.value)
 
-// показывать ли слот (для кейса одного стрима: минута показ / минута пауза)
+// показывать ли слот (для одного стрима: минута показ / минута пауза)
 const showSlot = ref(true)
 
 const placeholderText = computed(() => {
@@ -260,10 +107,26 @@ const placeholderText = computed(() => {
   return 'Сейчас нет активных превью. Мы периодически ищем для вас что-то интересное…'
 })
 
+// ------ format & ref-handlers ------
+
 function formatTime(ts: string): string {
   const d = new Date(ts)
   return d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })
 }
+
+function setMyVideoEl(el: HTMLVideoElement | null) {
+  myVideoEl.value = el
+}
+
+function setPreviewVideoEl(el: HTMLVideoElement | null) {
+  previewVideoEl.value = el
+}
+
+function setViewerVideoEl(el: HTMLVideoElement | null) {
+  viewerVideoEl.value = el
+}
+
+// ------ действия стримера ------
 
 async function onStartClick() {
   await startLive()
@@ -273,10 +136,11 @@ async function onSwitchCameraClick() {
   await switchCamera()
 }
 
+// ------ действия зрителя ------
+
 async function openViewer() {
   if (!current.value) return
-  // чтобы не было двух соединений одновременно
-  stopPreview()
+  stopPreview() // чтобы не было двух соединений
   openForStreamer(current.value.id)
 }
 
@@ -289,6 +153,8 @@ async function refreshViewer() {
 function closeViewer() {
   closeViewerInternal()
 }
+
+// ------ таймеры для карусели превью ------
 
 let previewTimer: number | null = null
 let candidatesTimer: number | null = null
@@ -322,19 +188,17 @@ async function initialSetup() {
 
   if (!process.client) return
 
-  // каждые 5 секунд — обновляем список эфиров
+  // каждые 5 сек — обновляем список эфиров
   candidatesTimer = window.setInterval(async () => {
     const prevId = current.value?.id
     await refreshCandidates()
 
     if (!candidates.value.length) {
-      // эфиров вообще нет
       stopPreview()
       showSlot.value = false
       return
     }
 
-    // текущий стример исчез — переключаемся
     if (prevId && !candidates.value.find((c) => c.id === prevId)) {
       stopPreview()
       if (hasCandidates.value) {
@@ -344,7 +208,7 @@ async function initialSetup() {
     }
   }, 5_000)
 
-  // каждые 60 секунд — логика карусели превью
+  // каждые 60 сек — логика карусели
   previewTimer = window.setInterval(async () => {
     await refreshCandidates()
 
@@ -374,6 +238,8 @@ async function initialSetup() {
     await startPreviewForCurrent()
   }, 60_000)
 }
+
+// ------ жизненный цикл ------
 
 onMounted(async () => {
   await loadInitial({ autoResume: true })
