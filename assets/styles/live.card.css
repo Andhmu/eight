@@ -1,311 +1,613 @@
 /* Холо-карточка + шапка + свой эфир */
 
+
+
 .live-card {
+
   position: relative;
+
   border-radius: 26px;
+
   padding: 16px 18px;
+
   background: rgba(248, 250, 252, 0.02);
+
   border: 1.2px solid rgba(125, 211, 252, 0.9);
+
   box-shadow:
+
     0 0 28px rgba(56, 189, 248, 0.7),
+
     0 0 0 1px rgba(255, 255, 255, 0.5);
+
   backdrop-filter: blur(20px);
+
   -webkit-backdrop-filter: blur(20px);
+
 }
 
+
+
 .live-card__body {
+
   margin-top: 14px;
+
 }
+
+
 
 /* Шапка */
 
+
+
 .live-card__header {
+
   display: flex;
+
   align-items: center;
+
   justify-content: space-between;
+
   gap: 12px;
+
 }
+
+
 
 .live-card__header-left {
+
   display: flex;
+
   flex-direction: column;
+
   gap: 2px;
+
 }
+
+
 
 .live-card__title {
+
   font-weight: 600;
+
   font-size: 0.95rem;
+
   letter-spacing: 0.16em;
+
   text-transform: uppercase;
+
   color: #0f172a;
+
 }
 
-.live-card__subtitle {
-  font-size: 0.7rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: #9ca3af;
-}
+
+
+/* подзаголовок убрали — оставляем только заголовок */
+
+
+
+/* Контейнер под правую часть шапки */
+
+
 
 .live-card__header-actions {
+
   display: flex;
+
   align-items: center;
+
   gap: 10px;
+
 }
 
-.live-card__header-live {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
 
-/* Индикатор «в эфире» */
+
+/* Индикатор «в эфире» был, но сейчас не используем в шапке
+
+   (оставил на будущее, вдруг пригодится) */
+
+
 
 .live-card__status-pill {
+
   display: inline-flex;
+
   align-items: center;
+
   gap: 6px;
+
   padding: 4px 10px;
+
   border-radius: 999px;
+
   border: 1px solid rgba(56, 189, 248, 0.7);
+
   background: rgba(240, 249, 255, 0.9);
+
   color: #0369a1;
+
   font-size: 0.76rem;
+
   font-weight: 500;
+
 }
+
+
 
 .live-card__status-dot {
+
   width: 7px;
+
   height: 7px;
+
   border-radius: 999px;
+
   background: #22c55e;
+
   box-shadow: 0 0 10px rgba(34, 197, 94, 0.9);
+
 }
 
-/* Главная holo-кнопка */
+
+
+/* Главная holo-кнопка запуска эфира */
+
+
 
 .live-card__action {
+
   position: relative;
+
   padding: 7px 18px;
+
   border-radius: 999px;
+
   border: none;
+
   font-size: 0.8rem;
+
   font-weight: 500;
+
   cursor: pointer;
+
   display: inline-flex;
+
   align-items: center;
+
   justify-content: center;
+
   gap: 6px;
+
   background: transparent;
+
   color: #0b1120;
+
   overflow: hidden;
+
   transition:
+
     transform 0.12s ease-out,
+
     box-shadow 0.15s ease-out,
+
     opacity 0.12s ease-out;
+
 }
+
+
 
 .live-card__action-glow {
+
   position: absolute;
+
   inset: 0;
+
   border-radius: inherit;
+
   background:
+
     radial-gradient(circle at 0% 0%, rgba(56, 189, 248, 0.45), transparent 65%),
+
     radial-gradient(circle at 100% 100%, rgba(129, 140, 248, 0.5), transparent 65%);
+
   box-shadow:
+
     0 0 24px rgba(56, 189, 248, 0.9),
+
     0 0 0 1px rgba(224, 242, 254, 1);
+
 }
+
+
 
 .live-card__action-label {
+
   position: relative;
+
   z-index: 1;
+
 }
+
+
 
 .live-card__action:disabled {
+
   opacity: 0.6;
+
   cursor: default;
+
 }
+
+
 
 .live-card__action:hover:not(:disabled) {
+
   transform: translateY(-1px);
+
 }
 
-/* Чип смены камеры */
+
+
+/* Чип смены камеры — используется только в превью и стартовом состоянии */
+
+
 
 .live-card__chip {
+
   padding: 6px 14px;
+
   border-radius: 999px;
+
   border: 1px solid rgba(148, 163, 184, 0.7);
+
   background: rgba(255, 255, 255, 0.95);
+
   color: #0f172a;
+
   font-size: 0.78rem;
+
   cursor: pointer;
+
   display: inline-flex;
+
   align-items: center;
+
   gap: 6px;
+
   box-shadow: 0 10px 22px rgba(15, 23, 42, 0.18);
+
   transition:
+
     transform 0.12s ease-out,
+
     box-shadow 0.15s ease-out,
+
     background 0.15s ease-out;
+
 }
+
+
 
 .live-card__chip--header {
+
   font-size: 0.76rem;
+
   padding-inline: 10px;
+
 }
+
+
 
 .live-card__chip:hover:not(:disabled) {
+
   transform: translateY(-1px);
+
   box-shadow: 0 14px 30px rgba(15, 23, 42, 0.22);
+
 }
 
-/* Свой эфир — holo-рамка */
+
+
+/* ----- СВОЙ ЭФИР: видео + неоновый оверлей с кнопками ----- */
+
+
 
 .live-card__holo {
+
   display: flex;
+
   justify-content: center;
+
 }
 
+
+
 .live-card__holo-frame {
+
   width: 100%;
+
   border-radius: 24px;
-  padding: 10px 12px 14px;
-  border: 1.4px solid rgba(191, 219, 254, 0.95);
+
+  padding: 4px;
+
+  border: 1.4px solid rgba(56, 189, 248, 0.95);
+
   background:
-    radial-gradient(circle at 0% 0%, rgba(239, 246, 255, 0.9), transparent 60%),
-    rgba(255, 255, 255, 0.96);
+
+    radial-gradient(circle at 0% 0%, rgba(56, 189, 248, 0.18), transparent 60%);
+
   box-shadow:
-    0 20px 48px rgba(148, 163, 184, 0.5),
-    0 0 38px rgba(56, 189, 248, 0.7);
+
+    0 0 40px rgba(56, 189, 248, 0.7),
+
+    0 0 0 1px rgba(15, 23, 42, 0.8);
+
   position: relative;
-  display: grid;
-  gap: 10px;
+
 }
+
+
 
 /* Контейнер под 16:9, чтобы видео всегда было горизонтальным */
 
+
+
 .live-card__screen {
-  border-radius: 18px;
-  padding: 6px;
-  border: 1px solid rgba(186, 230, 253, 0.9);
+
+  position: relative;
+
+  border-radius: 20px;
+
+  border: 1px solid rgba(191, 219, 254, 0.95);
+
   background:
-    radial-gradient(circle at 0% 0%, rgba(15, 23, 42, 0.85), transparent 60%),
-    #020617;
-  /* фиксируем соотношение сторон экрана */
+
+    radial-gradient(circle at 10% 0%, rgba(15, 23, 42, 0.95), transparent 55%),
+
+    rgba(15, 23, 42, 0.98);
+
   aspect-ratio: 16 / 9;
+
   overflow: hidden;
+
 }
+
+
 
 /* Плеер стримера: заполняет экран целиком (vertical — обрежется по бокам) */
 
+
+
 .live-card__player {
+
   display: block;
+
   width: 100%;
+
   height: 100%;
-  border-radius: 14px;
+
+  border-radius: 18px;
+
   background: #000;
+
   object-fit: cover; /* ВАЖНО: заполняем весь блок, без чёрных полос */
+
 }
 
-/* Нижняя панель + круглая кнопка */
+
+
+/* Полупрозрачная панель с блюром сбоку — в духе Black Mirror */
+
+
+
+.live-card__overlay-panel {
+
+  position: absolute;
+
+  top: 50%;
+
+  right: 14px;
+
+  transform: translateY(-50%);
+
+  padding: 10px 8px;
+
+  border-radius: 999px;
+
+  background: rgba(15, 23, 42, 0.7);
+
+  backdrop-filter: blur(18px);
+
+  -webkit-backdrop-filter: blur(18px);
+
+  border: 1px solid rgba(56, 189, 248, 0.9);
+
+  box-shadow:
+
+    0 0 26px rgba(56, 189, 248, 0.9),
+
+    0 0 0 1px rgba(15, 23, 42, 0.9);
+
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 8px;
+
+}
+
+
+
+/* Круглые неоновые кнопки */
+
+
+
+.live-card__icon-btn {
+
+  width: 44px;
+
+  height: 44px;
+
+  border-radius: 999px;
+
+  border: none;
+
+  padding: 0;
+
+  cursor: pointer;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  font-size: 1.1rem;
+
+  color: #e5e7eb;
+
+  background: radial-gradient(circle at 30% 0%, rgba(248, 250, 252, 0.18), transparent 55%);
+
+  box-shadow:
+
+    0 0 22px rgba(56, 189, 248, 0.9),
+
+    0 0 0 1px rgba(191, 219, 254, 0.95);
+
+  transition:
+
+    transform 0.12s ease-out,
+
+    box-shadow 0.15s ease-out,
+
+    opacity 0.12s ease-out;
+
+}
+
+
+
+.live-card__icon-btn:hover:not(:disabled) {
+
+  transform: translateY(-1px) scale(1.03);
+
+  box-shadow:
+
+    0 0 30px rgba(56, 189, 248, 1),
+
+    0 0 0 1px rgba(248, 250, 252, 0.98);
+
+}
+
+
+
+.live-card__icon-btn:disabled {
+
+  opacity: 0.6;
+
+  cursor: default;
+
+}
+
+
+
+/* Кнопка завершения: лёгкий красный/пурпурный оттенок */
+
+
+
+.live-card__icon-btn--danger {
+
+  box-shadow:
+
+    0 0 24px rgba(248, 113, 113, 0.95),
+
+    0 0 0 1px rgba(254, 202, 202, 0.95);
+
+  background:
+
+    radial-gradient(circle at 30% 0%, rgba(248, 250, 252, 0.12), transparent 55%),
+
+    radial-gradient(circle at 70% 100%, rgba(248, 113, 113, 0.85), transparent 65%);
+
+}
+
+
+
+/* Вспомогательный класс для скрытого текста (а11y) */
+
+
+
+.visually-hidden {
+
+  position: absolute;
+
+  width: 1px;
+
+  height: 1px;
+
+  padding: 0;
+
+  margin: -1px;
+
+  overflow: hidden;
+
+  clip: rect(0, 0, 0, 0);
+
+  white-space: nowrap;
+
+  border: 0;
+
+}
+
+
+
+/* Нижняя панель, подписи «Вы в эфире» — больше не используются,
+
+   но оставляю CSS на всякий случай */
+
+
 
 .live-card__holo-bottom {
+
   margin-top: 4px;
-  display: grid;
-  grid-template-columns: 1fr auto;
-  grid-template-rows: auto auto;
-  column-gap: 12px;
-  row-gap: 8px;
-  align-items: center;
+
+  display: none;
+
 }
+
+
 
 .live-card__circle-btn {
-  grid-column: 2 / 3;
-  grid-row: 1 / 3;
-  justify-self: center;
-  width: 82px;
-  height: 82px;
-  border-radius: 999px;
-  border: none;
-  padding: 0;
-  cursor: pointer;
-  position: relative;
-  background: none;
-  transition: transform 0.12s ease-out;
+
+  display: none;
+
 }
 
-.live-card__circle-btn::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  background:
-    radial-gradient(circle, rgba(56, 189, 248, 0.7), transparent 70%),
-    radial-gradient(circle at 30% 0%, rgba(129, 140, 248, 0.75), transparent 60%);
-  opacity: 0.95;
-  box-shadow:
-    0 0 30px rgba(56, 189, 248, 0.95),
-    0 0 0 1px rgba(241, 245, 249, 0.98);
-}
 
-.live-card__circle-btn::after {
-  content: '';
-  position: absolute;
-  inset: 6px;
-  border-radius: inherit;
-  background: rgba(15, 23, 42, 0.98);
-  box-shadow: inset 0 0 16px rgba(15, 23, 42, 0.95);
-}
-
-.live-card__circle-inner {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  font-size: 0.7rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  color: #e5e7eb;
-}
-
-.live-card__circle-sub {
-  font-size: 0.6rem;
-  opacity: 0.8;
-}
-
-.live-card__circle-btn:hover:not(:disabled) {
-  transform: translateY(-2px) scale(1.03);
-}
-
-.live-card__circle-btn:disabled {
-  opacity: 0.6;
-  cursor: default;
-}
 
 .live-card__meta {
-  grid-column: 1 / 2;
-  grid-row: 2 / 3;
-  display: inline-flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 4px;
-  font-size: 0.78rem;
-  color: #4b5563;
+
+  display: none;
+
 }
+
+
 
 .live-card__meta-label {
+
   text-transform: uppercase;
+
   letter-spacing: 0.16em;
+
   font-size: 0.69rem;
+
   color: #0ea5e9;
+
 }
 
+
+
 .live-card__meta-separator {
+
   opacity: 0.6;
+
 }
