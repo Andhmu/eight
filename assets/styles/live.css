@@ -1,24 +1,24 @@
 /* ============================
-   Блок прямого эфира (карточка)
+   Холо-карточка прямого эфира
    ============================ */
 
 .live-card {
   position: relative;
-  border-radius: 22px;
-  padding: 16px 18px;
+  border-radius: 26px;
+  padding: 18px 20px;
   background:
-    radial-gradient(circle at 0% 0%, rgba(79, 209, 255, 0.14), transparent 55%),
-    radial-gradient(circle at 100% 100%, rgba(129, 140, 248, 0.18), transparent 50%),
-    rgba(248, 250, 252, 0.96);
-  border: 1px solid rgba(148, 163, 184, 0.3);
+    radial-gradient(circle at 0% 0%, rgba(96, 165, 250, 0.12), transparent 55%),
+    radial-gradient(circle at 100% 100%, rgba(56, 189, 248, 0.12), transparent 55%),
+    rgba(248, 250, 252, 0.98);
+  border: 1.25px solid rgba(148, 163, 184, 0.4);
   box-shadow:
-    0 18px 40px rgba(15, 23, 42, 0.22),
-    0 0 0 1px rgba(255, 255, 255, 0.4);
+    0 18px 40px rgba(15, 23, 42, 0.25),
+    0 0 0 1px rgba(255, 255, 255, 0.7);
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
 }
 
-/* Заголовок */
+/* Шапка */
 
 .live-card__header {
   display: flex;
@@ -27,47 +27,59 @@
   gap: 12px;
 }
 
+.live-card__header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
 .live-card__title {
   font-weight: 600;
-  font-size: 1rem;
-  letter-spacing: 0.04em;
+  font-size: 0.98rem;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   color: #0f172a;
-  display: flex;
-  align-items: center;
-  gap: 8px;
 }
 
-.live-card__title::before {
-  content: '';
-  width: 8px;
-  height: 8px;
+.live-card__subtitle {
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #9ca3af;
+}
+
+/* Индикатор «в эфире» справа */
+
+.live-card__status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
   border-radius: 999px;
-  background: radial-gradient(circle, #22d3ee 0, #0ea5e9 55%, transparent 70%);
-  box-shadow: 0 0 10px rgba(56, 189, 248, 0.9);
+  border: 1px solid rgba(59, 130, 246, 0.7);
+  background: radial-gradient(circle, rgba(56, 189, 248, 0.4), transparent 65%);
+  color: #0f172a;
+  font-size: 0.76rem;
+  font-weight: 500;
 }
 
-/* Кнопки в шапке */
-
-.live-card__header-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+.live-card__status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: #22c55e;
+  box-shadow: 0 0 10px rgba(34, 197, 94, 0.8);
 }
+
+/* Кнопка «Транслировать меня» */
 
 .live-card__action {
-  padding: 6px 16px;
+  padding: 7px 18px;
   border-radius: 999px;
-  border: 1px solid rgba(148, 163, 184, 0.45);
+  border: none;
   font-size: 0.8rem;
   font-weight: 500;
   cursor: pointer;
-  background: radial-gradient(circle at 0% 0%, rgba(248, 250, 252, 0.6), transparent 55%),
-    rgba(15, 23, 42, 0.92);
-  color: #e5e7eb;
-  box-shadow:
-    0 10px 24px rgba(15, 23, 42, 0.4),
-    0 0 0 1px rgba(15, 23, 42, 0.6);
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -75,45 +87,27 @@
     transform 0.12s ease-out,
     box-shadow 0.15s ease-out,
     background 0.15s ease-out,
-    border-color 0.15s ease-out;
+    opacity 0.12s ease-out;
 }
 
 .live-card__action--start {
-  background: radial-gradient(circle at 0% 0%, rgba(59, 130, 246, 0.32), transparent 60%),
+  background: radial-gradient(circle at 0% 0%, rgba(59, 130, 246, 0.3), transparent 60%),
     linear-gradient(135deg, #22d3ee, #6366f1);
   color: #0b1120;
-  border-color: rgba(129, 140, 248, 0.8);
   box-shadow:
-    0 14px 32px rgba(37, 99, 235, 0.45),
-    0 0 0 1px rgba(191, 219, 254, 0.65);
+    0 14px 32px rgba(37, 99, 235, 0.55),
+    0 0 0 1px rgba(219, 234, 254, 0.9);
 }
 
-.live-card__action--stop {
-  background: radial-gradient(circle at 0% 0%, rgba(248, 113, 113, 0.32), transparent 60%),
-    linear-gradient(135deg, #fecaca, #fb7185);
-  color: #450a0a;
-  border-color: rgba(248, 113, 113, 0.75);
-  box-shadow:
-    0 14px 32px rgba(248, 113, 113, 0.6),
-    0 0 0 1px rgba(254, 226, 226, 0.9);
-}
-
-.live-card__action--switch {
-  padding-inline: 14px;
-  background: radial-gradient(circle at 0% 0%, rgba(15, 23, 42, 0.9), transparent 55%),
-    rgba(15, 23, 42, 0.96);
-  color: #e5e7eb;
-}
-
-.live-card__action:hover:not(:disabled) {
+.live-card__action--start:hover:not(:disabled) {
   transform: translateY(-1px);
   box-shadow:
-    0 18px 36px rgba(15, 23, 42, 0.55),
-    0 0 0 1px rgba(248, 250, 252, 0.9);
+    0 18px 40px rgba(37, 99, 235, 0.7),
+    0 0 0 1px rgba(239, 246, 255, 1);
 }
 
 .live-card__action:disabled {
-  opacity: 0.55;
+  opacity: 0.6;
   cursor: default;
   box-shadow: none;
 }
@@ -121,25 +115,40 @@
 /* Тело карточки */
 
 .live-card__body {
-  margin-top: 12px;
+  margin-top: 14px;
 }
 
-/* Собственный эфир стримера */
+/* Холо-рамка собственного эфира */
 
-.live-card__video-wrapper {
-  margin-top: 2px;
-  padding: 10px;
-  border-radius: 18px;
+.live-card__holo {
+  display: flex;
+  justify-content: center;
+}
+
+.live-card__holo-frame {
+  width: 100%;
+  border-radius: 24px;
+  padding: 10px 12px 14px;
+  border: 1.4px solid rgba(190, 230, 255, 0.9);
   background:
-    linear-gradient(135deg, rgba(15, 23, 42, 0.98), rgba(15, 23, 42, 0.96)),
-    radial-gradient(circle at 100% 0%, rgba(56, 189, 248, 0.3), transparent 55%);
-  border: 1px solid rgba(30, 64, 175, 0.8);
+    radial-gradient(circle at 0% 0%, rgba(59, 130, 246, 0.16), transparent 55%),
+    radial-gradient(circle at 100% 100%, rgba(59, 130, 246, 0.16), transparent 55%),
+    rgba(15, 23, 42, 0.96);
   box-shadow:
-    0 14px 30px rgba(15, 23, 42, 0.9),
-    0 0 0 1px rgba(15, 23, 42, 0.9);
-  color: #e5e7eb;
-  display: grid;
-  gap: 8px;
+    0 20px 48px rgba(15, 23, 42, 0.9),
+    0 0 40px rgba(56, 189, 248, 0.55);
+  position: relative;
+}
+
+/* Экран */
+
+.live-card__screen {
+  border-radius: 18px;
+  padding: 6px;
+  border: 1px solid rgba(15, 23, 42, 0.9);
+  background:
+    radial-gradient(circle at 0% 0%, rgba(15, 23, 42, 0.8), transparent 60%),
+    #020617;
 }
 
 .live-card__player {
@@ -149,116 +158,242 @@
   border-radius: 14px;
   background: #020617;
   object-fit: contain;
-  box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.85);
 }
 
-.live-card__badge {
+/* Нижняя панель с кнопками как в примере */
+
+.live-card__holo-bottom {
+  margin-top: 10px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-rows: auto auto;
+  column-gap: 12px;
+  row-gap: 10px;
+  align-items: center;
+}
+
+/* маленькая пилюля «Сменить камеру» */
+
+.live-card__chip {
+  grid-column: 1 / 2;
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.75);
+  background: radial-gradient(circle at 0% 0%, rgba(248, 250, 252, 0.7), transparent 65%),
+    rgba(15, 23, 42, 0.95);
+  color: #e5e7eb;
+  font-size: 0.78rem;
+  cursor: pointer;
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 4px 12px;
-  border-radius: 999px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  background: radial-gradient(circle, #f97316 0, #ea580c 55%, #7c2d12 100%);
-  color: #fff;
-  box-shadow: 0 0 16px rgba(249, 115, 22, 0.9);
+  box-shadow:
+    0 10px 24px rgba(15, 23, 42, 0.7),
+    0 0 0 1px rgba(15, 23, 42, 0.9);
+  transition:
+    transform 0.12s ease-out,
+    box-shadow 0.15s ease-out,
+    background 0.15s ease-out;
 }
 
-.live-card__badge::before {
+.live-card__chip::before {
+  content: '⇄';
+  font-size: 0.8rem;
+}
+
+.live-card__chip:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow:
+    0 16px 32px rgba(15, 23, 42, 0.9),
+    0 0 0 1px rgba(248, 250, 252, 0.9);
+}
+
+/* центральная круглая кнопка */
+
+.live-card__circle-btn {
+  grid-column: 2 / 3;
+  grid-row: 1 / 3;
+  justify-self: center;
+  width: 82px;
+  height: 82px;
+  border-radius: 999px;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  position: relative;
+  background: none;
+}
+
+.live-card__circle-btn::before {
   content: '';
-  width: 7px;
-  height: 7px;
-  border-radius: 999px;
-  background: #fee2e2;
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background:
+    radial-gradient(circle, rgba(56, 189, 248, 0.65), transparent 70%),
+    radial-gradient(circle at 30% 0%, rgba(129, 140, 248, 0.7), transparent 60%);
+  opacity: 0.9;
+  box-shadow:
+    0 0 28px rgba(56, 189, 248, 0.9),
+    0 0 0 1px rgba(240, 249, 255, 0.95);
 }
 
-.live-card__badge--idle {
-  background: radial-gradient(circle, #0f172a 0, #020617 100%);
-  box-shadow: 0 0 12px rgba(15, 23, 42, 0.9);
+.live-card__circle-btn::after {
+  content: '';
+  position: absolute;
+  inset: 6px;
+  border-radius: inherit;
+  background: rgba(15, 23, 42, 0.96);
+  box-shadow: inset 0 0 14px rgba(15, 23, 42, 0.9);
+}
+
+.live-card__circle-inner {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
   color: #e5e7eb;
 }
 
-.live-card__hint {
-  font-size: 0.8rem;
-  color: #cbd5f5;
-  opacity: 0.9;
+.live-card__circle-sub {
+  font-size: 0.6rem;
+  opacity: 0.75;
 }
 
-/* Блок, когда сам не в эфире */
+.live-card__circle-btn:hover:not(:disabled) {
+  transform: translateY(-2px) scale(1.02);
+}
+
+.live-card__circle-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+/* подпись слева снизу */
+
+.live-card__meta {
+  grid-column: 1 / 2;
+  grid-row: 2 / 3;
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  font-size: 0.78rem;
+  color: #e5e7eb;
+  opacity: 0.85;
+}
+
+.live-card__meta-label {
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-size: 0.69rem;
+  color: #bfdbfe;
+}
+
+.live-card__meta-separator {
+  opacity: 0.6;
+}
+
+/* когда сам не в эфире */
 
 .live-card__viewer-wrapper {
-  margin-top: 10px;
+  margin-top: 2px;
 }
 
-/* Информация о текущем стримере */
+.live-card__current {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.live-card__current-main {
+  display: grid;
+  gap: 4px;
+}
 
 .live-card__now {
-  font-size: 0.82rem;
+  font-size: 0.78rem;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: #64748b;
-}
-
-.live-card__user-email {
-  margin-top: 4px;
-  font-weight: 600;
-  color: #020617;
-}
-
-.live-card__since {
-  margin-top: 3px;
-  font-size: 0.8rem;
+  letter-spacing: 0.12em;
   color: #6b7280;
 }
 
-.live-card__watch-btn,
-.live-card__watch-button {
-  margin-top: 10px;
-  padding: 7px 18px;
+.live-card__user-email {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: #0f172a;
+}
+
+.live-card__since {
+  font-size: 0.78rem;
+  color: #6b7280;
+}
+
+.live-card__subtitle-text {
+  font-size: 0.8rem;
+  color: #9ca3af;
+}
+
+.live-card__watch-btn {
+  align-self: center;
+  padding: 8px 18px;
   border-radius: 999px;
   border: none;
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   font-weight: 500;
   cursor: pointer;
   background: linear-gradient(135deg, #22d3ee, #38bdf8);
   color: #0b1120;
   box-shadow:
-    0 12px 26px rgba(8, 47, 73, 0.6),
-    0 0 0 1px rgba(224, 242, 254, 0.9);
+    0 12px 28px rgba(8, 47, 73, 0.7),
+    0 0 0 1px rgba(224, 242, 254, 1);
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  transition:
-    transform 0.13s ease-out,
-    box-shadow 0.15s ease-out,
-    background 0.15s ease-out;
 }
 
-.live-card__watch-btn::after,
-.live-card__watch-button::after {
+.live-card__watch-btn::after {
   content: '▶';
-  font-size: 0.78rem;
+  font-size: 0.8rem;
 }
 
-.live-card__watch-btn:hover,
-.live-card__watch-button:hover {
+.live-card__watch-btn:hover {
   transform: translateY(-1px);
   box-shadow:
-    0 16px 32px rgba(8, 47, 73, 0.85),
+    0 16px 36px rgba(8, 47, 73, 0.9),
     0 0 0 1px rgba(240, 249, 255, 1);
 }
 
-/* Плейсхолдер, когда эфиров нет */
+/* плейсхолдер без эфиров */
 
 .live-card__placeholder {
-  margin-top: 8px;
+  margin-top: 4px;
   padding: 14px 12px;
-  border-radius: 16px;
+  border-radius: 18px;
   background: rgba(248, 250, 252, 0.96);
   border: 1px dashed rgba(148, 163, 184, 0.6);
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   color: #4b5563;
+}
+
+.live-card__badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.74rem;
+  font-weight: 600;
+  margin-bottom: 6px;
+  background: radial-gradient(circle, #0f172a 0, #020617 100%);
+  color: #e5e7eb;
 }
 
 /* =============================
@@ -285,13 +420,14 @@
   align-items: flex-end;
 }
 
-/* затемнение фона */
+/* затемнение и размытие фона */
 
 .live-sheet__backdrop {
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle at 20% 0%, rgba(56, 189, 248, 0.25), transparent 55%),
-    rgba(15, 23, 42, 0.7);
+  background:
+    radial-gradient(circle at 20% 0%, rgba(56, 189, 248, 0.25), transparent 55%),
+    rgba(15, 23, 42, 0.8);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
 }
@@ -301,18 +437,19 @@
 .live-sheet__panel {
   position: relative;
   width: 100%;
-  max-width: 520px;
+  max-width: 540px;
   margin: 0 auto 16px;
   padding: 14px 16px 16px;
-  border-radius: 22px;
+  border-radius: 24px;
   background:
     radial-gradient(circle at 0% 0%, rgba(56, 189, 248, 0.22), transparent 60%),
     radial-gradient(circle at 100% 100%, rgba(129, 140, 248, 0.25), transparent 60%),
     rgba(248, 250, 252, 0.98);
-  border: 1px solid rgba(148, 163, 184, 0.5);
+  border: 1.3px solid rgba(148, 163, 184, 0.55);
   box-shadow:
-    0 24px 60px rgba(15, 23, 42, 0.85),
-    0 0 0 1px rgba(255, 255, 255, 0.7);
+    0 24px 64px rgba(15, 23, 42, 0.9),
+    0 0 0 1px rgba(255, 255, 255, 0.85);
+  z-index: 51;
 }
 
 /* шапка панели */
@@ -326,7 +463,7 @@
 }
 
 .live-sheet__title {
-  font-size: 0.95rem;
+  font-size: 0.96rem;
   font-weight: 600;
   color: #0f172a;
   display: inline-flex;
@@ -360,7 +497,7 @@
   transform: translateY(-1px);
 }
 
-/* основное тело панели */
+/* тело панели */
 
 .live-sheet__body {
   display: flex;
@@ -382,7 +519,7 @@
     0 0 0 1px rgba(15, 23, 42, 0.9);
 }
 
-/* нижняя зона: кнопка обновления, статус, статистика */
+/* нижняя зона панели */
 
 .live-sheet__controls {
   display: flex;
@@ -393,10 +530,10 @@
 }
 
 .live-sheet__refresh {
-  padding: 6px 14px;
+  padding: 6px 16px;
   border-radius: 999px;
   border: 1px solid rgba(148, 163, 184, 0.7);
-  background: radial-gradient(circle at 0% 0%, rgba(248, 250, 252, 0.8), transparent 60%),
+  background: radial-gradient(circle at 0% 0%, rgba(248, 250, 252, 0.9), transparent 65%),
     rgba(15, 23, 42, 0.96);
   color: #e5e7eb;
   font-size: 0.8rem;
@@ -406,7 +543,7 @@
   align-items: center;
   gap: 6px;
   box-shadow:
-    0 10px 24px rgba(15, 23, 42, 0.6),
+    0 10px 24px rgba(15, 23, 42, 0.7),
     0 0 0 1px rgba(15, 23, 42, 0.9);
   transition:
     transform 0.13s ease-out,
@@ -422,8 +559,8 @@
 .live-sheet__refresh:hover {
   transform: translateY(-1px);
   box-shadow:
-    0 16px 32px rgba(15, 23, 42, 0.85),
-    0 0 0 1px rgba(248, 250, 252, 0.9);
+    0 16px 32px rgba(15, 23, 42, 0.9),
+    0 0 0 1px rgba(248, 250, 252, 0.95);
 }
 
 .live-sheet__status {
@@ -439,9 +576,4 @@
 .live-sheet__hint {
   font-size: 0.78rem;
   color: #9ca3af;
-}
-
-/* чтобы панель была поверх всего внутри секции */
-.live-sheet__panel {
-  z-index: 51;
 }
