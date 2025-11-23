@@ -1,81 +1,85 @@
-<!-- components/live/LiveViewerDrawer.vue -->
 <template>
-  <transition name="live-viewer">
-    <div class="live-viewer-backdrop" @click.self="emit('close')">
-      <aside class="live-viewer">
-        <header class="live-viewer__header">
-          <div class="live-viewer__title-block">
-            <h3 class="live-viewer__title">
-              Эфир пользователя
-              {{ profile.display_name || shortEmail }}
-            </h3>
-            <p class="live-viewer__subtitle">
-              Вы смотрите эфир как гость.
-            </p>
-          </div>
+  <transition name="live-sheet">
+    <div v-if="isOpen" class="live-sheet">
+      <div class="live-sheet__backdrop" @click="$emit('close')"></div>
 
+      <div class="live-sheet__panel">
+        <header class="live-sheet__header">
+          <div class="live-sheet__title">
+            Эфир
+            <span v-if="currentEmail"> {{ currentEmail }}</span>
+          </div>
           <button
+            class="live-sheet__close"
             type="button"
-            class="live-viewer__close"
-            @click="emit('close')"
+            @click="$emit('close')"
           >
-            ✕
+            ×
           </button>
         </header>
 
-        <section class="live-viewer__body">
-          <div class="live-viewer__video-placeholder">
-            <!-- сюда позже прикрутим реальное видео через WebRTC -->
-            <p>
-              Здесь будет трансляция пользователя
-              <b>{{ profile.display_name || shortEmail }}</b>.
-            </p>
-            <p class="live-viewer__note">
-              Сейчас мы уже показываем, кто в эфире и когда он начался.
-              В следующем шаге подключим реальный видеопоток.
+        <main class="live-sheet__body">
+          <div class="live-sheet__video-frame">
+            <video
+              :ref="setVideoEl"
+              class="live-sheet__video"
+              autoplay
+              playsinline
+              controls
+            ></video>
+          </div>
+
+          <div class="live-sheet__controls">
+            <button
+              type="button"
+              class="live-sheet__refresh"
+              @click="$emit('refresh')"
+            >
+              ⟳ Обновить трансляцию
+            </button>
+
+            <p class="live-sheet__status" v-if="statusMessage">
+              {{ statusMessage }}
             </p>
           </div>
 
-          <div class="live-viewer__info">
-            <p><b>Email:</b> {{ profile.email }}</p>
-            <p v-if="profile.live_started_at">
-              <b>В эфире с:</b> {{ formatTime(profile.live_started_at) }}
-            </p>
-          </div>
-        </section>
-      </aside>
+          <p class="live-sheet__stats" v-if="stats">
+            Скорость:
+            <span v-if="stats.bitrateKbps !== null">
+              {{ stats.bitrateKbps }} кбит/с
+            </span>
+            <span v-else>н/д</span>
+            <span v-if="stats.rttMs !== null">
+              · Пинг: {{ stats.rttMs }} мс
+            </span>
+          </p>
+
+          <p class="live-sheet__hint">
+            Если видео не появилось через несколько секунд, попробуйте
+            обновить трансляцию или закрыть и открыть эфир ещё раз.
+          </p>
+        </main>
+      </div>
     </div>
   </transition>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
-
-interface LiveProfile {
-  id: string
-  display_name: string | null
-  email: string | null
-  live_started_at?: string | null
+interface ViewerStats {
+  bitrateKbps: number | null
+  rttMs: number | null
 }
 
 const props = defineProps<{
-  profile: LiveProfile
+  isOpen: boolean
+  currentEmail: string | null
+  statusMessage: string | null
+  stats: ViewerStats | null
+  setVideoEl: (el: HTMLVideoElement | null) => void
 }>()
 
 const emit = defineEmits<{
-  (e: 'close'): void
+  close: []
+  refresh: []
 }>()
-
-const shortEmail = computed(() => {
-  if (!props.profile.email) return 'гость'
-  return props.profile.email.split('@')[0] || props.profile.email
-})
-
-function formatTime(value?: string | null): string {
-  if (!value) return ''
-  const d = new Date(value)
-  const hh = d.getHours().toString().padStart(2, '0')
-  const mm = d.getMinutes().toString().padStart(2, '0')
-  return `${hh}:${mm}`
-}
 </script>
