@@ -1,3 +1,4 @@
+<!-- components/feed/LiveNowBlock.vue -->
 <template>
   <section class="feed-card live-card">
     <!-- ХОЛО-ШАПКА -->
@@ -26,7 +27,7 @@
     </div>
 
     <div class="live-card__body">
-      <!-- Я сам в эфире -->
+      <!-- Я сам в эфире: холографический блок -->
       <div v-if="isLive" class="live-card__holo">
         <div class="live-card__holo-frame">
           <div class="live-card__screen">
@@ -72,10 +73,24 @@
         </div>
       </div>
 
-      <!-- Я не в эфире – показываем чужие эфиры -->
+      <!-- Я не в эфире – превью чужих эфиров + плейсхолдер -->
       <div v-else class="live-card__viewer-wrapper">
-        <div v-if="current" class="live-card__current">
-          <div class="live-card__current-main">
+        <!-- Превью-карточка с видео -->
+        <div
+          v-if="current && showSlot"
+          class="live-card__current live-card__current--with-preview"
+        >
+          <div class="live-card__preview-wrapper">
+            <video
+              ref="previewVideoEl"
+              class="live-card__preview-player"
+              autoplay
+              muted
+              playsinline
+            ></video>
+          </div>
+
+          <div class="live-card__current-info">
             <p class="live-card__now">Сейчас в эфире</p>
             <p class="live-card__user-email">
               {{ current.email || 'Пользователь' }}
@@ -86,23 +101,21 @@
             <p class="live-card__subtitle-text">
               Нажмите, чтобы подключиться к прямой трансляции
             </p>
-          </div>
 
-          <button
-            type="button"
-            class="live-card__watch-btn"
-            @click="openViewer"
-          >
-            Перейти к трансляции
-          </button>
+            <button
+              type="button"
+              class="live-card__watch-btn"
+              @click="openViewer"
+            >
+              Перейти к трансляции
+            </button>
+          </div>
         </div>
 
+        <!-- Пауза / нет эфиров -->
         <div v-else class="live-card__placeholder">
           <span class="live-card__badge live-card__badge--idle">Эфир</span>
-          <p>
-            Сейчас нет активных эфиров. Как только кто-то запустит трансляцию,
-            здесь появится превью.
-          </p>
+          <p>{{ placeholderText }}</p>
         </div>
       </div>
     </div>
@@ -173,10 +186,11 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useMyLive } from '~/composables/live/useMyLive'
 import { useLiveNow } from '~/composables/live/useLiveNow'
 import { useLiveViewer } from '~/composables/live/useLiveViewer'
+import { useLivePreview } from '~/composables/live/useLivePreview'
 
 const {
   isLive,
@@ -188,7 +202,15 @@ const {
   switchCamera,
 } = useMyLive()
 
-const { current, startRotation } = useLiveNow()
+const {
+  candidates,
+  current,
+  hasCandidates,
+  hasMultipleCandidates,
+  refreshCandidates,
+  pickRandom,
+  pickNext,
+} = useLiveNow()
 
 const {
   isWatching,
@@ -200,9 +222,25 @@ const {
   stats: viewerStatsRef,
 } = useLiveViewer()
 
+const previewVideoEl = ref<HTMLVideoElement | null>(null)
+const { isPreviewing, startPreview, stopPreview } = useLivePreview(previewVideoEl)
+
 const viewerOpen = computed(() => isWatching.value)
 const viewerStatusMessage = computed(() => viewerStatusMessageRef.value)
 const viewerStats = computed(() => viewerStatsRef.value)
+
+// показывать ли слот (для кейса одного стрима: минута показ / минута пауза)
+const showSlot = ref(true)
+
+const placeholderText = computed(() => {
+  if (!hasCandidates.value) {
+    return 'Сейчас нет активных эфиров. Как только кто-то выйдет в эфир, превью появится здесь.'
+  }
+  if (!hasMultipleCandidates.value && !showSlot.value) {
+    return 'Сейчас в сети один прямой эфир. Его превью появится здесь через минуту.'
+  }
+  return 'Сейчас нет активных превью. Мы периодически ищем для вас что-то интересное…'
+})
 
 function formatTime(ts: string): string {
   const d = new Date(ts)
@@ -217,13 +255,16 @@ async function onSwitchCameraClick() {
   await switchCamera()
 }
 
-function openViewer() {
+async function openViewer() {
   if (!current.value) return
+  // чтобы не было двух соединений одновременно
+  stopPreview()
   openForStreamer(current.value.id)
 }
 
-function refreshViewer() {
+async function refreshViewer() {
   if (!current.value) return
+  stopPreview()
   openForStreamer(current.value.id)
 }
 
@@ -231,9 +272,98 @@ function closeViewer() {
   closeViewerInternal()
 }
 
+let previewTimer: number | null = null
+let candidatesTimer: number | null = null
+
+function stopTimers() {
+  if (previewTimer !== null) {
+    clearInterval(previewTimer)
+    previewTimer = null
+  }
+  if (candidatesTimer !== null) {
+    clearInterval(candidatesTimer)
+    candidatesTimer = null
+  }
+}
+
+async function startPreviewForCurrent() {
+  if (!current.value) return
+  await startPreview(current.value.id)
+}
+
+async function initialSetup() {
+  await refreshCandidates()
+
+  if (hasCandidates.value) {
+    pickRandom()
+    showSlot.value = true
+    await startPreviewForCurrent()
+  } else {
+    showSlot.value = false
+  }
+
+  if (!process.client) return
+
+  // каждые 5 секунд — обновляем список эфиров
+  candidatesTimer = window.setInterval(async () => {
+    const prevId = current.value?.id
+    await refreshCandidates()
+
+    if (!candidates.value.length) {
+      // эфиров вообще нет
+      stopPreview()
+      showSlot.value = false
+      return
+    }
+
+    // текущий стример исчез
+    if (prevId && !candidates.value.find((c) => c.id === prevId)) {
+      stopPreview()
+      if (hasCandidates.value) {
+        pickRandom()
+      }
+    }
+  }, 5_000)
+
+  // каждые 60 секунд — логика карусели
+  previewTimer = window.setInterval(async () => {
+    await refreshCandidates()
+
+    if (!hasCandidates.value) {
+      showSlot.value = false
+      stopPreview()
+      return
+    }
+
+    if (!hasMultipleCandidates.value) {
+      // один стрим: минута показываем, минута пауза
+      if (showSlot.value) {
+        showSlot.value = false
+        stopPreview()
+      } else {
+        showSlot.value = true
+        pickRandom()
+        await startPreviewForCurrent()
+      }
+      return
+    }
+
+    // два и более стримов: всегда показываем,
+    // каждые 60 секунд переключаемся на следующего по кругу
+    showSlot.value = true
+    stopPreview()
+    pickNext()
+    await startPreviewForCurrent()
+  }, 60_000)
+}
+
 onMounted(async () => {
-  // Восстанавливаем эфир, если профиль в БД помечен как is_live = true
   await loadInitial({ autoResume: true })
-  await startRotation()
+  await initialSetup()
+})
+
+onBeforeUnmount(() => {
+  stopPreview()
+  stopTimers()
 })
 </script>
