@@ -1,4 +1,4 @@
-<!-- components/feed/LiveNowBlock.vue -->
+<!-- FILE: components/feed/LiveNowBlock.vue -->
 <template>
   <section class="feed-card live-card">
     <!-- Холо-шапка -->
@@ -44,16 +44,17 @@
 </template>
 
 <script setup lang="ts">
+// FILE: components/feed/LiveNowBlock.vue
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useMyLive } from '~/composables/live/useMyLive'
 import { useLiveNow } from '~/composables/live/useLiveNow'
 import { useLiveViewer } from '~/composables/live/useLiveViewer'
 import { useLivePreview } from '~/composables/live/useLivePreview'
 
-import LiveHeader from '~~/components/feed/live/LiveHeader.vue'
-import LiveMyStreamPanel from '~~/components/feed/live/LiveMyStreamPanel.vue'
-import LivePreviewBlock from '~~/components/feed/live/LivePreviewBlock.vue'
-import LiveViewerDrawer from '~~/components/feed/live/LiveViewerDrawer.vue'
+import LiveHeader from '~/components/feed/live/LiveHeader.vue'
+import LiveMyStreamPanel from '~/components/feed/live/LiveMyStreamPanel.vue'
+import LivePreviewBlock from '~/components/feed/live/LivePreviewBlock.vue'
+import LiveViewerDrawer from '~/components/feed/live/LiveViewerDrawer.vue'
 
 const {
   isLive,
@@ -107,12 +108,7 @@ const placeholderText = computed(() => {
   return 'Сейчас нет активных превью. Мы периодически ищем для вас что-то интересное…'
 })
 
-// ------ format & ref-handlers ------
-
-function formatTime(ts: string): string {
-  const d = new Date(ts)
-  return d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })
-}
+// ------ ref-handlers ------
 
 function setMyVideoEl(el: HTMLVideoElement | null) {
   myVideoEl.value = el
@@ -159,6 +155,10 @@ function closeViewer() {
 let previewTimer: number | null = null
 let candidatesTimer: number | null = null
 
+// будем помнить предыдущий набор кандидатов,
+// чтобы отловить "нового" стримера и сразу показать его
+let lastCandidateIds: string[] = []
+
 function stopTimers() {
   if (previewTimer !== null) {
     clearInterval(previewTimer)
@@ -178,7 +178,10 @@ async function startPreviewForCurrent() {
 async function initialSetup() {
   await refreshCandidates()
 
+  lastCandidateIds = candidates.value.map((c) => c.id)
+
   if (hasCandidates.value) {
+    // при первом заходе выбираем случайный эфир и сразу показываем
     pickRandom()
     showSlot.value = true
     await startPreviewForCurrent()
@@ -191,7 +194,16 @@ async function initialSetup() {
   // каждые 5 сек — обновляем список эфиров
   candidatesTimer = window.setInterval(async () => {
     const prevId = current.value?.id
+    const prevIdsSet = new Set(lastCandidateIds)
+
     await refreshCandidates()
+
+    const ids = candidates.value.map((c) => c.id)
+    const newCandidates = candidates.value.filter(
+      (c) => !prevIdsSet.has(c.id),
+    )
+
+    lastCandidateIds = ids
 
     if (!candidates.value.length) {
       stopPreview()
@@ -199,6 +211,19 @@ async function initialSetup() {
       return
     }
 
+    // если появился НОВЫЙ стример — сразу показываем его минуту
+    if (newCandidates.length) {
+      const firstNew = newCandidates[0]
+      console.log('[live-now] new streamer detected, show first:', firstNew.id)
+
+      stopPreview()
+      current.value = firstNew
+      showSlot.value = true
+      await startPreviewForCurrent()
+      return
+    }
+
+    // если текущий стрим пропал из списка — переключаемся
     if (prevId && !candidates.value.find((c) => c.id === prevId)) {
       stopPreview()
       if (hasCandidates.value) {
@@ -219,13 +244,14 @@ async function initialSetup() {
     }
 
     if (!hasMultipleCandidates.value) {
-      // один стрим: минута показываем, минута пауза
+      // один стрим: минута показываем, минута пауза (старое поведение)
       if (showSlot.value) {
         showSlot.value = false
         stopPreview()
       } else {
         showSlot.value = true
-        pickRandom()
+        // всегда показываем единственный эфир
+        current.value = candidates.value[0]
         await startPreviewForCurrent()
       }
       return
