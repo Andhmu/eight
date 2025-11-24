@@ -1,6 +1,9 @@
 <!-- FILE: components/feed/LiveNowBlock.vue -->
 <template>
-  <section class="feed-card live-card">
+  <section
+    class="feed-card live-card"
+    :class="{ 'live-card--focus': viewerOpen }"
+  >
     <!-- Холо-шапка -->
     <LiveHeader
       :is-live="isLive"
@@ -19,33 +22,27 @@
         @stopLive="stopLive"
       />
 
-      <!-- Превью чужих эфиров / плейсхолдер -->
+      <!-- Превью / просмотр чужих эфиров -->
       <LivePreviewBlock
         v-else
         :current="current"
         :show-slot="showSlot"
         :placeholder-text="placeholderText"
         :set-preview-video-el="setPreviewVideoEl"
+        :is-watching="viewerOpen"
+        :status-message="viewerStatusMessage"
+        :stats="viewerStats"
+        :set-viewer-video-el="setViewerVideoEl"
         @openViewer="openViewer"
+        @closeViewer="closeInlineViewer"
       />
     </div>
-
-    <!-- Выезжающая панель для просмотра эфира -->
-    <LiveViewerDrawer
-      :is-open="viewerOpen"
-      :current-email="current?.email || null"
-      :status-message="viewerStatusMessage"
-      :stats="viewerStats"
-      :set-video-el="setViewerVideoEl"
-      @close="closeViewer"
-      @refresh="refreshViewer"
-    />
   </section>
 </template>
 
 <script setup lang="ts">
 // FILE: components/feed/LiveNowBlock.vue
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useMyLive } from '~/composables/live/useMyLive'
 import { useLiveNow } from '~/composables/live/useLiveNow'
 import { useLiveViewer } from '~/composables/live/useLiveViewer'
@@ -54,7 +51,6 @@ import { useLivePreview } from '~/composables/live/useLivePreview'
 import LiveHeader from '~/components/feed/live/LiveHeader.vue'
 import LiveMyStreamPanel from '~/components/feed/live/LiveMyStreamPanel.vue'
 import LivePreviewBlock from '~/components/feed/live/LivePreviewBlock.vue'
-import LiveViewerDrawer from '~/components/feed/live/LiveViewerDrawer.vue'
 
 const {
   isLive,
@@ -136,27 +132,38 @@ async function onSwitchCameraClick() {
 
 async function openViewer() {
   if (!current.value) return
-  stopPreview() // чтобы не было двух соединений
+  stopPreview() // выключаем превью, чтобы не было второго соединения
   openForStreamer(current.value.id)
 }
 
-async function refreshViewer() {
-  if (!current.value) return
-  stopPreview()
-  openForStreamer(current.value.id)
-}
-
-function closeViewer() {
+function closeInlineViewer() {
   closeViewerInternal()
+  // после закрытия возвращаемся к обычной превьюшке
+  if (hasCandidates.value) {
+    showSlot.value = true
+    void startPreviewForCurrent()
+  }
 }
+
+// ------ блюр страницы, пока открыт просмотр --------
+
+watch(
+  viewerOpen,
+  (open) => {
+    if (!process.client) return
+    if (open) {
+      document.body.classList.add('live-view-blur')
+    } else {
+      document.body.classList.remove('live-view-blur')
+    }
+  },
+  { immediate: true },
+)
 
 // ------ таймеры для карусели превью ------
 
 let previewTimer: number | null = null
 let candidatesTimer: number | null = null
-
-// будем помнить предыдущий набор кандидатов,
-// чтобы отловить "нового" стримера и сразу показать его
 let lastCandidateIds: string[] = []
 
 function stopTimers() {
@@ -181,7 +188,6 @@ async function initialSetup() {
   lastCandidateIds = candidates.value.map((c) => c.id)
 
   if (hasCandidates.value) {
-    // при первом заходе выбираем случайный эфир и сразу показываем
     pickRandom()
     showSlot.value = true
     await startPreviewForCurrent()
@@ -211,7 +217,6 @@ async function initialSetup() {
       return
     }
 
-    // если появился НОВЫЙ стример — сразу показываем его минуту
     if (newCandidates.length) {
       const firstNew = newCandidates[0]
       console.log('[live-now] new streamer detected, show first:', firstNew.id)
@@ -223,7 +228,6 @@ async function initialSetup() {
       return
     }
 
-    // если текущий стрим пропал из списка — переключаемся
     if (prevId && !candidates.value.find((c) => c.id === prevId)) {
       stopPreview()
       if (hasCandidates.value) {
@@ -244,13 +248,12 @@ async function initialSetup() {
     }
 
     if (!hasMultipleCandidates.value) {
-      // один стрим: минута показываем, минута пауза (старое поведение)
+      // один стрим: минута показываем, минута пауза
       if (showSlot.value) {
         showSlot.value = false
         stopPreview()
       } else {
         showSlot.value = true
-        // всегда показываем единственный эфир
         current.value = candidates.value[0]
         await startPreviewForCurrent()
       }
@@ -275,5 +278,8 @@ onMounted(async () => {
 onBeforeUnmount(() => {
   stopPreview()
   stopTimers()
+  if (process.client) {
+    document.body.classList.remove('live-view-blur')
+  }
 })
 </script>

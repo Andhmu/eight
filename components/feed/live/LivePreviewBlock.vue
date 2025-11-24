@@ -1,9 +1,43 @@
 <!-- FILE: components/feed/live/LivePreviewBlock.vue -->
 <template>
   <div class="live-card__viewer-wrapper">
-    <!-- Превью-карточка -->
+    <!-- Режим просмотра: inline-плеер зрителя на месте превью -->
+    <div v-if="isWatching" class="live-card__viewer-live-frame">
+      <div class="live-card__viewer-live-screen">
+        <video
+          :ref="setViewerVideoEl"
+          class="live-card__viewer-video"
+          autoplay
+          playsinline
+          controls
+        ></video>
+
+        <div class="live-card__viewer-top">
+          <div class="live-card__viewer-top-left">
+            <span class="live-card__viewer-title">Смотрим эфир</span>
+            <span class="live-card__viewer-email">
+              {{ current?.email || 'Пользователь' }}
+            </span>
+          </div>
+
+          <button
+            type="button"
+            class="live-card__viewer-close"
+            @click="$emit('closeViewer')"
+          >
+            Закрыть
+          </button>
+        </div>
+      </div>
+
+      <p class="live-card__viewer-status" v-if="statusMessage">
+        {{ statusMessage }}
+      </p>
+    </div>
+
+    <!-- Режим превью -->
     <div
-      v-if="current && showSlot"
+      v-else-if="current && showSlot"
       class="live-card__current live-card__current--with-preview"
     >
       <div class="live-card__preview-frame">
@@ -16,7 +50,6 @@
             playsinline
           ></video>
 
-          <!-- Плашка поверх видео снизу -->
           <div class="live-card__preview-overlay">
             <div class="live-card__preview-meta">
               <p class="live-card__now">Сейчас в эфире</p>
@@ -56,15 +89,29 @@ interface LiveCandidate {
   live_started_at?: string | null
 }
 
+interface ViewerStats {
+  bitrateKbps: number | null
+  rttMs: number | null
+}
+
 const props = defineProps<{
   current: LiveCandidate | null
   showSlot: boolean
   placeholderText: string
+
+  /* превьюшный видео-элемент */
   setPreviewVideoEl: (el: HTMLVideoElement | null) => void
+
+  /* просмотр */
+  isWatching: boolean
+  statusMessage: string | null
+  stats: ViewerStats | null
+  setViewerVideoEl: (el: HTMLVideoElement | null) => void
 }>()
 
 const emit = defineEmits<{
   openViewer: []
+  closeViewer: []
 }>()
 
 function formatTime(ts: string): string {

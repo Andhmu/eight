@@ -1,5 +1,5 @@
 /* FILE: assets/css/live.card.css */
-/* Холо-карточка + шапка + свой эфир */
+/* Холо-карточка + шапка + свой эфир + фокус для просмотра */
 
 .live-card {
   position: relative;
@@ -15,7 +15,16 @@
 }
 
 .live-card__body {
-  margin-top: 0; /* убрали отступ — видео теперь вплотную к шапке/карточке */
+  margin-top: 0;
+}
+
+/* Когда открыта трансляция зрителю — этот live-card в фокусе */
+body.live-view-blur #__nuxt {
+  filter: blur(12px);
+}
+
+body.live-view-blur .live-card--focus {
+  filter: none !important;
 }
 
 /* ---------- ШАПКА (оверлей поверх видео) ---------- */
@@ -61,12 +70,9 @@
   color: #e5e7eb;
 }
 
-/* подписи нам больше не нужны, убираем */
 .live-card__subtitle {
   display: none;
 }
-
-/* контейнер действий справа */
 
 .live-card__header-actions {
   display: flex;
@@ -124,7 +130,7 @@
   transform: translateY(-1px);
 }
 
-/* ---------- Свой эфир — holo-рамка + видео на весь блок ---------- */
+/* ---------- Свой эфир — holo-рамка + видео на весь live-card ---------- */
 
 .live-card__holo {
   display: flex;
@@ -145,8 +151,6 @@
   position: relative;
 }
 
-/* Контейнер 16:9 — по ширине всей карточки */
-
 .live-card__screen {
   position: relative;
   border-radius: 20px;
@@ -154,11 +158,9 @@
   background:
     radial-gradient(circle at 0% 0%, rgba(15, 23, 42, 0.85), transparent 60%),
     #020617;
-  aspect-ratio: 16 / 9; /* видео строго горизонтальное */
+  aspect-ratio: 16 / 9;
   overflow: hidden;
 }
-
-/* Плеер стримера заполняет весь экран */
 
 .live-card__player {
   display: block;
@@ -166,10 +168,10 @@
   height: 100%;
   border-radius: 18px;
   background: #000;
-  object-fit: cover; /* вертикальное видео обрежется по бокам */
+  object-fit: cover;
 }
 
-/* ---------- Панель с круглыми кнопками (мы её уже сделали) ---------- */
+/* Панель с круглыми кнопками */
 
 .live-card__overlay-panel {
   position: absolute;
@@ -224,8 +226,6 @@
   cursor: default;
 }
 
-/* Кнопка завершения: красное неоновое сияние */
-
 .live-card__icon-btn--danger {
   box-shadow:
     0 0 24px rgba(248, 113, 113, 0.95),
@@ -235,7 +235,7 @@
     radial-gradient(circle at 70% 100%, rgba(248, 113, 113, 0.85), transparent 65%);
 }
 
-/* скрытый текст для a11y */
+/* a11y helper */
 
 .visually-hidden {
   position: absolute;
@@ -249,7 +249,7 @@
   border: 0;
 }
 
-/* Старый низ (текст «Вы в эфире» и круглая кнопка) больше не нужен */
+/* старые элементы низа эфира не используем */
 
 .live-card__holo-bottom,
 .live-card__circle-btn,

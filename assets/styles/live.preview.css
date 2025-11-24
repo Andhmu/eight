@@ -1,11 +1,11 @@
 /* FILE: assets/css/live.preview.css */
-/* Превью чужих эфиров и плейсхолдер */
+/* Превью чужих эфиров, inline-плеер зрителя и плейсхолдер */
 
 .live-card__viewer-wrapper {
   margin-top: 4px;
 }
 
-/* Превью целиком горизонтальное на ширину блока */
+/* ---------- Превью ---------- */
 
 .live-card__current {
   display: flex;
@@ -14,13 +14,11 @@
   gap: 10px;
 }
 
-/* Обёртка под превью, держим 16:9 */
-
 .live-card__preview-frame {
   flex: 1 1 auto;
   max-width: 100%;
-  border-radius: 20px;
-  padding: 6px;
+  border-radius: 22px;
+  padding: 4px;
   border: 1px solid rgba(191, 219, 254, 0.95);
   background:
     radial-gradient(circle at 0% 0%, rgba(239, 246, 255, 0.9), transparent 60%),
@@ -28,11 +26,9 @@
   box-shadow: 0 16px 36px rgba(148, 163, 184, 0.4);
 }
 
-/* Внутренний экран превью: фиксированное 16:9, всегда горизонтально */
-
 .live-card__preview-screen {
   position: relative;
-  border-radius: 14px;
+  border-radius: 18px;
   padding: 4px;
   border: 1px solid rgba(148, 163, 184, 0.85);
   background:
@@ -42,19 +38,16 @@
   overflow: hidden;
 }
 
-/* Видео превью полностью заполняет экран */
-
 .live-card__preview-player {
   display: block;
   width: 100%;
   height: 100%;
-  border-radius: 10px;
+  border-radius: 14px;
   background: #000;
   object-fit: cover;
 }
 
-/* ----- Плашка поверх видео (снизу) с инфой + кнопкой ----- */
-/* Делаем её низкой, чтобы не накрывала пол-кадра */
+/* Низкая плашка поверх превью */
 
 .live-card__preview-overlay {
   position: absolute;
@@ -62,7 +55,7 @@
   right: 0;
   bottom: 0;
 
-  padding: 3px 10px; /* низкая плашка */
+  padding: 3px 10px;
   min-height: 28px;
 
   display: flex;
@@ -118,8 +111,6 @@
   display: none;
 }
 
-/* Кнопка перехода к трансляции — компактная */
-
 .live-card__watch-btn {
   flex-shrink: 0;
   padding: 4px 10px;
@@ -155,13 +146,109 @@
     0 0 0 1px rgba(248, 250, 252, 1);
 }
 
-/* старый блок с текстом под видео не используем */
-
 .live-card__current-info {
   display: none;
 }
 
-/* Плейсхолдер / пауза */
+/* ---------- Inline-плеер зрителя (на месте превью) ---------- */
+
+.live-card__viewer-live-frame {
+  flex: 1 1 auto;
+  max-width: 100%;
+  border-radius: 22px;
+  padding: 4px;
+  border: 1px solid rgba(191, 219, 254, 0.95);
+  background:
+    radial-gradient(circle at 0% 0%, rgba(239, 246, 255, 0.9), transparent 60%),
+    rgba(255, 255, 255, 0.98);
+  box-shadow:
+    0 20px 48px rgba(148, 163, 184, 0.5),
+    0 0 38px rgba(56, 189, 248, 0.7);
+}
+
+.live-card__viewer-live-screen {
+  position: relative;
+  border-radius: 18px;
+  padding: 4px;
+  border: 1px solid rgba(191, 219, 254, 0.9);
+  background:
+    radial-gradient(circle at 0% 0%, rgba(15, 23, 42, 0.8), transparent 60%),
+    #020617;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+}
+
+.live-card__viewer-video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 14px;
+  background: #000;
+  object-fit: cover;
+}
+
+/* верхняя строка поверх плеера: почта + статус + кнопка закрыть */
+
+.live-card__viewer-top {
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  top: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(148, 163, 184, 0.7);
+  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.9);
+}
+
+.live-card__viewer-top-left {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.live-card__viewer-title {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.13em;
+  color: #e5e7eb;
+}
+
+.live-card__viewer-email {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #f9fafb;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+.live-card__viewer-close {
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: none;
+  font-size: 0.72rem;
+  cursor: pointer;
+  background: rgba(15, 23, 42, 0.9);
+  color: #e5e7eb;
+}
+
+/* статус под плеером */
+
+.live-card__viewer-status {
+  margin-top: 6px;
+  font-size: 0.78rem;
+  color: #4b5563;
+}
+
+/* плейсхолдер */
 
 .live-card__placeholder {
   margin-top: 4px;
