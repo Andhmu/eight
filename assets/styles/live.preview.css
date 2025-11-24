@@ -31,7 +31,7 @@
 /* Внутренний экран превью: фиксированное 16:9, всегда горизонтально */
 
 .live-card__preview-screen {
-  position: relative; /* нужно для плашки поверх видео */
+  position: relative;
   border-radius: 14px;
   padding: 4px;
   border: 1px solid rgba(148, 163, 184, 0.85);
@@ -50,20 +50,20 @@
   height: 100%;
   border-radius: 10px;
   background: #000;
-  object-fit: cover; /* vertical кадр увеличиваем и обрезаем по краям */
+  object-fit: cover;
 }
 
 /* ----- Плашка поверх видео (снизу) с инфой + кнопкой ----- */
-/* Сделали её уже (меньше по высоте) */
+/* Делаем её низкой, чтобы не накрывала пол-кадра */
 
-/* УЗКАЯ (по высоте) плашка */
 .live-card__preview-overlay {
   position: absolute;
   left: 0;
   right: 0;
   bottom: 0;
 
-  padding: 4px 10px; /* уменьшили высоту вдвое */
+  padding: 3px 10px; /* низкая плашка */
+  min-height: 28px;
 
   display: flex;
   align-items: center;
@@ -73,17 +73,14 @@
   background:
     linear-gradient(
       to top,
-      rgba(15, 23, 42, 0.92),
-      rgba(15, 23, 42, 0.65),
+      rgba(15, 23, 42, 0.95),
+      rgba(15, 23, 42, 0.3),
       transparent
     );
-
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-
-  border-top: 1px solid rgba(148, 163, 184, 0.55);
-  box-shadow: 0 -8px 20px rgba(15, 23, 42, 0.55);
-
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-top: 1px solid rgba(148, 163, 184, 0.5);
+  box-shadow: 0 -6px 18px rgba(15, 23, 42, 0.5);
   z-index: 2;
 }
 
@@ -95,16 +92,16 @@
 }
 
 .live-card__now {
-  font-size: 0.68rem;
+  font-size: 0.65rem;
   text-transform: uppercase;
   letter-spacing: 0.13em;
   color: #e5e7eb;
-  opacity: 0.8;
+  opacity: 0.85;
 }
 
 .live-card__user-email {
   font-weight: 600;
-  font-size: 0.86rem;
+  font-size: 0.82rem;
   color: #f9fafb;
   white-space: nowrap;
   text-overflow: ellipsis;
@@ -112,36 +109,35 @@
 }
 
 .live-card__since {
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   color: #e5e7eb;
-  opacity: 0.8;
+  opacity: 0.9;
 }
 
 .live-card__subtitle-text {
-  display: none; /* убираем мелкий текст из-под видео */
+  display: none;
 }
 
-/* Кнопка перехода к трансляции */
+/* Кнопка перехода к трансляции — компактная */
 
 .live-card__watch-btn {
   flex-shrink: 0;
-  align-self: flex-end;
-  padding: 5px 12px;
+  padding: 4px 10px;
   border-radius: 999px;
   border: none;
   cursor: pointer;
   background:
-    radial-gradient(circle at 0% 0%, rgba(56, 189, 248, 0.6), transparent 65%),
+    radial-gradient(circle at 0% 0%, rgba(56, 189, 248, 0.7), transparent 65%),
     linear-gradient(135deg, #e0f2fe, #bae6fd);
   color: #0b1120;
-  font-size: 0.76rem;
+  font-size: 0.72rem;
   font-weight: 500;
   box-shadow:
-    0 10px 22px rgba(8, 47, 73, 0.6),
+    0 8px 18px rgba(8, 47, 73, 0.7),
     0 0 0 1px rgba(219, 234, 254, 1);
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   transition:
     transform 0.12s ease-out,
     box-shadow 0.15s ease-out;
@@ -149,17 +145,17 @@
 
 .live-card__watch-btn::after {
   content: '▶';
-  font-size: 0.8rem;
+  font-size: 0.76rem;
 }
 
 .live-card__watch-btn:hover {
   transform: translateY(-1px);
   box-shadow:
-    0 14px 30px rgba(8, 47, 73, 0.8),
+    0 12px 24px rgba(8, 47, 73, 0.9),
     0 0 0 1px rgba(248, 250, 252, 1);
 }
 
-/* старый блок с текстом под видео больше не используется */
+/* старый блок с текстом под видео не используем */
 
 .live-card__current-info {
   display: none;
@@ -171,7 +167,8 @@
   margin-top: 4px;
   padding: 14px 12px;
   border-radius: 18px;
-  border: 2px dashed rgba(191, 219, 254, 0.95);
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px dashed rgba(191, 219, 254, 0.95);
   font-size: 0.88rem;
   color: #4b5563;
 }
