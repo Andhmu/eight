@@ -2,7 +2,7 @@
 /* Превью чужих эфиров, inline-плеер зрителя и плейсхолдер */
 
 .live-card__viewer-wrapper {
-  margin-top: 4px;
+  margin-top: 8px;
 }
 
 /* ---------- Превью ---------- */
@@ -11,28 +11,30 @@
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  gap: 10px;
+  gap: 8px;
 }
 
 .live-card__preview-frame {
   flex: 1 1 auto;
   max-width: 100%;
-  border-radius: 22px;
+  border-radius: 20px;
   padding: 4px;
-  border: 1px solid rgba(191, 219, 254, 0.95);
+  border: 1px solid rgba(30, 64, 175, 0.6);
   background:
-    radial-gradient(circle at 0% 0%, rgba(239, 246, 255, 0.9), transparent 60%),
-    rgba(248, 250, 252, 0.98);
-  box-shadow: 0 16px 36px rgba(148, 163, 184, 0.4);
+    radial-gradient(circle at 0% 0%, rgba(15, 23, 42, 0.98), transparent 60%),
+    rgba(15, 23, 42, 0.98);
+  box-shadow:
+    0 18px 40px rgba(15, 23, 42, 0.9),
+    0 0 32px rgba(56, 189, 248, 0.7);
 }
 
 .live-card__preview-screen {
   position: relative;
-  border-radius: 18px;
+  border-radius: 16px;
   padding: 4px;
   border: 1px solid rgba(148, 163, 184, 0.85);
   background:
-    radial-gradient(circle at 0% 0%, rgba(15, 23, 42, 0.75), transparent 60%),
+    radial-gradient(circle at 0% 0%, rgba(15, 23, 42, 0.9), transparent 60%),
     #020617;
   aspect-ratio: 16 / 9;
   overflow: hidden;
@@ -42,7 +44,7 @@
   display: block;
   width: 100%;
   height: 100%;
-  border-radius: 14px;
+  border-radius: 12px;
   background: #000;
   object-fit: cover;
 }
@@ -55,7 +57,7 @@
   right: 0;
   bottom: 0;
 
-  padding: 3px 10px;
+  padding: 4px 10px;
   min-height: 28px;
 
   display: flex;
@@ -66,14 +68,14 @@
   background:
     linear-gradient(
       to top,
-      rgba(15, 23, 42, 0.95),
-      rgba(15, 23, 42, 0.3),
+      rgba(15, 23, 42, 0.96),
+      rgba(15, 23, 42, 0.4),
       transparent
     );
-  backdrop-filter: blur(5px);
-  -webkit-backdrop-filter: blur(12px);
-  border-top: 1px solid rgba(148, 163, 184, 0.5);
-  box-shadow: 0 -6px 18px rgba(15, 23, 42, 0.5);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-top: 1px solid rgba(148, 163, 184, 0.55);
+  box-shadow: 0 -8px 24px rgba(15, 23, 42, 0.8);
   z-index: 2;
 }
 
@@ -85,11 +87,11 @@
 }
 
 .live-card__now {
-  font-size: 0.65rem;
+  font-size: 0.66rem;
   text-transform: uppercase;
   letter-spacing: 0.13em;
   color: #e5e7eb;
-  opacity: 0.85;
+  opacity: 0.9;
 }
 
 .live-card__user-email {
@@ -104,27 +106,29 @@
 .live-card__since {
   font-size: 0.7rem;
   color: #e5e7eb;
-  opacity: 0.9;
+  opacity: 0.88;
 }
 
 .live-card__subtitle-text {
   display: none;
 }
 
+/* Кнопка «Перейти к трансляции» */
+
 .live-card__watch-btn {
   flex-shrink: 0;
-  padding: 4px 10px;
+  padding: 4px 12px;
   border-radius: 999px;
   border: none;
   cursor: pointer;
   background:
-    radial-gradient(circle at 0% 0%, rgba(56, 189, 248, 0.7), transparent 65%),
+    radial-gradient(circle at 0% 0%, rgba(56, 189, 248, 0.8), transparent 65%),
     linear-gradient(135deg, #e0f2fe, #bae6fd);
   color: #0b1120;
   font-size: 0.72rem;
   font-weight: 500;
   box-shadow:
-    0 8px 18px rgba(8, 47, 73, 0.7),
+    0 10px 22px rgba(8, 47, 73, 0.9),
     0 0 0 1px rgba(219, 234, 254, 1);
   display: inline-flex;
   align-items: center;
@@ -142,37 +146,33 @@
 .live-card__watch-btn:hover {
   transform: translateY(-1px);
   box-shadow:
-    0 12px 24px rgba(8, 47, 73, 0.9),
+    0 14px 30px rgba(8, 47, 73, 1),
     0 0 0 1px rgba(248, 250, 252, 1);
 }
 
-.live-card__current-info {
-  display: none;
-}
-
-/* ---------- Inline-плеер зрителя (на месте превью) ---------- */
+/* Режим inline-просмотра (плеер зрителя на месте превью) */
 
 .live-card__viewer-live-frame {
   flex: 1 1 auto;
   max-width: 100%;
-  border-radius: 22px;
+  border-radius: 20px;
   padding: 4px;
-  border: 1px solid rgba(191, 219, 254, 0.95);
+  border: 1px solid rgba(30, 64, 175, 0.6);
   background:
-    radial-gradient(circle at 0% 0%, rgba(239, 246, 255, 0.9), transparent 60%),
-    rgba(255, 255, 255, 0.98);
+    radial-gradient(circle at 0% 0%, rgba(15, 23, 42, 0.98), transparent 60%),
+    rgba(15, 23, 42, 0.98);
   box-shadow:
-    0 20px 48px rgba(148, 163, 184, 0.5),
-    0 0 38px rgba(56, 189, 248, 0.7);
+    0 22px 52px rgba(15, 23, 42, 0.92),
+    0 0 38px rgba(59, 130, 246, 0.7);
 }
 
 .live-card__viewer-live-screen {
   position: relative;
-  border-radius: 18px;
+  border-radius: 16px;
   padding: 4px;
   border: 1px solid rgba(191, 219, 254, 0.9);
   background:
-    radial-gradient(circle at 0% 0%, rgba(15, 23, 42, 0.8), transparent 60%),
+    radial-gradient(circle at 0% 0%, rgba(15, 23, 42, 0.92), transparent 60%),
     #020617;
   aspect-ratio: 16 / 9;
   overflow: hidden;
@@ -182,12 +182,12 @@
   display: block;
   width: 100%;
   height: 100%;
-  border-radius: 14px;
+  border-radius: 12px;
   background: #000;
   object-fit: cover;
 }
 
-/* верхняя строка поверх плеера: почта + статус + кнопка закрыть */
+/* верхняя строка поверх плеера: статус + email + кнопка */
 
 .live-card__viewer-top {
   position: absolute;
@@ -200,11 +200,11 @@
   gap: 8px;
   padding: 4px 10px;
   border-radius: 999px;
-  background: rgba(15, 23, 42, 0.8);
+  background: rgba(15, 23, 42, 0.9);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid rgba(148, 163, 184, 0.7);
-  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.9);
+  box-shadow: 0 12px 26px rgba(15, 23, 42, 0.95);
 }
 
 .live-card__viewer-top-left {
@@ -238,26 +238,31 @@
   cursor: pointer;
   background: rgba(15, 23, 42, 0.9);
   color: #e5e7eb;
+  box-shadow:
+    0 0 0 1px rgba(148, 163, 184, 0.8);
 }
 
-/* статус под плеером */
+/* подпись под плеером */
 
 .live-card__viewer-status {
   margin-top: 6px;
   font-size: 0.78rem;
-  color: #4b5563;
+  color: #d1d5db;
 }
 
-/* плейсхолдер */
+/* Плейсхолдер / пауза (нет эфиров) */
 
 .live-card__placeholder {
-  margin-top: 4px;
-  padding: 14px 12px;
+  margin-top: 6px;
+  padding: 12px 12px 14px;
   border-radius: 18px;
-  background: rgba(255, 255, 255, 0.96);
-  border: 1px dashed rgba(191, 219, 254, 0.95);
-  font-size: 0.88rem;
-  color: #4b5563;
+  background:
+    radial-gradient(circle at 0% 0%, rgba(15, 23, 42, 0.95), transparent 60%),
+    rgba(15, 23, 42, 0.92);
+  border: 1px dashed rgba(148, 163, 184, 0.7);
+  box-shadow: 0 14px 32px rgba(15, 23, 42, 0.9);
+  font-size: 0.9rem;
+  color: #e5e7eb;
 }
 
 .live-card__badge {
@@ -268,6 +273,6 @@
   font-size: 0.74rem;
   font-weight: 600;
   margin-bottom: 6px;
-  background: rgba(239, 246, 255, 0.96);
-  color: #0369a1;
+  background: rgba(30, 64, 175, 0.9);
+  color: #e5e7eb;
 }

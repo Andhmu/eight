@@ -1,57 +1,50 @@
 /* FILE: assets/css/live.card.css */
-/* Холо-карточка + шапка + свой эфир + фокус для просмотра */
+/* Карточка прямого эфира (live-card) + шапка + свой эфир + фокус при просмотре */
 
 .live-card {
   position: relative;
   border-radius: 26px;
-  padding: 10px 12px 14px;
-  background: rgba(248, 250, 252, 0.02);
-  border: 1.2px solid rgba(125, 211, 252, 0.9);
+  padding: 14px 16px 16px;
+  border: 1px solid rgba(148, 163, 184, 0.5);
   box-shadow:
-    0 0 28px rgba(56, 189, 248, 0.7),
-    0 0 0 1px rgba(255, 255, 255, 0.5);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+    0 28px 60px rgba(15, 23, 42, 0.75),
+    0 0 40px rgba(59, 130, 246, 0.35);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
 }
 
-/* Карточка в фокусе поверх блюра */
+/* Карточка в фокусе поверх блюра при просмотре трансляции */
 .live-card--focus {
   position: relative;
   z-index: 60;
+  box-shadow:
+    0 32px 72px rgba(15, 23, 42, 0.9),
+    0 0 50px rgba(96, 165, 250, 0.6);
 }
 
-.live-card__body {
-  margin-top: 0;
-}
-
-/* ---------- Бекдроп для просмотра (размывает всё позади) ---------- */
-
+/* Отдельный полупрозрачный фон, который блюрит страницу позади live-card */
 .live-view-backdrop {
   position: fixed;
   inset: 0;
   z-index: 50;
   backdrop-filter: blur(5px);
-  -webkit-backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(5px);
 }
 
-/* ---------- ШАПКА (без плашки, просто текст + кнопка) ---------- */
+.live-card__body {
+  margin-top: 10px;
+}
+
+/* ---------- ШАПКА ---------- */
 
 .live-card__header {
-  position: absolute;
-  top: 10px;
-  left: 16px;
-  right: 16px;
+  position: relative;
   z-index: 65;
 
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
-
-  padding: 0;             /* без капсулы */
-  background: none;       /* убрали плашку */
-  border: none;
-  box-shadow: none;
+  gap: 12px;
 }
 
 .live-card__header-left {
@@ -60,39 +53,42 @@
   gap: 2px;
 }
 
+/* «ПРЯМОЙ ЭФИР» — без плашки, просто светящийся текст */
+
 .live-card__title {
   font-weight: 600;
-  font-size: 0.9rem;
-  letter-spacing: 0.16em;
+  font-size: 0.92rem;
+  letter-spacing: 0.24em;
   text-transform: uppercase;
-  color: #f9fafb;
-  text-shadow: 0 0 8px rgba(15, 23, 42, 0.9);
+  color: #e5e7eb;
+  text-shadow:
+    0 0 12px rgba(15, 23, 42, 0.9),
+    0 0 18px rgba(59, 130, 246, 0.65);
 }
 
-/* подпись beta можно вообще не показывать или оставить очень тонкой */
 .live-card__subtitle {
   font-size: 0.7rem;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: rgba(209, 213, 219, 0.8);
+  color: rgba(148, 163, 184, 0.9);
 }
 
-/* блок действий справа */
+/* блок с кнопками справа */
 
 .live-card__header-actions {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
 }
 
 /* ---------- Главная holo-кнопка «Транслировать меня» ---------- */
 
 .live-card__action {
   position: relative;
-  padding: 6px 14px;
+  padding: 7px 18px;
   border-radius: 999px;
   border: none;
-  font-size: 0.76rem;
+  font-size: 0.8rem;
   font-weight: 500;
   cursor: pointer;
   display: inline-flex;
@@ -113,17 +109,17 @@
   inset: 0;
   border-radius: inherit;
   background:
-    radial-gradient(circle at 0% 0%, rgba(56, 189, 248, 0.55), transparent 65%),
-    radial-gradient(circle at 100% 100%, rgba(129, 140, 248, 0.6), transparent 65%);
+    radial-gradient(circle at 0% 0%, rgba(56, 189, 248, 0.7), transparent 65%),
+    radial-gradient(circle at 100% 100%, rgba(244, 114, 182, 0.9), transparent 65%);
   box-shadow:
-    0 0 24px rgba(56, 189, 248, 0.9),
-    0 0 0 1px rgba(224, 242, 254, 1);
+    0 0 26px rgba(56, 189, 248, 0.9),
+    0 0 0 1px rgba(226, 232, 240, 1);
 }
 
 .live-card__action-label {
   position: relative;
   z-index: 1;
-  color: #0b1120;
+  color: #020617;
 }
 
 .live-card__action:disabled {
@@ -133,9 +129,83 @@
 
 .live-card__action:hover:not(:disabled) {
   transform: translateY(-1px);
+  box-shadow:
+    0 14px 34px rgba(15, 23, 42, 0.85),
+    0 0 0 1px rgba(241, 245, 249, 0.95);
 }
 
-/* ---------- Свой эфир — holo-рамка + видео на весь live-card ---------- */
+/* Индикатор «В эфире» в шапке */
+
+.live-card__header-live {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.live-card__status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 11px;
+  border-radius: 999px;
+  border: 1px solid rgba(74, 222, 128, 0.7);
+  background: rgba(22, 101, 52, 0.8);
+  color: #bbf7d0;
+  font-size: 0.75rem;
+  font-weight: 500;
+  box-shadow:
+    0 0 16px rgba(22, 163, 74, 0.9),
+    0 0 0 1px rgba(22, 101, 52, 0.9);
+}
+
+.live-card__status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: #22c55e;
+  box-shadow: 0 0 10px rgba(34, 197, 94, 1);
+}
+
+/* Чип смены камеры в шапке */
+
+.live-card__chip {
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.6);
+  background: rgba(15, 23, 42, 0.85);
+  color: #e5e7eb;
+  font-size: 0.78rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow:
+    0 14px 32px rgba(15, 23, 42, 0.75),
+    0 0 0 1px rgba(15, 23, 42, 1);
+  transition:
+    transform 0.12s ease-out,
+    box-shadow 0.15s ease-out,
+    background 0.15s ease-out;
+}
+
+.live-card__chip--header {
+  font-size: 0.76rem;
+  padding-inline: 11px;
+}
+
+.live-card__chip:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow:
+    0 18px 40px rgba(15, 23, 42, 1),
+    0 0 0 1px rgba(248, 250, 252, 0.95);
+}
+
+.live-card__chip:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+/* ---------- Свой эфир — holo-рамка ---------- */
 
 .live-card__holo {
   display: flex;
@@ -145,38 +215,42 @@
 .live-card__holo-frame {
   width: 100%;
   border-radius: 22px;
-  padding: 4px;
-  border: 1.4px solid rgba(191, 219, 254, 0.95);
+  padding: 5px 5px 9px;
+  border: 1px solid rgba(148, 163, 184, 0.65);
   background:
-    radial-gradient(circle at 0% 0%, rgba(239, 246, 255, 0.9), transparent 60%),
-    rgba(255, 255, 255, 0.96);
+    radial-gradient(circle at 0% 0%, rgba(15, 23, 42, 0.96), transparent 60%),
+    rgba(15, 23, 42, 0.96);
   box-shadow:
-    0 20px 48px rgba(148, 163, 184, 0.5),
-    0 0 38px rgba(56, 189, 248, 0.7);
+    0 22px 52px rgba(15, 23, 42, 0.9),
+    0 0 38px rgba(59, 130, 246, 0.7);
   position: relative;
 }
 
+/* Контейнер под 16:9, чтобы видео всегда горизонтальное */
+
 .live-card__screen {
   position: relative;
-  border-radius: 20px;
-  border: 1px solid rgba(186, 230, 253, 0.9);
+  border-radius: 18px;
+  border: 1px solid rgba(30, 64, 175, 0.85);
   background:
-    radial-gradient(circle at 0% 0%, rgba(15, 23, 42, 0.85), transparent 60%),
+    radial-gradient(circle at 0% 0%, rgba(15, 23, 42, 0.92), transparent 60%),
     #020617;
   aspect-ratio: 16 / 9;
   overflow: hidden;
 }
 
+/* Видео стримера */
+
 .live-card__player {
   display: block;
   width: 100%;
   height: 100%;
-  border-radius: 18px;
+  border-radius: 14px;
   background: #000;
-  object-fit: cover;
+  object-fit: cover; /* вертикальное обрежется по бокам */
 }
 
-/* Панель с круглыми кнопками */
+/* Панель с круглыми иконками (смена камеры / стоп) */
 
 .live-card__overlay-panel {
   position: absolute;
@@ -185,13 +259,12 @@
   transform: translateY(-50%);
   padding: 10px 8px;
   border-radius: 999px;
-  background: rgba(15, 23, 42, 0.7);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(6px);
   border: 1px solid rgba(56, 189, 248, 0.9);
   box-shadow:
     0 0 26px rgba(56, 189, 248, 0.9),
-    0 0 0 1px rgba(15, 23, 42, 0.9);
+    0 0 0 1px rgba(15, 23, 42, 0.95);
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -207,9 +280,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.1rem;
+  font-size: 1.2rem;
   color: #e5e7eb;
-  background: radial-gradient(circle at 30% 0%, rgba(248, 250, 252, 0.18), transparent 55%);
+  background:
+    radial-gradient(circle at 30% 0%, rgba(248, 250, 252, 0.18), transparent 55%),
+    radial-gradient(circle at 70% 100%, rgba(56, 189, 248, 0.7), transparent 65%);
   box-shadow:
     0 0 22px rgba(56, 189, 248, 0.9),
     0 0 0 1px rgba(191, 219, 254, 0.95);
@@ -232,12 +307,12 @@
 }
 
 .live-card__icon-btn--danger {
-  box-shadow:
-    0 0 24px rgba(248, 113, 113, 0.95),
-    0 0 0 1px rgba(254, 202, 202, 0.95);
   background:
-    radial-gradient(circle at 30% 0%, rgba(248, 250, 252, 0.12), transparent 55%),
-    radial-gradient(circle at 70% 100%, rgba(248, 113, 113, 0.85), transparent 65%);
+    radial-gradient(circle at 30% 0%, rgba(248, 250, 252, 0.16), transparent 55%),
+    radial-gradient(circle at 80% 100%, rgba(248, 113, 113, 0.9), transparent 65%);
+  box-shadow:
+    0 0 26px rgba(248, 113, 113, 0.95),
+    0 0 0 1px rgba(254, 202, 202, 0.95);
 }
 
 /* a11y helper */
@@ -254,7 +329,7 @@
   border: 0;
 }
 
-/* старые элементы низа эфира не используем */
+/* старый низ эфира скрыт */
 
 .live-card__holo-bottom,
 .live-card__circle-btn,
