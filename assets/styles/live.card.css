@@ -30,10 +30,7 @@
   position: fixed;
   inset: 0;
   z-index: 50;
-  background:
-    radial-gradient(circle at 20% 0%, rgba(59, 130, 246, 0.25), transparent 60%),
-    rgba(15, 23, 42, 0.8);
-  backdrop-filter: blur(18px);
+  backdrop-filter: blur(5px);
   -webkit-backdrop-filter: blur(18px);
 }
 
