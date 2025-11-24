@@ -1,48 +1,57 @@
 <!-- FILE: components/feed/LiveNowBlock.vue -->
 <template>
-  <section
-    class="feed-card live-card"
-    :class="{ 'live-card--focus': viewerOpen }"
-  >
-    <!-- Холо-шапка -->
-    <LiveHeader
-      :is-live="isLive"
-      :busy="busy"
-      @start="onStartClick"
-      @switchCamera="onSwitchCameraClick"
-    />
+  <div class="live-view-root">
+    <!-- Блюр-фон, клик по нему закрывает просмотр -->
+    <div
+      v-if="viewerOpen"
+      class="live-view-backdrop"
+      @click="closeInlineViewer"
+    ></div>
 
-    <div class="feed-card__body live-card__body">
-      <!-- Свой эфир -->
-      <LiveMyStreamPanel
-        v-if="isLive"
+    <section
+      class="feed-card live-card"
+      :class="{ 'live-card--focus': viewerOpen }"
+    >
+      <!-- Холо-шапка -->
+      <LiveHeader
+        :is-live="isLive"
         :busy="busy"
-        :set-video-el="setMyVideoEl"
+        @start="onStartClick"
         @switchCamera="onSwitchCameraClick"
-        @stopLive="stopLive"
       />
 
-      <!-- Превью / просмотр чужих эфиров -->
-      <LivePreviewBlock
-        v-else
-        :current="current"
-        :show-slot="showSlot"
-        :placeholder-text="placeholderText"
-        :set-preview-video-el="setPreviewVideoEl"
-        :is-watching="viewerOpen"
-        :status-message="viewerStatusMessage"
-        :stats="viewerStats"
-        :set-viewer-video-el="setViewerVideoEl"
-        @openViewer="openViewer"
-        @closeViewer="closeInlineViewer"
-      />
-    </div>
-  </section>
+      <div class="feed-card__body live-card__body">
+        <!-- Свой эфир -->
+        <LiveMyStreamPanel
+          v-if="isLive"
+          :busy="busy"
+          :set-video-el="setMyVideoEl"
+          @switchCamera="onSwitchCameraClick"
+          @stopLive="stopLive"
+        />
+
+        <!-- Превью / просмотр чужих эфиров -->
+        <LivePreviewBlock
+          v-else
+          :current="current"
+          :show-slot="showSlot"
+          :placeholder-text="placeholderText"
+          :set-preview-video-el="setPreviewVideoEl"
+          :is-watching="viewerOpen"
+          :status-message="viewerStatusMessage"
+          :stats="viewerStats"
+          :set-viewer-video-el="setViewerVideoEl"
+          @openViewer="openViewer"
+          @closeViewer="closeInlineViewer"
+        />
+      </div>
+    </section>
+  </div>
 </template>
 
 <script setup lang="ts">
 // FILE: components/feed/LiveNowBlock.vue
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useMyLive } from '~/composables/live/useMyLive'
 import { useLiveNow } from '~/composables/live/useLiveNow'
 import { useLiveViewer } from '~/composables/live/useLiveViewer'
@@ -85,13 +94,14 @@ const {
 const previewVideoEl = ref<HTMLVideoElement | null>(null)
 const { startPreview, stopPreview } = useLivePreview(previewVideoEl)
 
-// ------ вычислимые значения ------
+// вычислимые значения
 
 const viewerOpen = computed(() => isWatching.value)
 const viewerStatusMessage = computed(() => viewerStatusMessageRef.value)
 const viewerStats = computed(() => viewerStatsRef.value)
 
-// показывать ли слот (для одного стрима: минута показ / минута пауза)
+// логика показа слота превью
+
 const showSlot = ref(true)
 
 const placeholderText = computed(() => {
@@ -104,7 +114,7 @@ const placeholderText = computed(() => {
   return 'Сейчас нет активных превью. Мы периодически ищем для вас что-то интересное…'
 })
 
-// ------ ref-handlers ------
+// ref-handlers
 
 function setMyVideoEl(el: HTMLVideoElement | null) {
   myVideoEl.value = el
@@ -118,7 +128,7 @@ function setViewerVideoEl(el: HTMLVideoElement | null) {
   viewerVideoEl.value = el
 }
 
-// ------ действия стримера ------
+// стример
 
 async function onStartClick() {
   await startLive()
@@ -128,39 +138,24 @@ async function onSwitchCameraClick() {
   await switchCamera()
 }
 
-// ------ действия зрителя ------
+// зритель
 
 async function openViewer() {
   if (!current.value) return
-  stopPreview() // выключаем превью, чтобы не было второго соединения
+  stopPreview() // не держим два соединения
   openForStreamer(current.value.id)
 }
 
 function closeInlineViewer() {
   closeViewerInternal()
-  // после закрытия возвращаемся к обычной превьюшке
+  // после закрытия вернёмся к превью, если есть эфиры
   if (hasCandidates.value) {
     showSlot.value = true
     void startPreviewForCurrent()
   }
 }
 
-// ------ блюр страницы, пока открыт просмотр --------
-
-watch(
-  viewerOpen,
-  (open) => {
-    if (!process.client) return
-    if (open) {
-      document.body.classList.add('live-view-blur')
-    } else {
-      document.body.classList.remove('live-view-blur')
-    }
-  },
-  { immediate: true },
-)
-
-// ------ таймеры для карусели превью ------
+// таймеры карусели
 
 let previewTimer: number | null = null
 let candidatesTimer: number | null = null
@@ -197,7 +192,7 @@ async function initialSetup() {
 
   if (!process.client) return
 
-  // каждые 5 сек — обновляем список эфиров
+  // каждые 5 сек обновляем список эфиров
   candidatesTimer = window.setInterval(async () => {
     const prevId = current.value?.id
     const prevIdsSet = new Set(lastCandidateIds)
@@ -217,6 +212,7 @@ async function initialSetup() {
       return
     }
 
+    // новый стример — сразу показываем его
     if (newCandidates.length) {
       const firstNew = newCandidates[0]
       console.log('[live-now] new streamer detected, show first:', firstNew.id)
@@ -228,6 +224,7 @@ async function initialSetup() {
       return
     }
 
+    // текущий исчез — берём другой
     if (prevId && !candidates.value.find((c) => c.id === prevId)) {
       stopPreview()
       if (hasCandidates.value) {
@@ -268,7 +265,7 @@ async function initialSetup() {
   }, 60_000)
 }
 
-// ------ жизненный цикл ------
+// жизненный цикл
 
 onMounted(async () => {
   await loadInitial({ autoResume: true })
@@ -278,8 +275,5 @@ onMounted(async () => {
 onBeforeUnmount(() => {
   stopPreview()
   stopTimers()
-  if (process.client) {
-    document.body.classList.remove('live-view-blur')
-  }
 })
 </script>

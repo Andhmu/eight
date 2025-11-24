@@ -14,65 +14,73 @@
   -webkit-backdrop-filter: blur(20px);
 }
 
+/* Карточка в фокусе поверх блюра */
+.live-card--focus {
+  position: relative;
+  z-index: 60;
+}
+
 .live-card__body {
   margin-top: 0;
 }
 
-/* Когда открыта трансляция зрителю — этот live-card в фокусе */
-body.live-view-blur #__nuxt {
-  filter: blur(12px);
+/* ---------- Бекдроп для просмотра (размывает всё позади) ---------- */
+
+.live-view-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background:
+    radial-gradient(circle at 20% 0%, rgba(59, 130, 246, 0.25), transparent 60%),
+    rgba(15, 23, 42, 0.8);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
 }
 
-body.live-view-blur .live-card--focus {
-  filter: none !important;
-}
-
-/* ---------- ШАПКА (оверлей поверх видео) ---------- */
+/* ---------- ШАПКА (без плашки, просто текст + кнопка) ---------- */
 
 .live-card__header {
   position: absolute;
   top: 10px;
   left: 16px;
   right: 16px;
-  z-index: 5;
+  z-index: 65;
 
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 10px;
 
-  padding: 6px 10px;
-  border-radius: 999px;
-
-  background:
-    linear-gradient(
-      to right,
-      rgba(15, 23, 42, 0.95),
-      rgba(15, 23, 42, 0.6)
-    );
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(148, 163, 184, 0.7);
-  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.8);
+  padding: 0;             /* без капсулы */
+  background: none;       /* убрали плашку */
+  border: none;
+  box-shadow: none;
 }
 
 .live-card__header-left {
   display: flex;
   flex-direction: column;
-  gap: 1px;
+  gap: 2px;
 }
 
 .live-card__title {
   font-weight: 600;
-  font-size: 0.82rem;
+  font-size: 0.9rem;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: #e5e7eb;
+  color: #f9fafb;
+  text-shadow: 0 0 8px rgba(15, 23, 42, 0.9);
 }
 
+/* подпись beta можно вообще не показывать или оставить очень тонкой */
 .live-card__subtitle {
-  display: none;
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(209, 213, 219, 0.8);
 }
+
+/* блок действий справа */
 
 .live-card__header-actions {
   display: flex;
