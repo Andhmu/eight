@@ -1,47 +1,99 @@
-<!-- FILE: LiveMyStreamPanel.vue -->
 <template>
-  <div class="live-card__preview-full">
 
-    <!-- ВИДЕО МОЕГО СТРИМА -->
-    <video
-      :ref="setVideoEl"
-      class="live-card__full-video"
-      autoplay
-      muted
-      playsinline
-    ></video>
+  <div class="live-card__holo">
 
-    <!-- КНОПКИ СПРАВА -->
-    <div class="live-card__side-buttons">
-      <button
-        class="live-card__side-btn"
-        :disabled="busy"
-        @click="$emit('switchCamera')"
-      >
-        🔄
-      </button>
+    <div class="live-card__holo-frame">
 
-      <button
-        class="live-card__side-btn live-card__side-btn--danger"
-        :disabled="busy"
-        @click="$emit('stopLive')"
-      >
-        ⏹
-      </button>
+      <div class="live-card__screen">
+
+        <video
+
+          :ref="setVideoEl"
+
+          class="live-card__player"
+
+          autoplay
+
+          muted
+
+          playsinline
+
+        ></video>
+
+
+
+        <!-- Прозрачная панель с кнопками поверх видео (Black Mirror style) -->
+
+        <div class="live-card__overlay-panel">
+
+          <button
+
+            type="button"
+
+            class="live-card__icon-btn"
+
+            :disabled="busy"
+
+            @click="$emit('switchCamera')"
+
+          >
+
+            ⇄
+
+            <span class="visually-hidden">Сменить камеру</span>
+
+          </button>
+
+
+
+          <button
+
+            type="button"
+
+            class="live-card__icon-btn live-card__icon-btn--danger"
+
+            :disabled="busy"
+
+            @click="$emit('stopLive')"
+
+          >
+
+            ⏹
+
+            <span class="visually-hidden">Завершить трансляцию</span>
+
+          </button>
+
+        </div>
+
+      </div>
+
     </div>
 
-    <!-- ПЛАШКА НИЗУ -->
-    <div class="live-card__stream-bar">
-      <span class="live-card__stream-label">Вы в эфире • Ваш эфир виден другим пользователям</span>
-    </div>
   </div>
+
 </template>
 
+
+
 <script setup lang="ts">
+
 const props = defineProps<{
+
   busy: boolean
+
   setVideoEl: (el: HTMLVideoElement | null) => void
+
 }>()
 
-const emit = defineEmits(['switchCamera', 'stopLive'])
+
+
+const emit = defineEmits<{
+
+  switchCamera: []
+
+  stopLive: []
+
+}>()
+
 </script>

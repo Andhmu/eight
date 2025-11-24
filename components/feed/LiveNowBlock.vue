@@ -1,52 +1,46 @@
 <!-- FILE: components/feed/LiveNowBlock.vue -->
 <template>
-  <div class="live-view-root">
-    <!-- Блюр-фон, клик по нему закрывает просмотр -->
-    <div
-      v-if="viewerOpen"
-      class="live-view-backdrop"
-      @click="closeInlineViewer"
-    ></div>
+  <section class="feed-card live-card">
+    <!-- Холо-шапка -->
+    <LiveHeader
+      :is-live="isLive"
+      :busy="busy"
+      @start="onStartClick"
+      @switchCamera="onSwitchCameraClick"
+    />
 
-    <section
-      class="feed-card live-card"
-      :class="{ 'live-card--focus': viewerOpen }"
-    >
-      <!-- Холо-шапка -->
-      <LiveHeader
-        :is-live="isLive"
+    <div class="feed-card__body live-card__body">
+      <!-- Свой эфир -->
+      <LiveMyStreamPanel
+        v-if="isLive"
         :busy="busy"
-        @start="onStartClick"
+        :set-video-el="setMyVideoEl"
         @switchCamera="onSwitchCameraClick"
+        @stopLive="stopLive"
       />
 
-      <div class="feed-card__body live-card__body">
-        <!-- Свой эфир -->
-        <LiveMyStreamPanel
-          v-if="isLive"
-          :busy="busy"
-          :set-video-el="setMyVideoEl"
-          @switchCamera="onSwitchCameraClick"
-          @stopLive="stopLive"
-        />
+      <!-- Превью чужих эфиров / плейсхолдер -->
+      <LivePreviewBlock
+        v-else
+        :current="current"
+        :show-slot="showSlot"
+        :placeholder-text="placeholderText"
+        :set-preview-video-el="setPreviewVideoEl"
+        @openViewer="openViewer"
+      />
+    </div>
 
-        <!-- Превью / просмотр чужих эфиров -->
-        <LivePreviewBlock
-          v-else
-          :current="current"
-          :show-slot="showSlot"
-          :placeholder-text="placeholderText"
-          :set-preview-video-el="setPreviewVideoEl"
-          :is-watching="viewerOpen"
-          :status-message="viewerStatusMessage"
-          :stats="viewerStats"
-          :set-viewer-video-el="setViewerVideoEl"
-          @openViewer="openViewer"
-          @closeViewer="closeInlineViewer"
-        />
-      </div>
-    </section>
-  </div>
+    <!-- Выезжающая панель для просмотра эфира -->
+    <LiveViewerDrawer
+      :is-open="viewerOpen"
+      :current-email="current?.email || null"
+      :status-message="viewerStatusMessage"
+      :stats="viewerStats"
+      :set-video-el="setViewerVideoEl"
+      @close="closeViewer"
+      @refresh="refreshViewer"
+    />
+  </section>
 </template>
 
 <script setup lang="ts">
@@ -60,6 +54,7 @@ import { useLivePreview } from '~/composables/live/useLivePreview'
 import LiveHeader from '~/components/feed/live/LiveHeader.vue'
 import LiveMyStreamPanel from '~/components/feed/live/LiveMyStreamPanel.vue'
 import LivePreviewBlock from '~/components/feed/live/LivePreviewBlock.vue'
+import LiveViewerDrawer from '~/components/feed/live/LiveViewerDrawer.vue'
 
 const {
   isLive,
@@ -94,14 +89,13 @@ const {
 const previewVideoEl = ref<HTMLVideoElement | null>(null)
 const { startPreview, stopPreview } = useLivePreview(previewVideoEl)
 
-// вычислимые значения
+// ------ вычислимые значения ------
 
 const viewerOpen = computed(() => isWatching.value)
 const viewerStatusMessage = computed(() => viewerStatusMessageRef.value)
 const viewerStats = computed(() => viewerStatsRef.value)
 
-// логика показа слота превью
-
+// показывать ли слот (для одного стрима: минута показ / минута пауза)
 const showSlot = ref(true)
 
 const placeholderText = computed(() => {
@@ -114,7 +108,7 @@ const placeholderText = computed(() => {
   return 'Сейчас нет активных превью. Мы периодически ищем для вас что-то интересное…'
 })
 
-// ref-handlers
+// ------ ref-handlers ------
 
 function setMyVideoEl(el: HTMLVideoElement | null) {
   myVideoEl.value = el
@@ -128,7 +122,7 @@ function setViewerVideoEl(el: HTMLVideoElement | null) {
   viewerVideoEl.value = el
 }
 
-// стример
+// ------ действия стримера ------
 
 async function onStartClick() {
   await startLive()
@@ -138,27 +132,31 @@ async function onSwitchCameraClick() {
   await switchCamera()
 }
 
-// зритель
+// ------ действия зрителя ------
 
 async function openViewer() {
   if (!current.value) return
-  stopPreview() // не держим два соединения
+  stopPreview() // чтобы не было двух соединений
   openForStreamer(current.value.id)
 }
 
-function closeInlineViewer() {
-  closeViewerInternal()
-  // после закрытия вернёмся к превью, если есть эфиры
-  if (hasCandidates.value) {
-    showSlot.value = true
-    void startPreviewForCurrent()
-  }
+async function refreshViewer() {
+  if (!current.value) return
+  stopPreview()
+  openForStreamer(current.value.id)
 }
 
-// таймеры карусели
+function closeViewer() {
+  closeViewerInternal()
+}
+
+// ------ таймеры для карусели превью ------
 
 let previewTimer: number | null = null
 let candidatesTimer: number | null = null
+
+// будем помнить предыдущий набор кандидатов,
+// чтобы отловить "нового" стримера и сразу показать его
 let lastCandidateIds: string[] = []
 
 function stopTimers() {
@@ -183,6 +181,7 @@ async function initialSetup() {
   lastCandidateIds = candidates.value.map((c) => c.id)
 
   if (hasCandidates.value) {
+    // при первом заходе выбираем случайный эфир и сразу показываем
     pickRandom()
     showSlot.value = true
     await startPreviewForCurrent()
@@ -192,7 +191,7 @@ async function initialSetup() {
 
   if (!process.client) return
 
-  // каждые 5 сек обновляем список эфиров
+  // каждые 5 сек — обновляем список эфиров
   candidatesTimer = window.setInterval(async () => {
     const prevId = current.value?.id
     const prevIdsSet = new Set(lastCandidateIds)
@@ -212,7 +211,7 @@ async function initialSetup() {
       return
     }
 
-    // новый стример — сразу показываем его
+    // если появился НОВЫЙ стример — сразу показываем его минуту
     if (newCandidates.length) {
       const firstNew = newCandidates[0]
       console.log('[live-now] new streamer detected, show first:', firstNew.id)
@@ -224,7 +223,7 @@ async function initialSetup() {
       return
     }
 
-    // текущий исчез — берём другой
+    // если текущий стрим пропал из списка — переключаемся
     if (prevId && !candidates.value.find((c) => c.id === prevId)) {
       stopPreview()
       if (hasCandidates.value) {
@@ -245,12 +244,13 @@ async function initialSetup() {
     }
 
     if (!hasMultipleCandidates.value) {
-      // один стрим: минута показываем, минута пауза
+      // один стрим: минута показываем, минута пауза (старое поведение)
       if (showSlot.value) {
         showSlot.value = false
         stopPreview()
       } else {
         showSlot.value = true
+        // всегда показываем единственный эфир
         current.value = candidates.value[0]
         await startPreviewForCurrent()
       }
@@ -265,7 +265,7 @@ async function initialSetup() {
   }, 60_000)
 }
 
-// жизненный цикл
+// ------ жизненный цикл ------
 
 onMounted(async () => {
   await loadInitial({ autoResume: true })

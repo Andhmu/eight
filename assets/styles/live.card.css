@@ -1,103 +1,610 @@
-/* ВИДЕО НА ВЕСЬ БЛОК live-card */
+/* Холо-карточка + шапка + свой эфир */
 
-.live-card__preview-full {
+
+
+.live-card {
+
   position: relative;
-  width: 100%;
-  height: 100%;
-  border-radius: 22px;
-  overflow: hidden;
 
-  /* стильная стеклянная рамка */
-  background: rgba(15, 23, 42, 0.75);
-  border: 1px solid rgba(148, 163, 184, 0.35);
+  border-radius: 26px;
+
+  padding: 16px 18px;
+
+  background: rgba(248, 250, 252, 0.02);
+
+  border: 1.2px solid rgba(125, 211, 252, 0.9);
+
   box-shadow:
-    0 18px 40px rgba(15, 23, 42, 0.9),
-    0 0 30px rgba(56, 189, 248, 0.6);
+
+    0 0 6px rgba(56, 189, 248, 0.7),
+
+    0 0 0 1px rgba(255, 255, 255, 0.5);
+
+  backdrop-filter: blur(20px);
+
+  -webkit-backdrop-filter: blur(20px);
+
 }
 
-.live-card__full-video {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;   /* вертикальное → обрезается по бокам */
-  display: block;
+
+
+.live-card__body {
+
+  margin-top: 14px;
+
 }
 
-/* НИЖНЯЯ ПЛАШКА */
 
-.live-card__overlay-bar,
-.live-card__stream-bar {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
 
-  padding: 10px 16px;
+/* Шапка */
+
+
+
+.live-card__header {
+
   display: flex;
-  justify-content: space-between;
+
   align-items: center;
 
-  background: rgba(15, 23, 42, 0.76);
-  backdrop-filter: blur(14px);
-  border-top: 1px solid rgba(148, 163, 184, 0.4);
+  justify-content: space-between;
+
+  gap: 12px;
+
 }
 
-.live-card__overlay-now {
-  font-size: 0.72rem;
-  color: #e5e7eb;
-  opacity: 0.85;
-}
 
-.live-card__overlay-email {
-  font-size: 0.88rem;
-  font-weight: 600;
-  color: #f9fafb;
-}
 
-.live-card__overlay-btn {
-  padding: 6px 14px;
-  border-radius: 999px;
-  border: none;
-  cursor: pointer;
-
-  font-size: 0.8rem;
-  font-weight: 500;
-
-  background: linear-gradient(135deg, #bae6fd, #0ea5e9);
-  color: #0b1120;
-}
-
-/* КНОПКИ СПРАВА (камеры / стоп) */
-
-.live-card__side-buttons {
-  position: absolute;
-  top: 50%;
-  right: 14px;
-  transform: translateY(-50%);
+.live-card__header-left {
 
   display: flex;
+
   flex-direction: column;
-  gap: 10px;
+
+  gap: 2px;
+
 }
 
-.live-card__side-btn {
-  width: 44px;
-  height: 44px;
+
+
+.live-card__title {
+
+  font-weight: 600;
+
+  font-size: 0.95rem;
+
+  letter-spacing: 0.16em;
+
+  text-transform: uppercase;
+
+  color: #0f172a;
+
+}
+
+
+
+/* подзаголовок убрали — оставляем только заголовок */
+
+
+
+/* Контейнер под правую часть шапки */
+
+
+
+.live-card__header-actions {
+
+  display: flex;
+
+  align-items: center;
+
+  gap: 10px;
+
+}
+
+
+
+/* Индикатор «в эфире» был, но сейчас не используем в шапке
+
+   (оставил на будущее, вдруг пригодится) */
+
+
+
+.live-card__status-pill {
+
+  display: inline-flex;
+
+  align-items: center;
+
+  gap: 6px;
+
+  padding: 4px 10px;
+
   border-radius: 999px;
+
+  border: 1px solid rgba(56, 189, 248, 0.7);
+
+  background: rgba(240, 249, 255, 0.9);
+
+  color: #0369a1;
+
+  font-size: 0.76rem;
+
+  font-weight: 500;
+
+}
+
+
+
+.live-card__status-dot {
+
+  width: 7px;
+
+  height: 7px;
+
+  border-radius: 999px;
+
+  background: #22c55e;
+
+  box-shadow: 0 0 10px rgba(34, 197, 94, 0.9);
+
+}
+
+
+
+/* Главная holo-кнопка запуска эфира */
+
+
+
+.live-card__action {
+
+  position: relative;
+
+  padding: 7px 18px;
+
+  border-radius: 999px;
+
   border: none;
 
-  background: rgba(15, 23, 42, 0.75);
-  backdrop-filter: blur(10px);
+  font-size: 0.8rem;
 
-  box-shadow:
-    0 0 14px rgba(59, 130, 246, 0.8),
-    0 0 0 1px rgba(191, 219, 254, 0.9);
+  font-weight: 500;
 
-  font-size: 20px;
-  color: #e5e7eb;
+  cursor: pointer;
+
+  display: inline-flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  gap: 6px;
+
+  background: transparent;
+
+  color: #0b1120;
+
+  overflow: hidden;
+
+  transition:
+
+    transform 0.12s ease-out,
+
+    box-shadow 0.15s ease-out,
+
+    opacity 0.12s ease-out;
+
 }
 
-.live-card__side-btn--danger {
+
+
+.live-card__action-glow {
+
+  position: absolute;
+
+  inset: 0;
+
+  border-radius: inherit;
+
+background: linear-gradient(#fff, #fff) padding-box, linear-gradient(90deg, #38bdf8, #a855f7 45%, #f97316) border-box;
+    border: 1px solid transparent;
+    border-radius: 9999px;
+box-shadow:
+
+    0 0 24px rgba(56, 189, 248, 0.9),
+
+    0 0 0 1px rgba(224, 242, 254, 1);
+
+}
+
+
+
+.live-card__action-label {
+
+  position: relative;
+
+  z-index: 1;
+
+}
+
+
+
+.live-card__action:disabled {
+
+  opacity: 0.6;
+
+  cursor: default;
+
+}
+
+
+
+.live-card__action:hover:not(:disabled) {
+
+  transform: translateY(-1px);
+
+}
+
+
+
+/* Чип смены камеры — используется только в превью и стартовом состоянии */
+
+
+
+.live-card__chip {
+
+  padding: 6px 14px;
+
+  border-radius: 999px;
+
+  border: 1px solid rgba(148, 163, 184, 0.7);
+
+  background: rgba(255, 255, 255, 0.95);
+
+  color: #0f172a;
+
+  font-size: 0.78rem;
+
+  cursor: pointer;
+
+  display: inline-flex;
+
+  align-items: center;
+
+  gap: 6px;
+
+  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.18);
+
+  transition:
+
+    transform 0.12s ease-out,
+
+    box-shadow 0.15s ease-out,
+
+    background 0.15s ease-out;
+
+}
+
+
+
+.live-card__chip--header {
+
+  font-size: 0.76rem;
+
+  padding-inline: 10px;
+
+}
+
+
+
+.live-card__chip:hover:not(:disabled) {
+
+  transform: translateY(-1px);
+
+  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.22);
+
+}
+
+
+
+/* ----- СВОЙ ЭФИР: видео + неоновый оверлей с кнопками ----- */
+
+
+
+.live-card__holo {
+
+  display: flex;
+
+  justify-content: center;
+
+}
+
+
+
+.live-card__holo-frame {
+
+  width: 100%;
+
+  border-radius: 24px;
+
+  padding: 4px;
+
+  border: 1.4px solid rgba(56, 189, 248, 0.95);
+
+  background:
+
+    radial-gradient(circle at 0% 0%, rgba(56, 189, 248, 0.18), transparent 60%);
+
   box-shadow:
-    0 0 16px rgba(248, 113, 113, 0.9),
+
+    0 0 40px rgba(56, 189, 248, 0.7),
+
+    0 0 0 1px rgba(15, 23, 42, 0.8);
+
+  position: relative;
+
+}
+
+
+
+/* Контейнер под 16:9, чтобы видео всегда было горизонтальным */
+
+
+
+.live-card__screen {
+
+  position: relative;
+
+  border-radius: 20px;
+
+  border: 1px solid rgba(191, 219, 254, 0.95);
+
+  background:
+
+    radial-gradient(circle at 10% 0%, rgba(15, 23, 42, 0.95), transparent 55%),
+
+    rgba(15, 23, 42, 0.98);
+
+  aspect-ratio: 16 / 9;
+
+  overflow: hidden;
+
+}
+
+
+
+/* Плеер стримера: заполняет экран целиком (vertical — обрежется по бокам) */
+
+
+
+.live-card__player {
+
+  display: block;
+
+  width: 100%;
+
+  height: 100%;
+
+  border-radius: 18px;
+
+  background: #000;
+
+  object-fit: cover; /* ВАЖНО: заполняем весь блок, без чёрных полос */
+
+}
+
+
+
+/* Полупрозрачная панель с блюром сбоку — в духе Black Mirror */
+
+
+
+.live-card__overlay-panel {
+
+  position: absolute;
+
+  top: 50%;
+
+  right: 14px;
+
+  transform: translateY(-50%);
+
+  padding: 10px 8px;
+
+  border-radius: 999px;
+
+  background: rgba(15, 23, 42, 0.7);
+
+  backdrop-filter: blur(18px);
+
+  -webkit-backdrop-filter: blur(18px);
+
+  border: 1px solid rgba(56, 189, 248, 0.9);
+
+  box-shadow:
+
+    0 0 26px rgba(56, 189, 248, 0.9),
+
+    0 0 0 1px rgba(15, 23, 42, 0.9);
+
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 8px;
+
+}
+
+
+
+/* Круглые неоновые кнопки */
+
+
+
+.live-card__icon-btn {
+
+  width: 44px;
+
+  height: 44px;
+
+  border-radius: 999px;
+
+  border: none;
+
+  padding: 0;
+
+  cursor: pointer;
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  font-size: 1.1rem;
+
+  color: #e5e7eb;
+
+  background: radial-gradient(circle at 30% 0%, rgba(248, 250, 252, 0.18), transparent 55%);
+
+  box-shadow:
+
+    0 0 22px rgba(56, 189, 248, 0.9),
+
+    0 0 0 1px rgba(191, 219, 254, 0.95);
+
+  transition:
+
+    transform 0.12s ease-out,
+
+    box-shadow 0.15s ease-out,
+
+    opacity 0.12s ease-out;
+
+}
+
+
+
+.live-card__icon-btn:hover:not(:disabled) {
+
+  transform: translateY(-1px) scale(1.03);
+
+  box-shadow:
+
+    0 0 30px rgba(56, 189, 248, 1),
+
+    0 0 0 1px rgba(248, 250, 252, 0.98);
+
+}
+
+
+
+.live-card__icon-btn:disabled {
+
+  opacity: 0.6;
+
+  cursor: default;
+
+}
+
+
+
+/* Кнопка завершения: лёгкий красный/пурпурный оттенок */
+
+
+
+.live-card__icon-btn--danger {
+
+  box-shadow:
+
+    0 0 24px rgba(248, 113, 113, 0.95),
+
     0 0 0 1px rgba(254, 202, 202, 0.95);
+
+  background:
+
+    radial-gradient(circle at 30% 0%, rgba(248, 250, 252, 0.12), transparent 55%),
+
+    radial-gradient(circle at 70% 100%, rgba(248, 113, 113, 0.85), transparent 65%);
+
+}
+
+
+
+/* Вспомогательный класс для скрытого текста (а11y) */
+
+
+
+.visually-hidden {
+
+  position: absolute;
+
+  width: 1px;
+
+  height: 1px;
+
+  padding: 0;
+
+  margin: -1px;
+
+  overflow: hidden;
+
+  clip: rect(0, 0, 0, 0);
+
+  white-space: nowrap;
+
+  border: 0;
+
+}
+
+
+
+/* Нижняя панель, подписи «Вы в эфире» — больше не используются,
+
+   но оставляю CSS на всякий случай */
+
+
+
+.live-card__holo-bottom {
+
+  margin-top: 4px;
+
+  display: none;
+
+}
+
+
+
+.live-card__circle-btn {
+
+  display: none;
+
+}
+
+
+
+.live-card__meta {
+
+  display: none;
+
+}
+
+
+
+.live-card__meta-label {
+
+  text-transform: uppercase;
+
+  letter-spacing: 0.16em;
+
+  font-size: 0.69rem;
+
+  color: #0ea5e9;
+
+}
+
+
+
+.live-card__meta-separator {
+
+  opacity: 0.6;
+
 }
